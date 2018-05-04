@@ -36,9 +36,9 @@
 #include "Common/x64Emitter.h"
 #elif PPSSPP_ARCH(MIPS)
 #include "Common/MipsEmitter.h"
-#else
-#include "Common/FakeEmitter.h"
 #endif
+
+#include "Common/FakeEmitter.h"
 
 // DecVtxFormat - vertex formats for PC
 // Kind of like a D3D VertexDeclaration.
