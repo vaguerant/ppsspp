@@ -117,7 +117,7 @@ void GetIndexBounds(const void *inds, int count, u32 vertType, u16 *indexLowerBo
 				lowerBound = value;
 		}
 	} else if (idx == GE_VTYPE_IDX_16BIT) {
-		const u16 *ind16 = (const u16 *)inds;
+		const u16_le *ind16 = (const u16_le *)inds;
 		for (int i = 0; i < count; i++) {
 			u16 value = ind16[i];
 			if (value > upperBound)
@@ -127,7 +127,7 @@ void GetIndexBounds(const void *inds, int count, u32 vertType, u16 *indexLowerBo
 		}
 	} else if (idx == GE_VTYPE_IDX_32BIT) {
 		WARN_LOG_REPORT_ONCE(indexBounds32, G3D, "GetIndexBounds: Decoding 32-bit indexes");
-		const u32 *ind32 = (const u32 *)inds;
+		const u32_le *ind32 = (const u32_le *)inds;
 		for (int i = 0; i < count; i++) {
 			u16 value = (u16)ind32[i];
 			// These aren't documented and should be rare.  Let's bounds check each one.
@@ -496,41 +496,42 @@ void VertexDecoder::Step_ColorInvalid() const
 
 void VertexDecoder::Step_Color565() const
 {
-	u8 *c = decoded_ + decFmt.c0off;
+	u32 *c = (u32*)(decoded_ + decFmt.c0off);
 	u16 cdata = *(u16_le *)(ptr_ + coloff);
-	c[0] = Convert5To8(cdata & 0x1f);
-	c[1] = Convert6To8((cdata >> 5) & 0x3f);
-	c[2] = Convert5To8((cdata >> 11) & 0x1f);
-	c[3] = 255;
+	*c = Convert5To8(cdata & 0x1f);
+	*c |= Convert6To8((cdata >> 5) & 0x3f) << 8;
+	*c |= Convert5To8((cdata >> 11) & 0x1f) << 16;
+	*c |= 255 << 24;
 	// Always full alpha.
 }
 
 void VertexDecoder::Step_Color5551() const
 {
-	u8 *c = decoded_ + decFmt.c0off;
+	u32 *c = (u32*)(decoded_ + decFmt.c0off);
 	u16 cdata = *(u16_le *)(ptr_ + coloff);
 	gstate_c.vertexFullAlpha = gstate_c.vertexFullAlpha && (cdata >> 15) != 0;
-	c[0] = Convert5To8(cdata & 0x1f);
-	c[1] = Convert5To8((cdata >> 5) & 0x1f);
-	c[2] = Convert5To8((cdata >> 10) & 0x1f);
-	c[3] = (cdata >> 15) ? 255 : 0;
+	*c = Convert5To8(cdata & 0x1f);
+	*c |= Convert5To8((cdata >> 5) & 0x1f) << 8;
+	*c |= Convert5To8((cdata >> 10) & 0x1f) << 16;
+	*c |= (cdata >> 15) ? 255 << 24 : 0;
 }
 
 void VertexDecoder::Step_Color4444() const
 {
-	u8 *c = decoded_ + decFmt.c0off;
+	u32 *c = (u32*)(decoded_ + decFmt.c0off);
 	u16 cdata = *(u16_le *)(ptr_ + coloff);
 	gstate_c.vertexFullAlpha = gstate_c.vertexFullAlpha && (cdata >> 12) == 0xF;
+	*c = 0;
 	for (int j = 0; j < 4; j++)
-		c[j] = Convert4To8((cdata >> (j * 4)) & 0xF);
+		*c |= Convert4To8((cdata >> (j * 4)) & 0xF) << (j * 8);
 }
 
 void VertexDecoder::Step_Color8888() const
 {
-	u8 *c = decoded_ + decFmt.c0off;
-	const u8 *cdata = (const u8*)(ptr_ + coloff);
-	gstate_c.vertexFullAlpha = gstate_c.vertexFullAlpha && cdata[3] == 255;
-	memcpy(c, cdata, sizeof(u8) * 4);
+	u32 *c = (u32*)(decoded_ + decFmt.c0off);
+	u32 cdata = *(u32_le*)(ptr_ + coloff);
+	gstate_c.vertexFullAlpha = gstate_c.vertexFullAlpha && (cdata >> 24) == 0xFF;
+	*c = cdata;
 }
 
 void VertexDecoder::Step_Color565Morph() const
@@ -750,9 +751,10 @@ void VertexDecoder::Step_PosS16() const
 
 void VertexDecoder::Step_PosFloat() const
 {
-	u8 *v = (u8 *)(decoded_ + decFmt.posoff);
-	const u8 *fv = (const u8*)(ptr_ + posoff);
-	memcpy(v, fv, 12);
+	float *pos = (float *)(decoded_ + decFmt.posoff);
+	const float_le *fv = (const float_le *)(ptr_ + posoff);
+	for (int j = 0; j < 3; j++)
+		pos[j] = fv[j];
 }
 
 void VertexDecoder::Step_PosS8Skin() const
@@ -800,9 +802,11 @@ void VertexDecoder::Step_PosS16Through() const
 
 void VertexDecoder::Step_PosFloatThrough() const
 {
-	u8 *v = (u8 *)(decoded_ + decFmt.posoff);
-	const u8 *fv = (const u8 *)(ptr_ + posoff);
-	memcpy(v, fv, 12);
+	float *v = (float *)(decoded_ + decFmt.posoff);
+	const float_le *fv = (const float_le*)(ptr_ + posoff);
+	v[0] = fv[0];
+	v[1] = fv[1];
+	v[2] = fv[2];
 }
 
 void VertexDecoder::Step_PosS8Morph() const
@@ -1355,6 +1359,8 @@ std::string VertexDecoder::GetString(DebugShaderStringType stringType) {
 			lines = DisassembleArm2((const u8 *)jitted_, jittedSize_);
 #elif defined(MIPS)
 			// No MIPS disassembler defined
+#elif defined(__PPC__)
+			// No PPC disassembler defined
 #else
 			lines = DisassembleX86((const u8 *)jitted_, jittedSize_);
 #endif

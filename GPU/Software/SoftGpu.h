@@ -25,8 +25,8 @@ struct FormatBuffer {
 	FormatBuffer() { data = nullptr; }
 	union {
 		u8 *data;
-		u16 *as16;
-		u32 *as32;
+		u16_le *as16;
+		u32_le *as32;
 	};
 
 	inline void Set16(int x, int y, int stride, u16 v) {
@@ -108,7 +108,7 @@ private:
 
 	Draw::Texture *fbTex;
 	Draw::Pipeline *texColor;
-	std::vector<u32> fbTexBuffer;
+	std::vector<u32_le> fbTexBuffer;
 
 	Draw::SamplerState *samplerNearest = nullptr;
 	Draw::SamplerState *samplerLinear = nullptr;

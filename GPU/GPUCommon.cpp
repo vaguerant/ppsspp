@@ -973,7 +973,7 @@ void GPUCommon::FastRunLoop(DisplayList &list) {
 	int dc = downcount;
 	for (; dc > 0; --dc) {
 		// We know that display list PCs have the upper nibble == 0 - no need to mask the pointer
-		const u32 op = *(const u32 *)(Memory::base + list.pc);
+		const u32 op = Memory::ReadUnchecked_U32(list.pc);
 		const u32 cmd = op >> 24;
 		const CommandInfo &info = cmdInfo[cmd];
 		const u32 diff = op ^ gstate.cmdmem[cmd];
@@ -2151,8 +2151,8 @@ void GPUCommon::FlushImm() {
 	// through vertices.
 	// Since the only known use is Thrillville and it only uses it to clear, we just use color and pos.
 	struct ImmVertex {
-		uint32_t color;
-		float xyz[3];
+		u32_le color;
+		float_le xyz[3];
 	};
 	ImmVertex temp[MAX_IMMBUFFER_SIZE];
 	for (int i = 0; i < immCount_; i++) {

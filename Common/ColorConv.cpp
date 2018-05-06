@@ -322,13 +322,12 @@ void ConvertRGBA565ToRGBA8888(u32 *dst32, const u16 *src, u32 numPixels) {
 	u32 i = 0;
 #endif
 
-	u8 *dst = (u8 *)dst32;
 	for (u32 x = i; x < numPixels; x++) {
 		u16 col = src[x];
-		dst[x * 4] = Convert5To8((col) & 0x1f);
-		dst[x * 4 + 1] = Convert6To8((col >> 5) & 0x3f);
-		dst[x * 4 + 2] = Convert5To8((col >> 11) & 0x1f);
-		dst[x * 4 + 3] = 255;
+		dst32[x] = Convert5To8((col) & 0x1f);
+		dst32[x] |= Convert6To8((col >> 5) & 0x3f) << 8;
+		dst32[x] |= Convert5To8((col >> 11) & 0x1f) << 16;
+		dst32[x] |= 255 << 24;
 	}
 }
 
@@ -376,13 +375,12 @@ void ConvertRGBA5551ToRGBA8888(u32 *dst32, const u16 *src, u32 numPixels) {
 	u32 i = 0;
 #endif
 
-	u8 *dst = (u8 *)dst32;
 	for (u32 x = i; x < numPixels; x++) {
 		u16 col = src[x];
-		dst[x * 4] = Convert5To8((col) & 0x1f);
-		dst[x * 4 + 1] = Convert5To8((col >> 5) & 0x1f);
-		dst[x * 4 + 2] = Convert5To8((col >> 10) & 0x1f);
-		dst[x * 4 + 3] = (col >> 15) ? 255 : 0;
+		dst32[x] = Convert5To8((col) & 0x1f);
+		dst32[x] |= Convert5To8((col >> 5) & 0x1f) << 8;
+		dst32[x] |= Convert5To8((col >> 10) & 0x1f) << 16;
+		dst32[x] |= (col >> 15) ? 255  << 24 : 0;
 	}
 }
 
@@ -425,51 +423,46 @@ void ConvertRGBA4444ToRGBA8888(u32 *dst32, const u16 *src, u32 numPixels) {
 	u32 i = 0;
 #endif
 
-	u8 *dst = (u8 *)dst32;
 	for (u32 x = i; x < numPixels; x++) {
 		u16 col = src[x];
-		dst[x * 4] = Convert4To8(col & 0xf);
-		dst[x * 4 + 1] = Convert4To8((col >> 4) & 0xf);
-		dst[x * 4 + 2] = Convert4To8((col >> 8) & 0xf);
-		dst[x * 4 + 3] = Convert4To8(col >> 12);
+		dst32[x] = Convert4To8(col & 0xf);
+		dst32[x] |= Convert4To8((col >> 4) & 0xf) << 8;
+		dst32[x] |= Convert4To8((col >> 8) & 0xf) << 16;
+		dst32[x] |= Convert4To8(col >> 12) << 24;
 	}
 }
 
 void ConvertABGR565ToRGBA8888(u32 *dst32, const u16 *src, u32 numPixels) {
-	u8 *dst = (u8 *)dst32;
 	for (u32 x = 0; x < numPixels; x++) {
 		u16 col = src[x];
-		dst[x * 4] = Convert5To8((col >> 11) & 0x1f);
-		dst[x * 4 + 1] = Convert6To8((col >> 5) & 0x3f);
-		dst[x * 4 + 2] = Convert5To8((col) & 0x1f);
-		dst[x * 4 + 3] = 255;
+		dst32[x] = Convert5To8((col >> 11) & 0x1f);
+		dst32[x] |= Convert6To8((col >> 5) & 0x3f) << 8;
+		dst32[x] |= Convert5To8((col) & 0x1f) << 16;
+		dst32[x] |= 255 << 24;
 	}
 }
 
 void ConvertABGR1555ToRGBA8888(u32 *dst32, const u16 *src, u32 numPixels) {
-	u8 *dst = (u8 *)dst32;
 	for (u32 x = 0; x < numPixels; x++) {
 		u16 col = src[x];
-		dst[x * 4] = Convert5To8((col >> 11) & 0x1f);
-		dst[x * 4 + 1] = Convert5To8((col >> 6) & 0x1f);
-		dst[x * 4 + 2] = Convert5To8((col >> 1) & 0x1f);
-		dst[x * 4 + 3] = (col & 1) ? 255 : 0;
+		dst32[x] = Convert5To8((col >> 11) & 0x1f);
+		dst32[x] |= Convert5To8((col >> 6) & 0x1f) << 8;
+		dst32[x] |= Convert5To8((col >> 1) & 0x1f) << 16;
+		dst32[x] |= (col & 1) ? 255  << 24 : 0;
 	}
 }
 
 void ConvertABGR4444ToRGBA8888(u32 *dst32, const u16 *src, u32 numPixels) {
-	u8 *dst = (u8 *)dst32;
 	for (u32 x = 0; x < numPixels; x++) {
 		u16 col = src[x];
-		dst[x * 4] = Convert4To8(col >> 12);
-		dst[x * 4 + 1] = Convert4To8((col >> 8) & 0xf);
-		dst[x * 4 + 2] = Convert4To8((col >> 4) & 0xf);
-		dst[x * 4 + 3] = Convert4To8(col & 0xf);
+		dst32[x] = Convert4To8(col >> 12);
+		dst32[x] |= Convert4To8((col >> 8) & 0xf) << 8;
+		dst32[x] |= Convert4To8((col >> 4) & 0xf) << 16;
+		dst32[x] |= Convert4To8(col & 0xf) << 24;
 	}
 }
 
-void ConvertRGBA4444ToBGRA8888(u32 *dst32, const u16 *src, u32 numPixels) {
-	u8 *dst = (u8 *)dst32;
+void ConvertRGBA4444ToBGRA8888(u32 *dst, const u16 *src, u32 numPixels) {
 	for (u32 x = 0; x < numPixels; x++) {
 		u16 c = src[x];
 		u32 r = c & 0x000f;
