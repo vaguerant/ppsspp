@@ -351,10 +351,12 @@ void Jit::Comp_FPU2op(MIPSOpcode op) {
 
 	switch (op & 0x3f) 
 	{
+#if !PPSSPP_ARCH(PPC750)
 	case 4:	//F(fd)	   = sqrtf(F(fs));            break; //sqrt
 		fpr.MapDirtyIn(fd, fs);
 		FSQRTS(fpr.R(fd), fpr.R(fs));
 		break;
+#endif
 	case 5:	//F(fd)    = fabsf(F(fs));            break; //abs
 		fpr.MapDirtyIn(fd, fs);
 		FABS(fpr.R(fd), fpr.R(fs));

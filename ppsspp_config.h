@@ -78,7 +78,6 @@
 #if defined(__PPC__)
     // we can't use PPC here since it could be pre-defined by the compiler
     #define PPSSPP_ARCH_POWERPC 1
-    #define PPSSPP_ARCH_32BIT 1
 #endif
 
 // PLATFORM defines
@@ -118,6 +117,8 @@
     #define PPSSPP_PLATFORM_ANDROID 1
     #define PPSSPP_PLATFORM_LINUX 1
 #elif defined(__wiiu__)
+    #define PPSSPP_ARCH_32BIT 1
+    #define PPSSPP_ARCH_PPC750 1
     #define PPSSPP_PLATFORM_WIIU 1
     #undef __INT32_TYPE__
     #undef __UINT32_TYPE__

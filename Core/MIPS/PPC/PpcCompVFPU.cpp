@@ -602,12 +602,14 @@ namespace MIPSComp
 				MOVI2F(FPR6, 1.0f);
 				FDIVS(fpr.V(tempregs[i]), FPR6, fpr.V(sregs[i]));
 				break;
+#if !PPSSPP_ARCH(PPC750)
 			case 17: // d[i] = 1.0f / sqrtf(s[i]); break; //vrsq
 				fpr.MapDirtyInV(tempregs[i], sregs[i]);
 				MOVI2F(FPR6, 1.0f);
 				FSQRTS(FPR7, fpr.V(sregs[i]));
 				FDIVS(fpr.V(tempregs[i]), FPR6, FPR7);
 				break;
+#endif
 			case 18: // d[i] = sinf((float)M_PI_2 * s[i]); break; //vsin
 				DISABLE;
 				break;
@@ -620,11 +622,13 @@ namespace MIPSComp
 			case 21: // d[i] = logf(s[i])/log(2.0f); break; //vlog2
 				DISABLE;
 				break;
+#if !PPSSPP_ARCH(PPC750)
 			case 22: // d[i] = sqrtf(s[i]); break; //vsqrt
 				fpr.MapDirtyInV(tempregs[i], sregs[i]);
 				FSQRTS(fpr.V(tempregs[i]), fpr.V(sregs[i]));
 				FABS(fpr.V(tempregs[i]), fpr.V(tempregs[i]));
 				break;
+#endif
 			case 23: // d[i] = asinf(s[i] * (float)M_2_PI); break; //vasin
 				DISABLE;
 				break;
@@ -972,7 +976,9 @@ namespace MIPSComp
 	}
 
 	void Jit::Comp_Vi2f(MIPSOpcode op) {
-		//DISABLE;
+#if PPSSPP_ARCH(32BIT)
+		DISABLE;
+#endif
 		CONDITIONAL_DISABLE;
 
 		if (js.HasUnknownPrefix() || disablePrefixes)

@@ -729,6 +729,7 @@ namespace PpcGen {
 	void PPCXEmitter::FDIVS	(PPCReg FRt, PPCReg FRa, PPCReg FRb) {		
 		A_FORM(59, FRt, FRa, FRb, 0, 18, 0);
 	}
+#if !PPSSPP_ARCH(PPC750)
 	void PPCXEmitter::FSQRT	(PPCReg FRt, PPCReg FRb) {		
 		A_FORM(63, FRt, 0, FRb, 0, 22, 0);
 	}
@@ -741,6 +742,7 @@ namespace PpcGen {
 	void PPCXEmitter::FSQRTES(PPCReg FRt, PPCReg FRb) {
 		Break();
 	}
+#endif
 	void PPCXEmitter::FRE	(PPCReg FRt, PPCReg FRb) {
 		Break();
 	}

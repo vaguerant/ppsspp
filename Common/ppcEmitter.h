@@ -395,10 +395,12 @@ namespace PpcGen
 		void FMULS	(PPCReg FRt, PPCReg FRa, PPCReg FRc);
 		void FDIV	(PPCReg FRt, PPCReg FRa, PPCReg FRb);
 		void FDIVS	(PPCReg FRt, PPCReg FRa, PPCReg FRb);
+#if !PPSSPP_ARCH(PPC750)
 		void FSQRT	(PPCReg FRt, PPCReg FRb);
 		void FSQRTS	(PPCReg FRt, PPCReg FRb);
 		void FSQRTE	(PPCReg FRt, PPCReg FRb);
 		void FSQRTES(PPCReg FRt, PPCReg FRb);
+#endif
 		void FRE	(PPCReg FRt, PPCReg FRb);
 		void FRES	(PPCReg FRt, PPCReg FRb);
 
