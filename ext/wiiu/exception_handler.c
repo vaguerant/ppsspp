@@ -17,10 +17,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
+#include <malloc.h>
 #include <inttypes.h>
 #include <wiiu/os.h>
 #include <wiiu/sysapp.h>
+#include <wiiu/vpad.h>
 #include "exception_handler.h"
 
 /*	Settings */
@@ -80,24 +83,72 @@ typedef struct _framerec
 #define SRR1_PROG_SRR0_INACCURATE 0x10000
 
 #define buf_add(...) wiiu_exception_handler_pos += sprintf(exception_msgbuf + wiiu_exception_handler_pos, __VA_ARGS__)
-#define linebuf_add(...) wiiu_exception_handler_lineinfo_pos += sprintf(exception_linebuf + wiiu_exception_handler_lineinfo_pos, __VA_ARGS__)
 size_t wiiu_exception_handler_pos = 0;
-size_t wiiu_exception_handler_lineinfo_pos = 0;
 char* exception_msgbuf;
-char* exception_linebuf;
 
 void net_print_exp(const char *str);
 
-BOOL exception_cb(OSContext* ctx, OSExceptionType type)
+static void disasm_printfcallback(const char* fmt, ...)
+{
+   va_list args;
+   va_start(args, fmt);
+   wiiu_exception_handler_pos += vsprintf(exception_msgbuf + wiiu_exception_handler_pos, fmt,  args);
+   va_end(args);
+}
+
+static void print_and_abort()
+{
+   puts(exception_msgbuf);
+#if 1
+   OSScreenInit();
+
+   OSScreenSetBufferEx(SCREEN_DRC, (u8*)0xF4000000);
+   OSScreenClearBufferEx(SCREEN_DRC, 0);
+   OSScreenPutFontEx(SCREEN_DRC, 0, 0, exception_msgbuf);
+   OSScreenFlipBuffersEx(SCREEN_DRC);
+   OSScreenClearBufferEx(SCREEN_DRC, 0);
+   OSScreenPutFontEx(SCREEN_DRC, 0, 0, exception_msgbuf);
+   OSScreenPutFontEx(SCREEN_DRC, 65 - 25, 17, "Press Any Button to Exit.");
+   OSScreenFlipBuffersEx(SCREEN_DRC);
+
+   OSScreenSetBufferEx(SCREEN_TV, (u8*)0xF4000000 + OSScreenGetBufferSizeEx(SCREEN_DRC));
+   OSScreenClearBufferEx(SCREEN_TV, 0);
+   OSScreenPutFontEx(SCREEN_TV, 0, 0, exception_msgbuf);
+   OSScreenFlipBuffersEx(SCREEN_TV);
+
+   VPADSetSamplingCallback(0, NULL);
+   OSTime time = OSGetSystemTime();
+   while (true)
+   {
+      VPADStatus vpad = {};
+      VPADReadError error = 0;
+      VPADRead(0, &vpad, 1, &error);
+      if(!error && vpad.trigger)
+         break;
+      if((time + sec_to_ticks(1)) < OSGetSystemTime())
+      {
+         OSScreenFlipBuffersEx(SCREEN_DRC);
+         time += sec_to_ticks(1);
+      }
+   }
+#else
+   OSFatal(exception_msgbuf);
+#endif
+   abort();
+}
+void exception_print_lineinfo(uint32_t addr)
+{
+   if (addr >= TEXT_START && addr < TEXT_END)
+      addr -= (TEXT_START - 0x02000000);
+
+   buf_add("info line *0x%08" PRIX32 "\n", addr);
+}
+
+BOOL exception_cb(OSContext* ctx, OSExceptionType type, OSExceptionCallbackFn prev_cb)
 {
    /*	No message buffer available, fall back onto MEM1 */
    if (!exception_msgbuf || !OSEffectiveToPhysical(exception_msgbuf))
-      exception_msgbuf = (char*)0xF4000000;
-
-   if (!exception_linebuf || !OSEffectiveToPhysical(exception_linebuf))
-      exception_linebuf = (char*)0xF4002000;
-
-   linebuf_add("\n");
+      exception_msgbuf = (char*)0xF4000000 + OSScreenGetBufferSizeEx(SCREEN_DRC) + OSScreenGetBufferSizeEx(SCREEN_TV);
 
    /*	First up, the pretty header that tells you wtf just happened */
    if (type == OS_EXCEPTION_TYPE_DSI)
@@ -152,9 +203,9 @@ BOOL exception_cb(OSContext* ctx, OSExceptionType type)
          buf_add(" Out-of-spec error (!) at");
 
       if (ctx->srr1 & SRR1_PROG_SRR0_INACCURATE)
-         buf_add("%08" PRIX32 "-ish\n", ctx->srr0);
+         buf_add(" %08" PRIX32 "-ish\n", ctx->srr0);
       else
-         buf_add("%08" PRIX32 "\n", ctx->srr0);
+         buf_add(" %08" PRIX32 "\n", ctx->srr0);
    }
 
    /*	Add register dump
@@ -179,13 +230,15 @@ BOOL exception_cb(OSContext* ctx, OSExceptionType type)
          ctx->ctr,     ctx->cr,      ctx->xer                                  \
          );
 
+   DisassemblePPCRange((void*)ctx->srr0, (void*)ctx->srr0, (void*)disasm_printfcallback, (void*)OSGetSymbolNameEx, 0);
+
    /*	Stack trace!
       First, let's print the PC... */
    exception_print_symbol(ctx->srr0);
 
+   int i;
    if (ctx->gpr[1])
    {
-      int i;
       /*	Then the addresses off the stack.
          Code borrowed from Dimok's exception handler. */
       frame_rec_t p = (frame_rec_t)ctx->gpr[1];
@@ -199,32 +252,52 @@ BOOL exception_cb(OSContext* ctx, OSExceptionType type)
       buf_add("Stack pointer invalid. Could not trace further.\n");
 
    extern const char *PPSSPP_GIT_VERSION;
-   buf_add("PPSSPP (%s)", PPSSPP_GIT_VERSION);
-   fflush(stdout);
+   buf_add("PPSSPP (%s)\n", PPSSPP_GIT_VERSION);
 
-   net_print_exp(exception_msgbuf);
-   net_print_exp(exception_linebuf);
-   if (ctx->dsisr & DSISR_DABR_MATCH)
+   /* again */
+   for (; i < NUM_STACK_TRACE_LINES + 3; i++)
+      buf_add("\n");
+
+   exception_print_lineinfo(ctx->srr0);
+   if (ctx->gpr[1])
+   {
+      frame_rec_t p = (frame_rec_t)ctx->gpr[1];
+      if ((unsigned int)p->lr != ctx->lr)
+         exception_print_lineinfo(ctx->lr);
+
+      for (i = 0; i < NUM_STACK_TRACE_LINES && p->up; p = p->up, i++)
+         exception_print_lineinfo((unsigned int)p->lr);
+   }
+   buf_add("\n\n");
+
+   if (ctx->srr1 & SRR1_PROG_TRAP)
+      ctx->srr0 += 4;
+   else if (!(ctx->dsisr & DSISR_DABR_MATCH))
+      ctx->srr0 = (u32)print_and_abort;
+
+   if(!prev_cb || prev_cb(ctx))
       return TRUE;
 
    OSFatal(exception_msgbuf);
-   for (;;) {}
    return FALSE;
 }
+static OSExceptionCallbackFn previous_dsi_cb;
+static OSExceptionCallbackFn previous_isi_cb;
+static OSExceptionCallbackFn previous_prog_cb;
 
 BOOL exception_dsi_cb(OSContext* ctx)
 {
-	return exception_cb(ctx, OS_EXCEPTION_TYPE_DSI);
+	return exception_cb(ctx, OS_EXCEPTION_TYPE_DSI, previous_dsi_cb);
 }
 
 BOOL exception_isi_cb(OSContext* ctx)
 {
-   return exception_cb(ctx, OS_EXCEPTION_TYPE_ISI);
+   return exception_cb(ctx, OS_EXCEPTION_TYPE_ISI, previous_isi_cb);
 }
 
 BOOL exception_prog_cb(OSContext* ctx)
 {
-	return exception_cb(ctx, OS_EXCEPTION_TYPE_PROGRAM);
+	return exception_cb(ctx, OS_EXCEPTION_TYPE_PROGRAM, previous_prog_cb);
 }
 
 void exception_print_symbol(uint32_t addr)
@@ -232,13 +305,11 @@ void exception_print_symbol(uint32_t addr)
    /*	Check if addr is within this RPX's .text */
    if (addr >= TEXT_START && addr < TEXT_END)
    {
-      char symbolName[64];
-      OSGetSymbolName(addr, symbolName, 63);
+      char symbolName[256];
+      OSGetSymbolNameEx(addr, symbolName, sizeof(symbolName));
 
       buf_add("%08" PRIX32 "(%08" PRIX32 "):%s\n",
             addr, addr - (TEXT_START - 0x02000000), symbolName);
-
-      linebuf_add("info line *0x%08" PRIX32 "\n", addr - (TEXT_START - 0x02000000));
    }
    /*	Check if addr is within the system library area... */
    else if ((addr >= 0x01000000 && addr < 0x01800000) ||
@@ -250,7 +321,7 @@ void exception_print_symbol(uint32_t addr)
       char *seperator = NULL;
       char symbolName[64];
 
-      OSGetSymbolName(addr, symbolName, 63);
+      OSGetSymbolNameEx(addr, symbolName, sizeof(symbolName));
 
       /*	Extract RPL name and try and find its base address */
       seperator = strchr(symbolName, '|');
@@ -301,11 +372,10 @@ void exception_print_symbol(uint32_t addr)
 */
 void setup_os_exceptions(void)
 {
-   exception_msgbuf = malloc(4096);
-   exception_linebuf = malloc(4096);
-   OSSetExceptionCallback(OS_EXCEPTION_TYPE_DSI, exception_dsi_cb);
-   OSSetExceptionCallback(OS_EXCEPTION_TYPE_ISI, exception_isi_cb);
-   OSSetExceptionCallback(OS_EXCEPTION_TYPE_PROGRAM, exception_prog_cb);
+   exception_msgbuf = malloc(4096* 8);
+   previous_dsi_cb = OSSetExceptionCallback(OS_EXCEPTION_TYPE_DSI, exception_dsi_cb);
+   previous_isi_cb = OSSetExceptionCallback(OS_EXCEPTION_TYPE_ISI, exception_isi_cb);
+   previous_prog_cb = OSSetExceptionCallback(OS_EXCEPTION_TYPE_PROGRAM, exception_prog_cb);
    test_os_exceptions();
 }
 
@@ -323,10 +393,10 @@ void test_os_exceptions(void)
    DCFlushRange((void*)0, 4);
 #endif
 
-   /*Malformed instruction, causes PROG. Doesn't seem to work. */
+   /* Trap instruction, causes PROG. */
 #if 0
    __asm__ volatile (
-         ".int 0xDEADC0DE"
+         ".int 0x0FE00016"
          );
 #endif
 

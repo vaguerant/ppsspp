@@ -51,6 +51,7 @@ add_library(wiiu STATIC
    ${WIIU_ROOT}/entry.c
    ${WIIU_ROOT}/logger.c
    ${WIIU_ROOT}/memory.c
+   ${WIIU_ROOT}/cxx_utils.cpp
    ${WIIU_ROOT}/fs_utils.c
    ${WIIU_ROOT}/sd_fat_devoptab.c
    ${WIIU_ROOT}/stubs.S

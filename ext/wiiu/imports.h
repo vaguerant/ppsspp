@@ -62,6 +62,15 @@ IMPORT(OSSignalSemaphore);
 IMPORT(OSWaitSemaphore);
 IMPORT(OSTryWaitSemaphore);
 
+IMPORT(OSScreenInit);
+IMPORT(OSScreenGetBufferSizeEx);
+IMPORT(OSScreenSetBufferEx);
+IMPORT(OSScreenClearBufferEx);
+IMPORT(OSScreenFlipBuffersEx);
+IMPORT(OSScreenPutFontEx);
+IMPORT(OSScreenPutPixelEx);
+IMPORT(OSScreenEnableEx);
+
 IMPORT(exit);
 IMPORT(_Exit);
 IMPORT(OSConsoleWrite);
