@@ -44,7 +44,7 @@ typedef struct MEMExpandedHeap
    uint16_t attribs;
 }MEMExpandedHeap;
 
-MEMExpandedHeap *MEMCreateExpHeapEx(MEMExpandedHeap *heap, uint32_t size, uint16_t flags);
+MEMExpandedHeap *MEMCreateExpHeapEx(void* addr, uint32_t size, uint16_t flags);
 MEMExpandedHeap *MEMDestroyExpHeap(MEMExpandedHeap *heap);
 void *MEMAllocFromExpHeapEx(MEMExpandedHeap *heap, uint32_t size, int alignment);
 void MEMFreeToExpHeap(MEMExpandedHeap *heap, void *block);

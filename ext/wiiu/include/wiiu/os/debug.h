@@ -13,10 +13,18 @@ void OSReport(const char *fmt, ...);
 void OSPanic(const char *file, int line, const char *fmt, ...);
 void OSFatal(const char *msg);
 int __os_snprintf(char *buf, int n, const char *format, ... );
+typedef void* (*GetSymbolNameFunc)(u32 addr, char* out, int out_size);
+typedef void (*PrintfFunc)(const char * fmt, ...);
 
+#define DISASM_FLAG_SIMPLE 0x001
+#define DISASM_FLAG_SPACES 0x020
+#define DISASM_FLAG_SHORT  0x040
+#define DISASM_FLAG_ADDR   0x080
+#define DISASM_FLAG_FUNCS  0x100
 void* OSGetSymbolName(u32 addr, char* out, int out_size);
 void* OSGetSymbolNameEx(u32 addr, char* out, int out_size);
-void DisassemblePPCRange(void *start, void *end, void* printf_func, void* GetSymbolName_func, u32 flags);
+void DisassemblePPCRange(const void *start, const void *end, PrintfFunc printf_cb, GetSymbolNameFunc getSymbolName_cb, int flags);
+BOOL DisassemblePPCOpcode(const void *opcode, char *out, int out_size, GetSymbolNameFunc getSymbolName_cb, int flags);
 void OSSetDABR(BOOL allCores, void* addr, BOOL reads, BOOL writes);
 
 #ifdef __cplusplus

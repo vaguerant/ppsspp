@@ -38,7 +38,9 @@
 
 #ifdef __wiiu__
 #include <wiiu/os/memory.h>
+#include <wiiu/mem/expandedheap.h>
 #include <malloc.h>
+static MEMExpandedHeap* rwx_heap;
 #endif
 
 #ifndef _WIN32
@@ -75,15 +77,7 @@ static uint32_t ConvertProtFlagsWin32(uint32_t flags) {
 	}
 	return protect;
 }
-#elif defined(__wiiu__)
-static uint32_t ConvertProtFlagsWiiU(uint32_t flags) {
-	if (flags & (MEM_PROT_READ | MEM_PROT_WRITE))
-		return OS_MMAP_RW;
-	if (flags & MEM_PROT_READ)
-		return OS_MMAP_RO;
-	return OS_MMAP_INVALID;
-}
-#else
+#elif !defined(__wiiu__)
 
 static uint32_t ConvertProtFlagsUnix(uint32_t flags) {
 	uint32_t protect = 0;
@@ -170,7 +164,10 @@ void *AllocateExecutableMemory(size_t size) {
 #endif
 	}
 #elif defined(__wiiu__)
-	void *ptr = malloc(size);
+	if (!rwx_heap) {
+		rwx_heap = MEMCreateExpHeapEx((u32*)0x00802000, 0x01000000 - 0x00802000, MEM_HEAP_FLAG_ZERO_ALLOCATED | MEM_HEAP_FLAG_USE_LOCK);
+	}
+	void *ptr = MEMAllocFromExpHeapEx(rwx_heap, size, 0x100);
 #else
 	static char *map_hint = 0;
 #if defined(_M_X64) && !defined(MAP_32BIT)
@@ -287,7 +284,11 @@ void FreeMemoryPages(void *ptr, size_t size) {
 	if (!VirtualFree(ptr, 0, MEM_RELEASE))
 		PanicAlert("FreeMemoryPages failed!\n%s", GetLastErrorMsg());
 #elif defined(__wiiu__)
-	free(ptr);
+	if ((u32)ptr < 0x01000000) {
+		MEMFreeToExpHeap(rwx_heap, ptr);
+	} else {
+		free(ptr);
+	}
 #else
 	munmap(ptr, size);
 #endif

@@ -87,10 +87,10 @@ const u8 *Jit::DoJit(u32 em_address, JitBlock *b)
 
 	b->codeSize = GetCodePtr() - b->normalEntry;
 
-#ifdef LOGASM
+#if defined(LOGASM) && defined(__wiiu__)
 	if (logBlocks > 0 && dontLogBlocks == 0) {
 		INFO_LOG(JIT, "=============== ARM ===============");
-		DisassembleArm(b->normalEntry, GetCodePtr() - b->normalEntry);
+		DisassemblePPC(b->normalEntry, GetCodePtr() - b->normalEntry);
 	}
 #endif	
 	//DumpJit();
@@ -105,10 +105,15 @@ const u8 *Jit::DoJit(u32 em_address, JitBlock *b)
 }
 
 void Jit::DumpJit() {
+#if defined(_XBOX) || defined(__wiiu__)
 #ifdef _XBOX
+	const char* filename = "game:\\jit.bin";
+#else
+	const char* filename = "sd:/jit.bin";
+#endif
 	u32 len = (u32)GetCodePtr() - (u32)GetBasePtr();
 	FILE * fd;
-	fd = fopen("game:\\jit.bin", "wb");
+	fd = fopen(filename, "wb");
 	fwrite(GetBasePtr(), len, 1, fd);
 	fclose(fd);
 #endif
@@ -213,10 +218,10 @@ void Jit::GenerateFixedCode() {
 			LWBRX(R3, R3, R0);
 
 			// R4 = R3 & MIPS_EMUHACK_VALUE_MASK
-			RLWINM(R4, R3, 0, 6, 31);
+			RLWINM(R4, R3, 0, 8, 31);
 
 			// R3 = R3 & MIPS_EMUHACK_MASK
-			RLWINM(R3, R3, 0, 0, 6);
+			RLWINM(R3, R3, 0, 0, 5);
 			
 			// compare, op == MIPS_EMUHACK_OPCODE 
 			MOVI2R(SREG, MIPS_EMUHACK_OPCODE);

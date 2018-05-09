@@ -422,7 +422,17 @@ void Jit::Comp_Syscall(MIPSOpcode op) {
 	// CallSyscall(op);
 	MOVI2R(R3, op.encoding);
 	SaveDowncount(DCNTREG);
+#ifdef __wiiu__
+	// R3 is expected to contain the address of the 4-byte MIPSOpcode struct ...
+	ADDI(R1, R1, -8);
+	STWU(R3, R1, 0);
+	MR(R3, R1);
+#endif
 	QuickCallFunction((void *)&CallSyscall);
+#ifdef __wiiu__
+	ADDI(R1, R1, 8);
+#endif
+
 	RestoreDowncount(DCNTREG);
 
 	WriteSyscallExit();

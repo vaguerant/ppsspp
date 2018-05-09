@@ -1005,6 +1005,7 @@ namespace MIPSComp
 
 		//Break();
 
+#if PPSSPP_ARCH(64BIT)
 		for (int i = 0; i < n; i++) {
 			// Crappy code !!
 			fpr.MapDirtyInV(tempregs[i], sregs[i]);
@@ -1029,6 +1030,10 @@ namespace MIPSComp
 			if (mult != 1.0f)
 				FMULS(fpr.V(tempregs[i]), fpr.V(tempregs[i]), FPR5);
 		}
+#else
+		// TODO:
+		Crash();
+#endif
 
 		//Break();
 

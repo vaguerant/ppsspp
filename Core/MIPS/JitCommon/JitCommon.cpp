@@ -30,6 +30,10 @@
 #include "Core/MIPS/JitCommon/JitState.h"
 #include "Core/MIPS/IR/IRJit.h"
 
+#if PPSSPP_PLATFORM(WIIU)
+#include <wiiu/os/debug.h>
+#endif
+
 #if PPSSPP_ARCH(ARM)
 #include "../ARM/ArmJit.h"
 #elif PPSSPP_ARCH(ARM64)
@@ -265,4 +269,31 @@ std::vector<std::string> DisassembleX86(const u8 *data, int size) {
 	return lines;
 }
 
+#endif
+
+#if PPSSPP_PLATFORM(WIIU)
+static std::vector<std::string> lines;
+static void PPCLineCallback(const char* fmt, ...) {
+	char* line = nullptr;
+
+	va_list args;
+	va_start(args, fmt);
+	vasprintf(&line, fmt, args);
+	va_end(args);
+
+	if(line) {
+		lines.push_back(line);
+		free(line);
+	}
+}
+std::vector<std::string> DisassemblePPC(const u8 *data, int size) {
+	lines.clear();
+	size >>= 2;
+	while (size-- > 0) {
+		DisassemblePPCRange(data, data, PPCLineCallback, nullptr, DISASM_FLAG_SIMPLE | DISASM_FLAG_SHORT);
+		data += 4;
+		lines.back().pop_back();
+	}
+	return lines;
+}
 #endif

@@ -659,6 +659,8 @@ JitBlockDebugInfo JitBlockCache::GetBlockDebugInfo(int blockNum) const {
 	debugInfo.targetDisasm = DisassembleArm64(block->normalEntry, block->codeSize);
 #elif defined(_M_IX86) || defined(_M_X64)
 	debugInfo.targetDisasm = DisassembleX86(block->normalEntry, block->codeSize);
+#elif defined(__wiiu__)
+	debugInfo.targetDisasm = DisassemblePPC(block->normalEntry, block->codeSize);
 #endif
 
 	return debugInfo;

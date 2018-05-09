@@ -275,8 +275,10 @@ namespace PpcGen
 		// 32 bit
 		void LWZ	(PPCReg dest, PPCReg src, int offset = 0);
 		void LWBRX	(PPCReg dest, PPCReg src, PPCReg offset);
+#if PPSSPP_ARCH(64BIT)
 		// 64 bit
 		void LD		(PPCReg dest, PPCReg src, int offset = 0);
+#endif
 
 		// 8 bit
 		void STB	(PPCReg dest, PPCReg src, int offset = 0);
@@ -288,13 +290,17 @@ namespace PpcGen
 		void STW	(PPCReg dest, PPCReg src, int offset = 0);
 		void STWU	(PPCReg dest, PPCReg src, int offset = 0);
 		void STWBRX (PPCReg dest, PPCReg src, PPCReg offset);
+#if PPSSPP_ARCH(64BIT)
 		// 64 bit
 		void STD	(PPCReg dest, PPCReg src, int offset = 0);
+#endif
 
 		// sign
 		void EXTSB	(PPCReg dest, PPCReg src);
 		void EXTSH	(PPCReg dest, PPCReg src);
+#if PPSSPP_ARCH(64BIT)
 		void EXTSW	(PPCReg dest, PPCReg src);
+#endif
 
 		// 
 		void RLWINM (PPCReg dest, PPCReg src, int shift, int start, int end);
@@ -366,8 +372,10 @@ namespace PpcGen
 
 		// fpu
 		void MTFSB0	(int bt);
+#if PPSSPP_ARCH(64BIT)
 		void FCFID	(PPCReg FRt, PPCReg FRb);
 		void FCTID	(PPCReg FRt, PPCReg FRb);
+#endif
 		void FRSP	(PPCReg FRt, PPCReg FRb);
 		void FCTIW	(PPCReg FRt, PPCReg FRb);
 		void STFIWX	(PPCReg FRt, PPCReg FRa, PPCReg FRb);

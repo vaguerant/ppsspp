@@ -3,6 +3,10 @@
 
 #include "ppcEmitter.h"
 
+#ifdef __wiiu__
+#include <wiiu/os/cache.h>
+#endif
+
 #if !defined(DebugBreak) && !defined(_WIN32)
 #ifdef __GNUC__
 #define DebugBreak() __builtin_trap()
@@ -192,6 +196,7 @@ namespace PpcGen {
 		Write32(instr);
 	}
 
+#if PPSSPP_ARCH(64BIT)
 	void PPCXEmitter::LD	(PPCReg dest, PPCReg src, int offset) {
 		u32 instr = ((58 << 26) | (dest << 21) | (src << 16) | ((offset) & 0xffff));
 		Write32(instr);
@@ -200,6 +205,7 @@ namespace PpcGen {
 		u32 instr = ((62 << 26) | (dest << 21) | (src << 16) | ((offset) & 0xffff));
 		Write32(instr);
 	}
+#endif
 
 	// Branch operations
 	void PPCXEmitter::B (const void *fnptr) {
@@ -534,11 +540,11 @@ namespace PpcGen {
 	void PPCXEmitter::EXTSH	(PPCReg dest, PPCReg src) {
 		Write32(0x7C000734 | (src << 21) | (dest << 16));
 	}
-
+#if PPSSPP_ARCH(64BIT)
 	void PPCXEmitter::EXTSW	(PPCReg Rt, PPCReg Ra) {
 		X_FORM(31, Rt, Ra, 0, 986, 0);
 	}
-
+#endif
 	void PPCXEmitter::EQV	(PPCReg Ra, PPCReg Rs, PPCReg Rb) {
 		X_FORM(31, Rs, Ra, Rb, 284, 0);
 	}
@@ -661,12 +667,14 @@ namespace PpcGen {
 	void PPCXEmitter::MTFSB0(int bt) {
 		X_FORM(63, bt, 0, 0, 70, 0);
 	}
+#if PPSSPP_ARCH(64BIT)
 	void PPCXEmitter::FCTID	(PPCReg FRt, PPCReg FRb) {
 		X_FORM(63, FRt, 0, FRb, 846, 0);
 	}
 	void PPCXEmitter::FCFID	(PPCReg FRt, PPCReg FRb) {
 		X_FORM(63, FRt, 0, FRb, 846, 0);
 	}
+#endif
 	void PPCXEmitter::FRSP	(PPCReg FRt, PPCReg FRb) {
 		X_FORM(63, FRt, 0, FRb, 12, 0);
 	}
@@ -804,7 +812,11 @@ namespace PpcGen {
 
 	void PPCXEmitter::Prologue() {
 		// Save regs
-		u32 regSize = 8; // 4 in 32bit system
+#if PPSSPP_ARCH(32BIT)
+		u32 regSize = 4;
+#else
+		u32 regSize = 8;
+#endif
 		u32 stackFrameSize = 0x1F0;
 
 		// Write Prologue (setup stack frame etc ...)
@@ -813,7 +825,11 @@ namespace PpcGen {
 
 		// Save gpr
 		for(int i = 14; i < 32; i ++) {
+#if PPSSPP_ARCH(32BIT)
+			STW((PPCReg)i, R1, -((33 - i) * regSize));
+#else
 			STD((PPCReg)i, R1, -((33 - i) * regSize));
+#endif
 		}
 
 		// Save r12
@@ -824,7 +840,7 @@ namespace PpcGen {
 
 		// Load fpr
 		for(int i = 14; i < 32; i ++) {
-			SFD((PPCReg)i, R1, -((32 - i) * regSize));
+			SFD((PPCReg)i, R1, -((32 - i) * sizeof(double)));
 		}
 #endif
 		// allocate stack
@@ -836,13 +852,17 @@ namespace PpcGen {
 
 		// Save fpr
 		for(int i = 14; i < 32; i ++) {
-			SFD((PPCReg)i, R5, i * regSize);
+			SFD((PPCReg)i, R5, i * sizeof(double));
 		}
 #endif
 	}
 
 	void PPCXEmitter::Epilogue() {		
-		u32 regSize = 8; // 4 in 32bit system
+#if PPSSPP_ARCH(32BIT)
+		u32 regSize = 4;
+#else
+		u32 regSize = 8;
+#endif
 		u32 stackFrameSize = 0x1F0;
 
 		//Break();
@@ -855,12 +875,16 @@ namespace PpcGen {
 
 		// Restore fpr
 		for(int i = 14; i < 32; i ++) {
-			LFD((PPCReg)i, R1, -((32 - i) * regSize));
+			LFD((PPCReg)i, R1, -((32 - i) * sizeof(double)));
 		}
 #endif
 		// Restore gpr
 		for(int i = 14; i < 32; i ++) {
+#if PPSSPP_ARCH(32BIT)
+			LWZ((PPCReg)i, R1, -((33 - i) * regSize));
+#else
 			LD((PPCReg)i, R1, -((33 - i) * regSize));
+#endif
 		}
 
 		// recover r12 (LR saved register)
@@ -875,7 +899,7 @@ namespace PpcGen {
 
 		// Load fpr
 		for(int i = 14; i < 32; i ++) {
-			LFD((PPCReg)i, R5, i * regSize);
+			LFD((PPCReg)i, R5, i * sizeof(double));
 		}
 #endif
 	}
@@ -925,8 +949,15 @@ namespace PpcGen {
 	void PPCXEmitter::FlushIcacheSection(u8 *start, u8 *end)
 	{
 #if PPSSPP_ARCH(POWERPC)
+#ifdef __wiiu__
+		DCStoreRange(start, end - start);
+		ICInvalidateRange(start, end - start);
+#if 0
+		DisassemblePPCRange(start, end, (void*)printf, (void*)OSGetSymbolName, 0);
+		fflush(stdout);
+#endif
+#elif defined(__GNUC__)
 		u8 * addr = start;
-#ifdef __GNUC__
 		while(addr < end) {
 			__asm__ volatile ("dcbst 0, %0" : : "r"(addr) : "0", "memory");
 			__asm__ volatile ("icbi 0, %0" : : "r"(addr) : "0", "memory");

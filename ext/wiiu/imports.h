@@ -77,11 +77,13 @@ IMPORT(OSConsoleWrite);
 IMPORT(OSReport);
 IMPORT(__os_snprintf);
 IMPORT(DisassemblePPCRange);
+IMPORT(DisassemblePPCOpcode);
 
 IMPORT(DCInvalidateRange);
 IMPORT(DCFlushRange);
 IMPORT(DCStoreRange);
 IMPORT(DCStoreRangeNoSync);
+IMPORT(ICInvalidateRange);
 
 IMPORT(__gh_errno_ptr);
 

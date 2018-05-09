@@ -122,8 +122,8 @@
     #undef __INT32_TYPE__
     #undef __UINT32_TYPE__
     #define __INT32_TYPE__ int
-    #define _GNU_SOURCE
-    #define _DEBUG // for DLOG()
+    #define _GNU_SOURCE 1
+    #define _DEBUG 1 // for DLOG()
     #define __TM_GMTOFF tm_gmtoff
     #define O_CLOEXEC 0
     // __is_pod is broken in devkitPPC

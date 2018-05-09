@@ -169,7 +169,16 @@ void Jit::Comp_Generic(MIPSOpcode op) {
 
 		// call interpreted function
 		MOVI2R(R3, op.encoding);
+#ifdef __wiiu__
+		// R3 is expected to contain the address of the 4-byte MIPSOpcode struct ...
+		ADDI(R1, R1, -8);
+		STWU(R3, R1, 0);
+		MR(R3, R1);
+#endif
 		QuickCallFunction((void *)func);
+#ifdef __wiiu__
+		ADDI(R1, R1, 8);
+#endif
 
 		// restore pc and cycles
 		RestoreDowncount(DCNTREG);
@@ -259,7 +268,12 @@ Jit::Jit(MIPSState *mips) : blocks(mips, this), gpr(mips, &jo),fpr(mips),mips_(m
 	blocks.Init();
 	gpr.SetEmitter(this);
 	fpr.SetEmitter(this);
-	AllocCodeSpace(1024 * 1024 * 16);  // 32MB is the absolute max because that's what an ARM branch instruction can reach, backwards and forwards.
+#ifdef __wiiu__
+	// we only have a little less than 8MB RWX memory available in the HBL environment.
+	AllocCodeSpace(1024 * 1024 * 7);
+#else
+	AllocCodeSpace(1024 * 1024 * 16);
+#endif
 	GenerateFixedCode();
 
 	js.startDefaultPrefix = true;
