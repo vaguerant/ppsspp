@@ -228,8 +228,13 @@ void GX2InitViewportReg(GX2ViewportReg *reg, float x, float y, float width, floa
 void GX2GetViewportReg(GX2ViewportReg *reg, float *x, float *y, float *width, float *height,
                        float *nearZ, float *farZ);
 void GX2SetViewportReg(GX2ViewportReg *reg);
+
 #ifdef __cplusplus
 }
 #endif
 
-/** @} */
+#if 0
+#include <wiiu/os/debug.h>
+#define GX2SetViewport(x, y, width, height, nearZ, farZ) do{GX2SetViewport(x, y, width, height, nearZ, farZ); printf("(%f,%f,%f,%f,%f,%f)\n", x, y, width, height, nearZ, farZ); DEBUG_LINE();}while(0)
+#define GX2SetViewportReg(reg) do{GX2SetViewportReg(reg); DEBUG_LINE();}while(0)
+#endif

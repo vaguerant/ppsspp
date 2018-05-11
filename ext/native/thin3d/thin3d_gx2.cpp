@@ -53,61 +53,41 @@ static const GX2TexClampMode taddrToGX2[] = {
 };
 static GX2SurfaceFormat dataFormatToGX2SurfaceFormat(DataFormat format) {
 	switch (format) {
-	case DataFormat::R32_FLOAT:
-		return GX2_SURFACE_FORMAT_FLOAT_R32;
+	case DataFormat::R32_FLOAT: return GX2_SURFACE_FORMAT_FLOAT_R32;
 	case DataFormat::R32G32_FLOAT:
 		return GX2_SURFACE_FORMAT_FLOAT_R32_G32;
 		//	case DataFormat::R32G32B32_FLOAT:
 		//		return GX2_SURFACE_FORMAT_FLOAT_R32_G32_B32;
-	case DataFormat::R32G32B32A32_FLOAT:
-		return GX2_SURFACE_FORMAT_FLOAT_R32_G32_B32_A32;
-	case DataFormat::A4R4G4B4_UNORM_PACK16:
-		return GX2_SURFACE_FORMAT_UNORM_R4_G4_B4_A4;
-	case DataFormat::A1R5G5B5_UNORM_PACK16:
-		return GX2_SURFACE_FORMAT_UNORM_A1_B5_G5_R5;
-	case DataFormat::R5G5B5A1_UNORM_PACK16:
-		return GX2_SURFACE_FORMAT_UNORM_R5_G5_B5_A1;
-	case DataFormat::R5G6B5_UNORM_PACK16:
-		return GX2_SURFACE_FORMAT_UNORM_R5_G6_B5;
+	case DataFormat::R32G32B32A32_FLOAT: return GX2_SURFACE_FORMAT_FLOAT_R32_G32_B32_A32;
+	case DataFormat::A4R4G4B4_UNORM_PACK16: return GX2_SURFACE_FORMAT_UNORM_R4_G4_B4_A4;
+	case DataFormat::A1R5G5B5_UNORM_PACK16: return GX2_SURFACE_FORMAT_UNORM_A1_B5_G5_R5;
+	case DataFormat::R5G5B5A1_UNORM_PACK16: return GX2_SURFACE_FORMAT_UNORM_R5_G5_B5_A1;
+	case DataFormat::R5G6B5_UNORM_PACK16: return GX2_SURFACE_FORMAT_UNORM_R5_G6_B5;
 	case DataFormat::R8G8B8_UNORM:
-	case DataFormat::R8G8B8A8_UNORM:
-		return GX2_SURFACE_FORMAT_UNORM_R8_G8_B8_A8;
-	case DataFormat::R8G8B8A8_UNORM_SRGB:
-		return GX2_SURFACE_FORMAT_SRGB_R8_G8_B8_A8;
-	case DataFormat::R16_FLOAT:
-		return GX2_SURFACE_FORMAT_FLOAT_R16;
-	case DataFormat::R16G16_FLOAT:
-		return GX2_SURFACE_FORMAT_FLOAT_R16_G16;
-	case DataFormat::R16G16B16A16_FLOAT:
-		return GX2_SURFACE_FORMAT_FLOAT_R16_G16_B16_A16;
-	case DataFormat::D24_S8:
-		return GX2_SURFACE_FORMAT_FLOAT_D24_S8;
-	case DataFormat::D16:
-		return GX2_SURFACE_FORMAT_UNORM_R16;
-	case DataFormat::D32F:
-		return GX2_SURFACE_FORMAT_FLOAT_R32;
+	case DataFormat::R8G8B8A8_UNORM: return GX2_SURFACE_FORMAT_UNORM_R8_G8_B8_A8;
+	case DataFormat::R8G8B8A8_UNORM_SRGB: return GX2_SURFACE_FORMAT_SRGB_R8_G8_B8_A8;
+	case DataFormat::R16_FLOAT: return GX2_SURFACE_FORMAT_FLOAT_R16;
+	case DataFormat::R16G16_FLOAT: return GX2_SURFACE_FORMAT_FLOAT_R16_G16;
+	case DataFormat::R16G16B16A16_FLOAT: return GX2_SURFACE_FORMAT_FLOAT_R16_G16_B16_A16;
+	case DataFormat::D24_S8: return GX2_SURFACE_FORMAT_FLOAT_D24_S8;
+	case DataFormat::D16: return GX2_SURFACE_FORMAT_UNORM_R16;
+	case DataFormat::D32F: return GX2_SURFACE_FORMAT_FLOAT_R32;
 	case DataFormat::ETC1:
-	default:
-		return GX2_SURFACE_FORMAT_INVALID;
+	default: return GX2_SURFACE_FORMAT_INVALID;
 	}
 }
 
 static u32 dataFormatToGX2SurfaceCompSelect(DataFormat format) {
 	switch (format) {
 	case DataFormat::R16_FLOAT:
-	case DataFormat::R32_FLOAT:
-		return GX2_COMP_SEL(_r, _0, _0, _1);
+	case DataFormat::R32_FLOAT: return GX2_COMP_SEL(_r, _0, _0, _1);
 	case DataFormat::R16G16_FLOAT:
-	case DataFormat::R32G32_FLOAT:
-		return GX2_COMP_SEL(_r, _g, _0, _1);
+	case DataFormat::R32G32_FLOAT: return GX2_COMP_SEL(_r, _g, _0, _1);
 	case DataFormat::R8G8B8_UNORM:
-	case DataFormat::R5G6B5_UNORM_PACK16:
-		return GX2_COMP_SEL(_r, _g, _b, _1);
+	case DataFormat::R5G6B5_UNORM_PACK16: return GX2_COMP_SEL(_r, _g, _b, _1);
 	case DataFormat::B8G8R8A8_UNORM:
-	case DataFormat::B8G8R8A8_UNORM_SRGB:
-		return GX2_COMP_SEL(_a, _r, _g, _b);
-	default:
-		return GX2_COMP_SEL(_a, _b, _g, _r);
+	case DataFormat::B8G8R8A8_UNORM_SRGB: return GX2_COMP_SEL(_a, _r, _g, _b);
+	default: return GX2_COMP_SEL(_a, _b, _g, _r);
 	}
 }
 
@@ -119,62 +99,43 @@ static int dataFormatToSwapSize(DataFormat format) {
 	case DataFormat::R16_FLOAT:
 	case DataFormat::D16:
 	case DataFormat::R16G16_FLOAT:
-	case DataFormat::R16G16B16A16_FLOAT:
-		return 2;
-	default:
-		return 4;
+	case DataFormat::R16G16B16A16_FLOAT: return 2;
+	default: return 4;
 	}
 }
 
 static GX2AttribFormat dataFormatToGX2AttribFormat(DataFormat format) {
 	switch (format) {
-	case DataFormat::R8_UNORM:
-		return GX2_ATTRIB_FORMAT_UNORM_8;
-	case DataFormat::R8G8_UNORM:
-		return GX2_ATTRIB_FORMAT_UNORM_8_8;
+	case DataFormat::R8_UNORM: return GX2_ATTRIB_FORMAT_UNORM_8;
+	case DataFormat::R8G8_UNORM: return GX2_ATTRIB_FORMAT_UNORM_8_8;
 	case DataFormat::B8G8R8A8_UNORM:
-	case DataFormat::R8G8B8A8_UNORM:
-		return GX2_ATTRIB_FORMAT_UNORM_8_8_8_8;
-	case DataFormat::R8G8B8A8_UINT:
-		return GX2_ATTRIB_FORMAT_UINT_8_8_8_8;
-	case DataFormat::R8G8B8A8_SNORM:
-		return GX2_ATTRIB_FORMAT_SNORM_8_8_8_8;
-	case DataFormat::R8G8B8A8_SINT:
-		return GX2_ATTRIB_FORMAT_SINT_8_8_8_8;
-	case DataFormat::R32_FLOAT:
-		return GX2_ATTRIB_FORMAT_FLOAT_32;
-	case DataFormat::R32G32_FLOAT:
-		return GX2_ATTRIB_FORMAT_FLOAT_32_32;
-	case DataFormat::R32G32B32_FLOAT:
-		return GX2_ATTRIB_FORMAT_FLOAT_32_32_32;
-	case DataFormat::R32G32B32A32_FLOAT:
-		return GX2_ATTRIB_FORMAT_FLOAT_32_32_32_32;
+	case DataFormat::R8G8B8A8_UNORM: return GX2_ATTRIB_FORMAT_UNORM_8_8_8_8;
+	case DataFormat::R8G8B8A8_UINT: return GX2_ATTRIB_FORMAT_UINT_8_8_8_8;
+	case DataFormat::R8G8B8A8_SNORM: return GX2_ATTRIB_FORMAT_SNORM_8_8_8_8;
+	case DataFormat::R8G8B8A8_SINT: return GX2_ATTRIB_FORMAT_SINT_8_8_8_8;
+	case DataFormat::R32_FLOAT: return GX2_ATTRIB_FORMAT_FLOAT_32;
+	case DataFormat::R32G32_FLOAT: return GX2_ATTRIB_FORMAT_FLOAT_32_32;
+	case DataFormat::R32G32B32_FLOAT: return GX2_ATTRIB_FORMAT_FLOAT_32_32_32;
+	case DataFormat::R32G32B32A32_FLOAT: return GX2_ATTRIB_FORMAT_FLOAT_32_32_32_32;
 
-	default:
-		return (GX2AttribFormat)-1;
+	default: return (GX2AttribFormat)-1;
 	}
 }
 static u32 dataFormatToGX2AttribCompSelect(DataFormat format) {
 	switch (format) {
 	case DataFormat::R8_UNORM:
-	case DataFormat::R32_FLOAT:
-		return GX2_COMP_SEL(_x, _0, _0, _1);
+	case DataFormat::R32_FLOAT: return GX2_COMP_SEL(_x, _0, _0, _1);
 	case DataFormat::R8G8_UNORM:
-	case DataFormat::R32G32_FLOAT:
-		return GX2_COMP_SEL(_x, _y, _0, _1);
-	case DataFormat::R32G32B32_FLOAT:
-		return GX2_COMP_SEL(_x, _y, _z, _1);
+	case DataFormat::R32G32_FLOAT: return GX2_COMP_SEL(_x, _y, _0, _1);
+	case DataFormat::R32G32B32_FLOAT: return GX2_COMP_SEL(_x, _y, _z, _1);
 	case DataFormat::R8G8B8A8_UNORM_SRGB:
 	case DataFormat::B8G8R8A8_UNORM:
-	case DataFormat::B8G8R8A8_UNORM_SRGB:
-		return GX2_COMP_SEL(_b, _g, _r, _a);
+	case DataFormat::B8G8R8A8_UNORM_SRGB: return GX2_COMP_SEL(_b, _g, _r, _a);
 	case DataFormat::R8G8B8A8_UNORM:
 	case DataFormat::R8G8B8A8_SNORM:
 	case DataFormat::R8G8B8A8_UINT:
-	case DataFormat::R8G8B8A8_SINT:
-		return GX2_COMP_SEL(_a, _b, _g, _r);
-	default:
-		return GX2_COMP_SEL(_x, _y, _z, _w);
+	case DataFormat::R8G8B8A8_SINT: return GX2_COMP_SEL(_a, _b, _g, _r);
+	default: return GX2_COMP_SEL(_x, _y, _z, _w);
 	}
 }
 
@@ -223,9 +184,7 @@ public:
 			size_ = (size_ + 0x3F) & ~0x3F;
 			/* fallthrough */
 		default:
-		case GENERIC:
-			align = GX2_UNIFORM_BLOCK_ALIGNMENT;
-			invMode_ = GX2_INVALIDATE_MODE_CPU_UNIFORM_BLOCK;
+		case GENERIC: align = GX2_UNIFORM_BLOCK_ALIGNMENT; invMode_ = GX2_INVALIDATE_MODE_CPU_UNIFORM_BLOCK;
 		}
 		data_ = (u8 *)MEM1_alloc(size_, align);
 	}
@@ -249,14 +208,14 @@ public:
 	GX2BlendState(const BlendStateDesc &desc) {
 		GX2InitBlendControlReg(&reg, GX2_RENDER_TARGET_0, blendToGX2[(int)desc.srcCol], blendToGX2[(int)desc.dstCol], blendOpToGX2[(int)desc.eqCol], (int)desc.srcAlpha && (int)desc.dstAlpha, blendToGX2[(int)desc.srcAlpha], blendToGX2[(int)desc.dstAlpha], blendOpToGX2[(int)desc.eqAlpha]);
 		GX2InitColorControlReg(&color_reg, desc.logicEnabled ? logicOpToGX2[(int)desc.logicOp] : GX2_LOGIC_OP_COPY, desc.enabled, false, desc.colorMask != 0);
+		GX2InitTargetChannelMasksReg(&mask_reg, (GX2ChannelMask)desc.colorMask, GX2_CHANNEL_MASK_RGBA, GX2_CHANNEL_MASK_RGBA, GX2_CHANNEL_MASK_RGBA, GX2_CHANNEL_MASK_RGBA, GX2_CHANNEL_MASK_RGBA, GX2_CHANNEL_MASK_RGBA, GX2_CHANNEL_MASK_RGBA);
 		logicEnabled = desc.logicEnabled;
-		colorMask = desc.colorMask;
 	}
 	~GX2BlendState() {}
 	GX2BlendControlReg reg;
 	GX2ColorControlReg color_reg;
+	GX2TargetChannelMaskReg mask_reg;
 	bool logicEnabled;
-	int colorMask;
 };
 
 class GX2RasterState : public RasterState {
@@ -456,7 +415,56 @@ public:
 
 class GX2Framebuffer : public Framebuffer {
 public:
-	GX2Framebuffer(const FramebufferDesc &desc) { DEBUG_LINE(); }
+	GX2Framebuffer(const FramebufferDesc &desc) {
+		_assert_(desc.numColorAttachments == 1);
+		_assert_(desc.depth == 1);
+		colorBuffer.surface.width = desc.width;
+		colorBuffer.surface.height = desc.height;
+		colorBuffer.surface.depth = 1;
+		colorBuffer.surface.dim = GX2_SURFACE_DIM_TEXTURE_2D;
+		colorBuffer.surface.tileMode = GX2_TILE_MODE_DEFAULT;
+		colorBuffer.surface.use = (GX2SurfaceUse)(GX2_SURFACE_USE_COLOR_BUFFER | GX2_SURFACE_USE_TEXTURE);
+		colorBuffer.viewNumSlices = 1;
+		switch (desc.colorDepth) {
+		case FBO_565: colorBuffer.surface.format = GX2_SURFACE_FORMAT_UNORM_R5_G6_B5; break;
+		case FBO_4444: colorBuffer.surface.format = GX2_SURFACE_FORMAT_UNORM_R4_G4_B4_A4; break;
+		case FBO_5551: colorBuffer.surface.format = GX2_SURFACE_FORMAT_UNORM_R5_G5_B5_A1; break;
+		default:
+		case FBO_8888: colorBuffer.surface.format = GX2_SURFACE_FORMAT_UNORM_R8_G8_B8_A8; break;
+		}
+		GX2CalcSurfaceSizeAndAlignment(&colorBuffer.surface);
+		GX2InitColorBufferRegs(&colorBuffer);
+		colorBuffer.surface.image = MEM2_alloc(colorBuffer.surface.imageSize, colorBuffer.surface.alignment);
+		_assert_(colorBuffer.surface.image);
+		GX2Invalidate(GX2_INVALIDATE_MODE_COLOR_BUFFER, colorBuffer.surface.image, colorBuffer.surface.imageSize);
+		colorTexture.surface = colorBuffer.surface;
+		GX2InitTextureRegs(&colorTexture);
+		if (desc.depth) {
+			depthBuffer.surface.width = desc.width;
+			depthBuffer.surface.height = desc.height;
+			depthBuffer.surface.depth = 1;
+			depthBuffer.surface.dim = GX2_SURFACE_DIM_TEXTURE_2D;
+			depthBuffer.surface.tileMode = GX2_TILE_MODE_DEFAULT;
+			depthBuffer.surface.use = (GX2SurfaceUse)(GX2_SURFACE_USE_DEPTH_BUFFER | GX2_SURFACE_USE_TEXTURE);
+			depthBuffer.viewNumSlices = 1;
+			depthBuffer.surface.format = GX2_SURFACE_FORMAT_FLOAT_D24_S8;
+			GX2CalcSurfaceSizeAndAlignment(&depthBuffer.surface);
+			GX2InitDepthBufferRegs(&depthBuffer);
+			depthBuffer.surface.image = MEM2_alloc(depthBuffer.surface.imageSize, depthBuffer.surface.alignment);
+			_assert_(depthBuffer.surface.image);
+			GX2Invalidate(GX2_INVALIDATE_MODE_DEPTH_BUFFER, depthBuffer.surface.image, depthBuffer.surface.imageSize);
+			depthTexture.surface = depthBuffer.surface;
+			GX2InitTextureRegs(&depthTexture);
+		}
+	}
+	~GX2Framebuffer() {
+		MEM2_free(colorBuffer.surface.image);
+		MEM2_free(depthBuffer.surface.image);
+	}
+	GX2ColorBuffer colorBuffer = {};
+	GX2DepthBuffer depthBuffer = {};
+	GX2Texture colorTexture = {};
+	GX2Texture depthTexture = {};
 };
 
 static GX2VertexShaderModule vsCol(&GX2_vsCol);
@@ -539,28 +547,19 @@ public:
 
 	std::string GetInfoString(InfoField info) const override {
 		switch (info) {
-		case APIVERSION:
-			return "1";
-		case VENDORSTRING:
-			return "AMD";
-		case VENDOR:
-			return "";
-		case DRIVER:
-			return "-";
-		case SHADELANGVERSION:
-			return "AMD R700 microcode";
-		case APINAME:
-			return "GX2";
-		default:
-			return "?";
+		case APIVERSION: return "1";
+		case VENDORSTRING: return "AMD";
+		case VENDOR: return "";
+		case DRIVER: return "-";
+		case SHADELANGVERSION: return "AMD R700 microcode";
+		case APINAME: return "GX2";
+		default: return "?";
 		}
 	}
 
 	uintptr_t GetNativeObject(NativeObject obj) override {
-		DEBUG_LINE();
-		DEBUG_VAR(obj);
 		switch (obj) {
-		case NativeObject::CONTEXT:
+		case NativeObject::CONTEXT: return (uintptr_t)context_state_;
 		case NativeObject::CONTEXT_EX:
 		case NativeObject::DEVICE:
 		case NativeObject::DEVICE_EX:
@@ -577,6 +576,8 @@ public:
 		case NativeObject::BOUND_TEXTURE1_IMAGEVIEW:
 		case NativeObject::RENDER_MANAGER:
 		default:
+			DEBUG_LINE();
+			DEBUG_VAR(obj);
 			return 0;
 		}
 	}
@@ -620,8 +621,7 @@ void GX2DrawContext::HandleEvent(Event ev, int width, int height, void *param1, 
 	case Event::GOT_BACKBUFFER: {
 		break;
 	}
-	case Event::PRESENTED:
-		break;
+	case Event::PRESENTED: break;
 	}
 }
 
@@ -656,6 +656,7 @@ void GX2DrawContext::BindPipeline(Pipeline *pipeline) {
 		}
 		GX2SetBlendControlReg(&pipeline_->blend_->reg);
 		GX2SetColorControlReg(&pipeline_->blend_->color_reg);
+		GX2SetTargetChannelMasksReg(&pipeline_->blend_->mask_reg);
 		GX2SetDepthStencilControlReg(&pipeline_->depthStencil_->reg_);
 		GX2SetCullOnlyControl(pipeline_->raster_->frontFace_, pipeline_->raster_->cullFront_, pipeline_->raster_->cullBack_);
 		if (pipeline_->ubo) {
@@ -796,13 +797,12 @@ void GX2DrawContext::BindSamplerStates(int start, int count, SamplerState **stat
 }
 
 void GX2DrawContext::Clear(int mask, uint32_t colorval, float depthVal, int stencilVal) {
-	DEBUG_LINE();
 	float f[4];
 	Uint8x4ToFloat4(f, colorval);
 
 	int flags = (mask >> 1) & 0x3;
 
-	if (flags && mask & FBChannel::FB_COLOR_BIT) {
+	if (flags && (mask & FBChannel::FB_COLOR_BIT)) {
 		GX2ClearBuffersEx(color_buffer_, depth_buffer_, f[0], f[1], f[2], f[3], depthVal, stencilVal, (GX2ClearFlags)flags);
 	} else if (mask & FBChannel::FB_COLOR_BIT) {
 		GX2ClearColor(color_buffer_, f[0], f[1], f[2], f[3]);
@@ -827,10 +827,18 @@ bool GX2DrawContext::CopyFramebufferToMemorySync(Framebuffer *src, int channelBi
 	return false;
 }
 
-void GX2DrawContext::BindFramebufferAsRenderTarget(Framebuffer *fbo, const RenderPassInfo &rp) {
+void GX2DrawContext::BindFramebufferAsRenderTarget(Framebuffer *fbo_, const RenderPassInfo &rp) {
+	GX2Framebuffer *fbo = (GX2Framebuffer *)fbo_;
 	if (fbo) {
-		DEBUG_LINE();
+		GX2SetColorBuffer(&fbo->colorBuffer, GX2_RENDER_TARGET_0);
+		if (fbo->depthBuffer.surface.image)
+			GX2SetDepthBuffer(&fbo->depthBuffer);
+	} else {
+		GX2SetColorBuffer(color_buffer_, GX2_RENDER_TARGET_0);
+		if (depth_buffer_->surface.image)
+			GX2SetDepthBuffer(depth_buffer_);
 	}
+
 	float f[4];
 	Uint8x4ToFloat4(f, rp.clearColor);
 	int flags = 0;
@@ -849,14 +857,28 @@ void GX2DrawContext::BindFramebufferAsRenderTarget(Framebuffer *fbo, const Rende
 	GX2SetContextState(context_state_);
 }
 
-void GX2DrawContext::BindFramebufferAsTexture(Framebuffer *fbo, int binding, FBChannel channelBit, int attachment) { DEBUG_LINE(); }
+void GX2DrawContext::BindFramebufferAsTexture(Framebuffer *fbo_, int binding, FBChannel channelBit, int attachment) {
+	GX2Framebuffer *fbo = (GX2Framebuffer *)fbo_;
+	_assert_(channelBit == FB_COLOR_BIT);
 
-uintptr_t GX2DrawContext::GetFramebufferAPITexture(Framebuffer *fbo, int channelBit, int attachment) {
-	DEBUG_LINE();
+	GX2SetPixelTexture(&fbo->colorTexture, binding);
+}
+
+uintptr_t GX2DrawContext::GetFramebufferAPITexture(Framebuffer *fbo_, int channelBit, int attachment) {
+	GX2Framebuffer *fbo = (GX2Framebuffer *)fbo_;
+	if (channelBit == FB_COLOR_BIT) {
+		return (uintptr_t)&fbo->colorTexture;
+	} else {
+		return (uintptr_t)&fbo->depthTexture;
+	}
 	return 0;
 }
 
-void GX2DrawContext::GetFramebufferDimensions(Framebuffer *fbo, int *w, int *h) { DEBUG_LINE(); }
+void GX2DrawContext::GetFramebufferDimensions(Framebuffer *fbo_, int *w, int *h) {
+	GX2Framebuffer *fbo = (GX2Framebuffer *)fbo_;
+	*w = fbo->colorBuffer.surface.width;
+	*h = fbo->colorBuffer.surface.height;
+}
 
 DrawContext *T3DCreateGX2Context(GX2ContextState *context_state, GX2ColorBuffer *color_buffer, GX2DepthBuffer *depth_buffer) { return new GX2DrawContext(context_state, color_buffer, depth_buffer); }
 

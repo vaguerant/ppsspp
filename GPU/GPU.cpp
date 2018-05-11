@@ -23,18 +23,19 @@
 #include "GPU/GPU.h"
 #include "GPU/GPUInterface.h"
 
+#include "GPU/Null/NullGpu.h"
+#include "GPU/Software/SoftGpu.h"
+
 #if PPSSPP_PLATFORM(UWP)
 #include "GPU/D3D11/GPU_D3D11.h"
+#elif PPSSPP_PLATFORM(WIIU)
+#include "GPU/GX2/GPU_GX2.h"
 #else
-#ifndef __wiiu__
 #include "GPU/GLES/GPU_GLES.h"
-#endif
 
 #ifndef NO_VULKAN
 #include "GPU/Vulkan/GPU_Vulkan.h"
 #endif
-#include "GPU/Null/NullGpu.h"
-#include "GPU/Software/SoftGpu.h"
 
 #if defined(_WIN32)
 #include "GPU/Directx9/GPU_DX9.h"
@@ -73,7 +74,7 @@ bool GPU_Init(GraphicsContext *ctx, Draw::DrawContext *draw) {
 		SetGPU(new NullGPU());
 		break;
 	case GPUCORE_GLES:
-#ifndef __wiiu__
+#if !PPSSPP_PLATFORM(WIIU)
 		SetGPU(new GPU_GLES(ctx, draw));
 		break;
 #else
@@ -105,6 +106,13 @@ bool GPU_Init(GraphicsContext *ctx, Draw::DrawContext *draw) {
 		SetGPU(new GPU_Vulkan(ctx, draw));
 #endif
 		break;
+	case GPUCORE_GX2:
+#if PPSSPP_PLATFORM(WIIU)
+		SetGPU(new GPU_GX2(ctx, draw));
+		break;
+#else
+		return false;
+#endif
 	}
 
 	return gpu != NULL;

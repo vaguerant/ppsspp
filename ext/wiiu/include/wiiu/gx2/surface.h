@@ -76,3 +76,8 @@ void GX2SetClearDepthStencil(GX2DepthBuffer *depthBuffer, float depth, uint8_t s
 #ifdef __cplusplus
 }
 #endif
+#if 0
+#include <wiiu/os/debug.h>
+#define GX2SetColorBuffer(colorBuffer, target) do{GX2SetColorBuffer(colorBuffer, target); DEBUG_PTR(colorBuffer); DEBUG_LINE();}while(0)
+#define GX2SetDepthBuffer(depthBuffer) do{GX2SetDepthBuffer(depthBuffer); DEBUG_PTR(depthBuffer); DEBUG_LINE();}while(0)
+#endif

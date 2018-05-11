@@ -25,5 +25,3 @@ void GX2SetGeometryTexture(GX2Texture *texture, uint32_t unit);
 #ifdef __cplusplus
 }
 #endif
-
-/** @} */

@@ -16,7 +16,9 @@
 
 #ifndef GX2_COMP_SEL
 #define GX2_COMP_SEL(c0, c1, c2, c3) (((c0) << 24) | ((c1) << 16) | ((c2) << 8) | (c3))
-
+#ifdef __cplusplus
+#include <functional>
+#endif
 #define _x 0
 #define _y 1
 #define _z 2

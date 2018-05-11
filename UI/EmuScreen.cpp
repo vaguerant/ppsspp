@@ -197,12 +197,16 @@ void EmuScreen::bootGame(const std::string &filename) {
 
 	CoreParameter coreParam{};
 	coreParam.cpuCore = (CPUCore)g_Config.iCpuCore;
+#if PPSSPP_PLATFORM(UWP)
+	coreParam.gpuCore = GPUCORE_DIRECTX11;
+#elif PPSSPP_PLATFORM(WIIU)
+	coreParam.gpuCore = GPUCORE_GX2;
+#else
 	coreParam.gpuCore = GPUCORE_GLES;
 	switch (GetGPUBackend()) {
 	case GPUBackend::DIRECT3D11:
 		coreParam.gpuCore = GPUCORE_DIRECTX11;
 		break;
-#if !PPSSPP_PLATFORM(UWP)
 	case GPUBackend::OPENGL:
 		coreParam.gpuCore = GPUCORE_GLES;
 		break;
@@ -212,13 +216,8 @@ void EmuScreen::bootGame(const std::string &filename) {
 	case GPUBackend::VULKAN:
 		coreParam.gpuCore = GPUCORE_VULKAN;
 		break;
-#endif
-#ifdef __wiiu__
-	case GPUBackend::GX2:
-		coreParam.gpuCore = GPUCORE_NULL;
-		break;
-#endif
 	}
+#endif
 	if (g_Config.bSoftwareRendering) {
 		coreParam.gpuCore = GPUCORE_SOFTWARE;
 	}

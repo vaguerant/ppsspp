@@ -58,12 +58,12 @@ static EShLanguage GetLanguage(const Draw::ShaderStage stage) {
 
 void ShaderTranslationInit() {
 	// TODO: We have TLS issues on UWP
-#if !PPSSPP_PLATFORM(UWP)
+#if !PPSSPP_PLATFORM(UWP) && !PPSSPP_PLATFORM(WIIU)
 	glslang::InitializeProcess();
 #endif
 }
 void ShaderTranslationShutdown() {
-#if !PPSSPP_PLATFORM(UWP)
+#if !PPSSPP_PLATFORM(UWP) && !PPSSPP_PLATFORM(WIIU)
 	glslang::FinalizeProcess();
 #endif
 }
@@ -197,7 +197,7 @@ bool TranslateShader(std::string *dest, ShaderLanguage destLang, TranslatedShade
 		*errorMessage = "";
 	}
 
-#if PPSSPP_PLATFORM(UWP)
+#if PPSSPP_PLATFORM(UWP) || PPSSPP_PLATFORM(WIIU)
 	return false;
 #endif
 

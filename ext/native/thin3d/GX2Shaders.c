@@ -126,7 +126,6 @@ GX2PixelShader GX2_fsCol = {
 	.size = sizeof(fsColCode),
 	.program = (uint8_t *)&fsColCode,
 	.mode = GX2_SHADER_MODE_UNIFORM_BLOCK,
-//	.samplerVarCount = countof(samplers), samplers,
 };
 // clang-format off
 __attribute__((aligned(GX2_SHADER_ALIGNMENT)))

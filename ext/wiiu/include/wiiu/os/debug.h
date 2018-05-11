@@ -1,6 +1,7 @@
 #pragma once
 #include <stddef.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <inttypes.h>
 #include <wiiu/types.h>
 
@@ -35,6 +36,7 @@ void OSSetDABR(BOOL allCores, void* addr, BOOL reads, BOOL writes);
 /* #define DEBUG_HOLD() do{printf("%s@%s:%d.\n",__FUNCTION__, __FILE__, __LINE__);fflush(stdout);wait_for_input();}while(0) */
 #define DEBUG_LINE() do{printf("%s:%4d %s().\n", __FILE__, __LINE__, __FUNCTION__);fflush(stdout);}while(0)
 #define DEBUG_BREAK() do{DEBUG_LINE();__asm__ volatile (".int 0x0FE00016");}while(0)
+#define DEBUG_BREAK_ONCE() do{static bool debug_break_done; if(!debug_break_done){debug_break_done=true; DEBUG_LINE(); __asm__ volatile (".int 0x0FE00016");}}while(0)
 #define DEBUG_CRASH() do{DEBUG_LINE(); *(u32*)0 = 0;}while(0)
 #define DEBUG_STR(X) do{printf( "%s: %s\n", #X, (char*)(X));fflush(stdout);}while(0)
 #define DEBUG_VAR(X) do{printf( "%-20s: 0x%08" PRIX32 "\n", #X, (uint32_t)(X));fflush(stdout);}while(0)

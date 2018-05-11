@@ -31,6 +31,7 @@ void GX2SetupContextStateEx(GX2ContextState *state, BOOL unk1);
 void GX2GetContextStateDisplayList(GX2ContextState *state, void *outDisplayList, uint32_t *outSize);
 void GX2SetContextState(GX2ContextState *state);
 void GX2SetDefaultState();
+void GX2ResetGPU();
 
 #ifdef __cplusplus
 }

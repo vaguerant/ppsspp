@@ -768,12 +768,11 @@ elseif(WIIU)
 	set(nativeExtra ${nativeExtra}
 		WiiU/WiiUHost.h
 		WiiU/WiiUHost.cpp
-      WiiU/WiiUMain.cpp
-      WiiU/GX2GraphicsContext.h
-      WiiU/GX2GraphicsContext.cpp
-      )
-   set(nativeExtraLibs ${nativeExtraLibs} wiiu fat iosuhax)
-   set(TargetBin PPSSPP)
+		WiiU/WiiUMain.cpp
+		WiiU/GX2GraphicsContext.h
+		WiiU/GX2GraphicsContext.cpp)
+	set(nativeExtraLibs ${nativeExtraLibs} wiiu fat iosuhax)
+	set(TargetBin PPSSPP)
 elseif(USING_QT_UI)
     set(CMAKE_AUTOMOC ON)
     find_package(Qt5 COMPONENTS OpenGL Gui Core)
@@ -1375,21 +1374,39 @@ set(GPU_D3D11
 	GPU/D3D11/VertexShaderGeneratorD3D11.h
 )
 
-if(NOT WIIU)
+set(GPU_GX2
+	GPU/GX2/DepalettizeShaderGX2.cpp
+	GPU/GX2/DepalettizeShaderGX2.h
+	GPU/GX2/DrawEngineGX2.cpp
+	GPU/GX2/DrawEngineGX2.h
+	GPU/GX2/FragmentShaderGeneratorGX2.cpp
+	GPU/GX2/FragmentShaderGeneratorGX2.h
+	GPU/GX2/FramebufferManagerGX2.cpp
+	GPU/GX2/FramebufferManagerGX2.h
+	GPU/GX2/GPU_GX2.cpp
+	GPU/GX2/GPU_GX2.h
+	GPU/GX2/GX2StaticShaders.c
+	GPU/GX2/GX2StaticShaders.h
+	GPU/GX2/GX2Util.cpp
+	GPU/GX2/GX2Util.h
+	GPU/GX2/ShaderManagerGX2.cpp
+	GPU/GX2/ShaderManagerGX2.h
+	GPU/GX2/StateMappingGX2.cpp
+	GPU/GX2/StateMappingGX2.h
+	GPU/GX2/StencilBufferGX2.cpp
+	GPU/GX2/TextureCacheGX2.cpp
+	GPU/GX2/TextureCacheGX2.h
+	GPU/GX2/TextureScalerGX2.cpp
+	GPU/GX2/TextureScalerGX2.h
+	GPU/GX2/VertexShaderGeneratorGX2.cpp
+	GPU/GX2/VertexShaderGeneratorGX2.h
+)
+
+if(WIIU)
+	set(GPU_IMPLS ${GPU_GX2})
+else()
 	# We build Vulkan even on Apple to avoid annoying build differences.
-	set(GPU_IMPLS ${GPU_GLES} ${GPU_VULKAN})
-	set(GPU_SHADERS
-		GPU/Common/DepalettizeShaderCommon.cpp
-		GPU/Common/DepalettizeShaderCommon.h
-		GPU/Common/ShaderId.cpp
-		GPU/Common/ShaderId.h
-		GPU/Common/ShaderUniforms.cpp
-		GPU/Common/ShaderUniforms.h
-		GPU/Common/ShaderCommon.cpp
-		GPU/Common/ShaderCommon.h
-		GPU/Common/ShaderTranslation.cpp
-		GPU/Common/ShaderTranslation.h
-		)
+	set(GPU_IMPLS ${GPU_GLES} ${GPU_VULKAN} )
 endif()
 if(WIN32)
 	list(APPEND GPU_IMPLS ${GPU_D3D9} ${GPU_D3D11})
@@ -1401,7 +1418,6 @@ endif()
 set(GPU_SOURCES
 	${GPU_IMPLS}
 	${GPU_NEON}
-	${GPU_SHADERS}
 	GPU/Common/FramebufferCommon.cpp
 	GPU/Common/FramebufferCommon.h
 	GPU/Common/GPUDebugInterface.cpp
@@ -1418,6 +1434,16 @@ set(GPU_SOURCES
 	GPU/Common/SoftwareTransformCommon.h
 	GPU/Common/VertexDecoderCommon.cpp
 	GPU/Common/VertexDecoderCommon.h
+	GPU/Common/DepalettizeShaderCommon.cpp
+	GPU/Common/DepalettizeShaderCommon.h
+	GPU/Common/ShaderId.cpp
+	GPU/Common/ShaderId.h
+	GPU/Common/ShaderCommon.cpp
+	GPU/Common/ShaderCommon.h
+	GPU/Common/ShaderUniforms.cpp
+	GPU/Common/ShaderUniforms.h
+	GPU/Common/ShaderTranslation.cpp
+	GPU/Common/ShaderTranslation.h
 	GPU/Common/TransformCommon.cpp
 	GPU/Common/TransformCommon.h
 	GPU/Common/IndexGenerator.cpp

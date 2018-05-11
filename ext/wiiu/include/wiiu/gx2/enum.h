@@ -23,9 +23,9 @@ typedef enum GX2AlphaToMaskMode
 
 typedef enum GX2AttribFormat
 {
-   GX2_ATTRIB_FORMAT_UNORM_8              = 0x0,
-   GX2_ATTRIB_FORMAT_UNORM_8_8            = 0x04,
-   GX2_ATTRIB_FORMAT_UNORM_8_8_8_8        = 0x0A,
+   GX2_ATTRIB_FORMAT_UNORM_8              = 0x000,
+   GX2_ATTRIB_FORMAT_UNORM_8_8            = 0x004,
+   GX2_ATTRIB_FORMAT_UNORM_8_8_8_8        = 0x00A,
 
    GX2_ATTRIB_FORMAT_UINT_8               = 0x100,
    GX2_ATTRIB_FORMAT_UINT_8_8             = 0x104,
@@ -38,6 +38,22 @@ typedef enum GX2AttribFormat
    GX2_ATTRIB_FORMAT_SINT_8               = 0x300,
    GX2_ATTRIB_FORMAT_SINT_8_8             = 0x304,
    GX2_ATTRIB_FORMAT_SINT_8_8_8_8         = 0x30A,
+
+   GX2_ATTRIB_FORMAT_UNORM_16             = 0x002,
+   GX2_ATTRIB_FORMAT_UNORM_16_16          = 0x007,
+   GX2_ATTRIB_FORMAT_UNORM_16_16_16_16    = 0x00E,
+
+   GX2_ATTRIB_FORMAT_UINT_16              = 0x102,
+   GX2_ATTRIB_FORMAT_UINT_16_16           = 0x107,
+   GX2_ATTRIB_FORMAT_UINT_16_16_16_16     = 0x10E,
+
+   GX2_ATTRIB_FORMAT_SNORM_16             = 0x202,
+   GX2_ATTRIB_FORMAT_SNORM_16_16          = 0x207,
+   GX2_ATTRIB_FORMAT_SNORM_16_16_16_16    = 0x20E,
+
+   GX2_ATTRIB_FORMAT_SINT_16              = 0x302,
+   GX2_ATTRIB_FORMAT_SINT_16_16           = 0x307,
+   GX2_ATTRIB_FORMAT_SINT_16_16_16_16     = 0x30E,
 
    GX2_ATTRIB_FORMAT_FLOAT_32             = 0x806,
    GX2_ATTRIB_FORMAT_FLOAT_32_32          = 0x80d,

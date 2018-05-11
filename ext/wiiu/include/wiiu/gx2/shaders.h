@@ -536,16 +536,16 @@ uint32_t GX2CalcFetchShaderSizeEx(uint32_t attribs, GX2FetchShaderType fetchShad
                                   GX2TessellationMode tesellationMode);
 
 void GX2InitFetchShaderEx(GX2FetchShader *fetchShader, uint8_t *buffer, uint32_t attribCount,
-                          GX2AttribStream *attribs, GX2FetchShaderType type, GX2TessellationMode tessMode);
+                          const GX2AttribStream *attribs, GX2FetchShaderType type, GX2TessellationMode tessMode);
 
-void GX2SetFetchShader(GX2FetchShader *shader);
-void GX2SetVertexShader(GX2VertexShader *shader);
-void GX2SetPixelShader(GX2PixelShader *shader);
-void GX2SetGeometryShader(GX2GeometryShader *shader);
+void GX2SetFetchShader(const GX2FetchShader *shader);
+void GX2SetVertexShader(const GX2VertexShader *shader);
+void GX2SetPixelShader(const GX2PixelShader *shader);
+void GX2SetGeometryShader(const GX2GeometryShader *shader);
 
-void GX2SetVertexSampler(GX2Sampler *sampler, uint32_t id);
-void GX2SetPixelSampler(GX2Sampler *sampler, uint32_t id);
-void GX2SetGeometrySampler(GX2Sampler *sampler, uint32_t id);
+void GX2SetVertexSampler(const GX2Sampler *sampler, uint32_t id);
+void GX2SetPixelSampler(const GX2Sampler *sampler, uint32_t id);
+void GX2SetGeometrySampler(const GX2Sampler *sampler, uint32_t id);
 void GX2SetVertexUniformReg(uint32_t offset, uint32_t count, uint32_t *data);
 void GX2SetPixelUniformReg(uint32_t offset, uint32_t count, uint32_t *data);
 void GX2SetVertexUniformBlock(uint32_t location, uint32_t size, const void *data);
@@ -575,6 +575,21 @@ uint32_t GX2GetVertexShaderGPRs(GX2VertexShader *shader);
 uint32_t GX2GetVertexShaderStackEntries(GX2VertexShader *shader);
 uint32_t GX2GetGeometryShaderGPRs(GX2GeometryShader *shader);
 uint32_t GX2GetGeometryShaderStackEntries(GX2GeometryShader *shader);
+
+static inline
+void GX2InitFetchShader(GX2FetchShader *fetchShader, uint8_t *buffer, uint32_t attribCount,
+                        const GX2AttribStream *attribs)
+{
+   GX2InitFetchShaderEx(fetchShader, buffer, attribCount, attribs,
+                        GX2_FETCH_SHADER_TESSELLATION_NONE, GX2_TESSELLATION_MODE_DISCRETE);
+}
+
+static inline uint32_t GX2CalcFetchShaderSize(uint32_t attribs)
+{
+   return GX2CalcFetchShaderSizeEx(attribs,
+                                   GX2_FETCH_SHADER_TESSELLATION_NONE, GX2_TESSELLATION_MODE_DISCRETE);
+}
+
 
 #ifdef __cplusplus
 }
