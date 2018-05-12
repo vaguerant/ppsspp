@@ -30,41 +30,35 @@
 
 class GX2PShader : public GX2PixelShader {
 public:
-	// TODO: fixme
-	GX2PShader(FShaderID id, bool useHWTransform) : GX2PixelShader(defPShaderGX2), id_(id), useHWTransform_(useHWTransform) {}
+	GX2PShader(FShaderID id);
 	~GX2PShader() {
-		if (program && program != defPShaderGX2.program) {
-			MEM2_free(program);
-		}
+		if(gx2rBuffer.flags & GX2R_RESOURCE_LOCKED_READ_ONLY)
+			return;
+		MEM2_free(program);
 	}
 
 	const std::string source() const { return "N/A"; }
-	bool UseHWTransform() const { return useHWTransform_; }
+	const u8 *bytecode() const { return program; }
 	std::string GetShaderString(DebugShaderStringType type) const;
 
 protected:
-	bool useHWTransform_;
 	FShaderID id_;
 };
 
 class GX2VShader : public GX2VertexShader {
 public:
-	// TODO: fixme
-	GX2VShader(VShaderID id, bool useHWTransform) : GX2VertexShader(defVShaderGX2), id_(id), failed_(false), useHWTransform_(useHWTransform) {}
+	GX2VShader(VShaderID id);
 	~GX2VShader() {
-		if (program && program != defVShaderGX2.program) {
-			MEM2_free(program);
-		}
+		if(gx2rBuffer.flags & GX2R_RESOURCE_LOCKED_READ_ONLY)
+			return;
+		MEM2_free(program);
 	}
 
 	const std::string source() const { return "N/A"; }
 	const u8 *bytecode() const { return program; }
-	bool UseHWTransform() const { return useHWTransform_; }
 	std::string GetShaderString(DebugShaderStringType type) const;
 
 protected:
-	bool failed_;
-	bool useHWTransform_;
 	VShaderID id_;
 };
 

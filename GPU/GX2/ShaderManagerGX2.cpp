@@ -37,6 +37,10 @@
 #include "GPU/GX2/GX2Util.h"
 
 
+GX2PShader::GX2PShader(FShaderID id) : GX2PixelShader(), id_(id) {
+	GenerateFragmentShaderGX2(id, this);
+}
+
 std::string GX2PShader::GetShaderString(DebugShaderStringType type) const {
 	switch (type) {
 	case SHADER_STRING_SHORT_DESC:
@@ -45,6 +49,10 @@ std::string GX2PShader::GetShaderString(DebugShaderStringType type) const {
 	default:
 		return "N/A";
 	}
+}
+
+GX2VShader::GX2VShader(VShaderID id) : GX2VertexShader(), id_(id) {
+	GenerateVertexShaderGX2(id, this);
 }
 
 std::string GX2VShader::GetShaderString(DebugShaderStringType type) const {
@@ -112,17 +120,20 @@ uint64_t ShaderManagerGX2::UpdateUniforms() {
 	if (dirty != 0) {
 		if (dirty & DIRTY_BASE_UNIFORMS) {
 			BaseUpdateUniforms(&ub_base, dirty, true);
-			memcpy(push_base, &ub_base, sizeof(ub_base));
+			for(int i = 0; i < sizeof(ub_base) / 4; i++)
+				((u32_le*)push_base)[i] = ((u32*)&ub_base)[i];
 			GX2Invalidate(GX2_INVALIDATE_MODE_CPU_UNIFORM_BLOCK, push_base, sizeof(ub_base));
 		}
 		if (dirty & DIRTY_LIGHT_UNIFORMS) {
 			LightUpdateUniforms(&ub_lights, dirty);
-			memcpy(push_lights, &ub_lights, sizeof(ub_lights));
+			for(int i = 0; i < sizeof(ub_lights) / 4; i++)
+				((u32_le*)push_lights)[i] = ((u32*)&ub_lights)[i];
 			GX2Invalidate(GX2_INVALIDATE_MODE_CPU_UNIFORM_BLOCK, push_lights, sizeof(ub_lights));
 		}
 		if (dirty & DIRTY_BONE_UNIFORMS) {
 			BoneUpdateUniforms(&ub_bones, dirty);
-			memcpy(push_bones, &ub_bones, sizeof(ub_bones));
+			for(int i = 0; i < sizeof(ub_bones) / 4; i++)
+				((u32_le*)push_bones)[i] = ((u32*)&ub_bones)[i];
 			GX2Invalidate(GX2_INVALIDATE_MODE_CPU_UNIFORM_BLOCK, push_bones, sizeof(ub_bones));
 		}
 	}
@@ -166,9 +177,8 @@ void ShaderManagerGX2::GetShaders(int prim, u32 vertType, GX2VShader **vshader, 
 	VSCache::iterator vsIter = vsCache_.find(VSID);
 	GX2VShader *vs;
 	if (vsIter == vsCache_.end()) {
-		// Vertex shader not in cache. Let's compile it.
-		// TODO:
-		vs = new GX2VShader(VSID, useHWTransform);
+		// Vertex shader not in cache. Let's generate it.
+		vs = new GX2VShader(VSID);
 		vsCache_[VSID] = vs;
 	} else {
 		vs = vsIter->second;
@@ -178,9 +188,8 @@ void ShaderManagerGX2::GetShaders(int prim, u32 vertType, GX2VShader **vshader, 
 	FSCache::iterator fsIter = fsCache_.find(FSID);
 	GX2PShader *fs;
 	if (fsIter == fsCache_.end()) {
-		// Fragment shader not in cache. Let's compile it.
-		// TODO:
-		fs = new GX2PShader(FSID, useHWTransform);
+		// Fragment shader not in cache. Let's generate it.
+		fs = new GX2PShader(FSID);
 		fsCache_[FSID] = fs;
 	} else {
 		fs = fsIter->second;

@@ -124,39 +124,36 @@ void DrawEngineGX2::DestroyDeviceObjects() {
 }
 
 struct DeclTypeInfo {
-	GX2AttribFormat type;
-	const char *name;
+	u32 mask;
+	GX2AttribFormat format;
 };
 
 static const DeclTypeInfo VComp[] = {
-	{ GX2_ATTRIB_FORMAT_FLOAT_32_32_32_32, "NULL" },                // DEC_NONE,
-	{ GX2_ATTRIB_FORMAT_FLOAT_32, "D3DDECLTYPE_FLOAT1 " },          // DEC_FLOAT_1,
-	{ GX2_ATTRIB_FORMAT_FLOAT_32_32, "D3DDECLTYPE_FLOAT2 " },       // DEC_FLOAT_2,
-	{ GX2_ATTRIB_FORMAT_FLOAT_32_32_32, "D3DDECLTYPE_FLOAT3 " },    // DEC_FLOAT_3,
-	{ GX2_ATTRIB_FORMAT_FLOAT_32_32_32_32, "D3DDECLTYPE_FLOAT4 " }, // DEC_FLOAT_4,
-
-	{ GX2_ATTRIB_FORMAT_SNORM_8_8_8_8, "UNUSED" }, // DEC_S8_3,
-
-	{ GX2_ATTRIB_FORMAT_SNORM_16_16_16_16, "D3DDECLTYPE_SHORT4N	" }, // DEC_S16_3,
-	{ GX2_ATTRIB_FORMAT_UNORM_8_8_8_8, "D3DDECLTYPE_UBYTE4N	" },    // DEC_U8_1,
-	{ GX2_ATTRIB_FORMAT_UNORM_8_8_8_8, "D3DDECLTYPE_UBYTE4N	" },    // DEC_U8_2,
-	{ GX2_ATTRIB_FORMAT_UNORM_8_8_8_8, "D3DDECLTYPE_UBYTE4N	" },    // DEC_U8_3,
-	{ GX2_ATTRIB_FORMAT_UNORM_8_8_8_8, "D3DDECLTYPE_UBYTE4N	" },    // DEC_U8_4,
-
-	{ GX2_ATTRIB_FORMAT_UINT_16, "UNUSED_DEC_U16_1" },                 // 	DEC_U16_1,
-	{ GX2_ATTRIB_FORMAT_UINT_16, "UNUSED_DEC_U16_2" },                 // 	DEC_U16_2,
-	{ GX2_ATTRIB_FORMAT_UNORM_16_16_16_16, "D3DDECLTYPE_USHORT4N " }, // DEC_U16_3,
-	{ GX2_ATTRIB_FORMAT_UNORM_16_16_16_16, "D3DDECLTYPE_USHORT4N " }, // DEC_U16_4,
+	{ GX2_COMP_SEL(_x, _y, _z, _w), GX2_ATTRIB_FORMAT_FLOAT_32_32_32_32 }, // DEC_NONE,
+	{ GX2_COMP_SEL(_x, _0, _0, _1), GX2_ATTRIB_FORMAT_FLOAT_32 },          // DEC_FLOAT_1,
+	{ GX2_COMP_SEL(_x, _y, _0, _1), GX2_ATTRIB_FORMAT_FLOAT_32_32 },       // DEC_FLOAT_2,
+	{ GX2_COMP_SEL(_x, _y, _z, _1), GX2_ATTRIB_FORMAT_FLOAT_32_32_32 },    // DEC_FLOAT_3,
+	{ GX2_COMP_SEL(_x, _y, _z, _w), GX2_ATTRIB_FORMAT_FLOAT_32_32_32_32 }, // DEC_FLOAT_4,
+	{ GX2_COMP_SEL(_x, _y, _z, _1), GX2_ATTRIB_FORMAT_SNORM_8_8_8_8 },     // DEC_S8_3,
+	{ GX2_COMP_SEL(_x, _y, _z, _1), GX2_ATTRIB_FORMAT_SNORM_16_16_16_16 }, // DEC_S16_3,
+	{ GX2_COMP_SEL(_r, _0, _0, _1), GX2_ATTRIB_FORMAT_UNORM_8_8_8_8 },     // DEC_U8_1,
+	{ GX2_COMP_SEL(_r, _g, _0, _1), GX2_ATTRIB_FORMAT_UNORM_8_8_8_8 },     // DEC_U8_2,
+	{ GX2_COMP_SEL(_r, _g, _b, _1), GX2_ATTRIB_FORMAT_UNORM_8_8_8_8 },     // DEC_U8_3,
+	{ GX2_COMP_SEL(_r, _g, _b, _a), GX2_ATTRIB_FORMAT_UNORM_8_8_8_8 },     // DEC_U8_4,
+	{ GX2_COMP_SEL(_x, _0, _0, _1), GX2_ATTRIB_FORMAT_UINT_16 },           // DEC_U16_1,
+	{ GX2_COMP_SEL(_x, _y, _0, _1), GX2_ATTRIB_FORMAT_UINT_16 },           // DEC_U16_2,
+	{ GX2_COMP_SEL(_x, _y, _z, _1), GX2_ATTRIB_FORMAT_UNORM_16_16_16_16 }, // DEC_U16_3,
+	{ GX2_COMP_SEL(_x, _y, _z, _w), GX2_ATTRIB_FORMAT_UNORM_16_16_16_16 }, // DEC_U16_4,
 };
 
-static void VertexAttribSetup(GX2AttribStream *VertexElement, u8 fmt, u8 offset, const char *semantic, u8 semantic_index = 0) {
-	VertexElement->location = semantic_index;
+static void VertexAttribSetup(GX2AttribStream *VertexElement, u8 fmt, u8 offset, u8 location) {
+	VertexElement->location = location;
 	VertexElement->buffer = 0;
 	VertexElement->offset = offset;
-	VertexElement->format = VComp[fmt].type;
+	VertexElement->format = VComp[fmt & 0xF].format;
 	VertexElement->type = GX2_ATTRIB_INDEX_PER_VERTEX;
 	VertexElement->aluDivisor = 0;
-	VertexElement->mask = GX2_COMP_SEL(_x, _y, _z, _w);
+	VertexElement->mask = VComp[fmt & 0xF].mask;
 	VertexElement->endianSwap = GX2_ENDIAN_SWAP_DEFAULT;
 }
 
@@ -170,46 +167,45 @@ GX2FetchShader *DrawEngineGX2::SetupFetchShaderForDraw(GX2VertexShader *vshader,
 	} else {
 		GX2AttribStream VertexElements[8];
 		GX2AttribStream *VertexElement = &VertexElements[0];
-
-		// Vertices Elements orders
-		// WEIGHT
-		if (decFmt.w0fmt != 0) {
-			VertexAttribSetup(VertexElement, decFmt.w0fmt, decFmt.w0off, "TEXCOORD", 1);
-			VertexElement++;
-		}
-
-		if (decFmt.w1fmt != 0) {
-			VertexAttribSetup(VertexElement, decFmt.w1fmt, decFmt.w1off, "TEXCOORD", 2);
-			VertexElement++;
-		}
+		// TODO: use less registers.
+		// POSITION
+		// Always
+		VertexAttribSetup(VertexElement, decFmt.posfmt, decFmt.posoff, 0);
+		VertexElement++;
 
 		// TC
 		if (decFmt.uvfmt != 0) {
-			VertexAttribSetup(VertexElement, decFmt.uvfmt, decFmt.uvoff, "TEXCOORD", 0);
+			VertexAttribSetup(VertexElement, decFmt.uvfmt, decFmt.uvoff, 1);
 			VertexElement++;
 		}
 
 		// COLOR
 		if (decFmt.c0fmt != 0) {
-			VertexAttribSetup(VertexElement, decFmt.c0fmt, decFmt.c0off, "COLOR", 0);
+			VertexAttribSetup(VertexElement, decFmt.c0fmt, decFmt.c0off, 2);
 			VertexElement++;
 		}
 		// Never used ?
 		if (decFmt.c1fmt != 0) {
-			VertexAttribSetup(VertexElement, decFmt.c1fmt, decFmt.c1off, "COLOR", 1);
+			VertexAttribSetup(VertexElement, decFmt.c1fmt, decFmt.c1off, 3);
 			VertexElement++;
 		}
 
 		// NORMAL
 		if (decFmt.nrmfmt != 0) {
-			VertexAttribSetup(VertexElement, decFmt.nrmfmt, decFmt.nrmoff, "NORMAL", 0);
+			VertexAttribSetup(VertexElement, decFmt.nrmfmt, decFmt.nrmoff, 4);
 			VertexElement++;
 		}
 
-		// POSITION
-		// Always
-		VertexAttribSetup(VertexElement, decFmt.posfmt, decFmt.posoff, "POSITION", 0);
-		VertexElement++;
+		// WEIGHT
+		if (decFmt.w0fmt != 0) {
+			VertexAttribSetup(VertexElement, decFmt.w0fmt, decFmt.w0off, 5);
+			VertexElement++;
+		}
+
+		if (decFmt.w1fmt != 0) {
+			VertexAttribSetup(VertexElement, decFmt.w1fmt, decFmt.w1off, 6);
+			VertexElement++;
+		}
 
 		// Create fetchShader
 		fetchShader = new GX2FetchShader;
@@ -293,6 +289,8 @@ void DrawEngineGX2::DoFlush() {
 	ApplyDrawState(prim);
 
 	bool useHWTransform = CanUseHardwareTransform(prim);
+	// let's keep it simple for now.
+	useHWTransform = false;
 
 	if (useHWTransform) {
 		void *vb_ = nullptr;
@@ -578,7 +576,6 @@ void DrawEngineGX2::DoFlush() {
 			u8 *vptr = pushVerts_->BeginPush(&vOffset, vSize);
 			memcpy(vptr, drawBuffer, vSize);
 			pushVerts_->EndPush();
-			GX2Invalidate(GX2_INVALIDATE_MODE_CPU_ATTRIBUTE_BUFFER, vptr, vSize);
 			GX2SetAttribBuffer(0, vSize, stride, vptr);
 			if (drawIndexed) {
 				u32 iOffset;

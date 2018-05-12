@@ -20,6 +20,18 @@
 
 #include "GPU/Common/ShaderCommon.h"
 #include "GPU/GX2/FragmentShaderGeneratorGX2.h"
+#include "GPU/Vulkan/FragmentShaderGeneratorVulkan.h"
+#include "GPU/GX2/GX2StaticShaders.h"
+
+#include <wiiu/os/debug.h>
 
 void GenerateFragmentShaderGX2(const FShaderID &id, GX2PixelShader *ps) {
+	// TODO;
+	*ps = STPshaderGX2;
+#if 1
+	DEBUG_STR(FragmentShaderDesc(id).c_str());
+	char glslcode [16384];
+	GenerateVulkanGLSLFragmentShader(id, glslcode);
+	puts(glslcode);
+#endif
 }

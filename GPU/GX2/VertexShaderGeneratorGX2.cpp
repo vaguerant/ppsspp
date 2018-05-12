@@ -20,7 +20,18 @@
 
 #include "GPU/Common/ShaderCommon.h"
 #include "GPU/GX2/VertexShaderGeneratorGX2.h"
+#include "GPU/Vulkan/VertexShaderGeneratorVulkan.h"
+#include "GPU/GX2/GX2StaticShaders.h"
+
+#include <wiiu/os/debug.h>
 
 void GenerateVertexShaderGX2(const VShaderID &id, GX2VertexShader *vs) {
 	// TODO;
+	*vs = STVshaderGX2;
+#if 1
+	DEBUG_STR(VertexShaderDesc(id).c_str());
+	char glslcode [16384];
+	GenerateVulkanGLSLVertexShader(id, glslcode);
+	puts(glslcode);
+#endif
 }

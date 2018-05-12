@@ -1402,12 +1402,15 @@ set(GPU_GX2
 	GPU/GX2/VertexShaderGeneratorGX2.h
 )
 
+# We build Vulkan even on Apple and WiiU to avoid annoying build differences.
+set(GPU_IMPLS ${GPU_VULKAN})
+
 if(WIIU)
-	set(GPU_IMPLS ${GPU_GX2})
+	list(APPEND GPU_IMPLS ${GPU_GX2})
 else()
-	# We build Vulkan even on Apple to avoid annoying build differences.
-	set(GPU_IMPLS ${GPU_GLES} ${GPU_VULKAN} )
+	list(APPEND GPU_IMPLS ${GPU_GLES})
 endif()
+
 if(WIN32)
 	list(APPEND GPU_IMPLS ${GPU_D3D9} ${GPU_D3D11})
 endif()

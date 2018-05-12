@@ -150,6 +150,7 @@ bool FramebufferManagerGX2::NotifyStencilUpload(u32 addr, int size, bool skipZer
 		// something is wrong...
 	}
 	GX2SetViewport(0.0f, 0.0f, (float)w, (float)h, 0.0f, 1.0f);
+	GX2SetScissor(0, 0, w, h);
 	gstate_c.Dirty(DIRTY_VIEWPORTSCISSOR_STATE);
 
 	float coord[20] = {

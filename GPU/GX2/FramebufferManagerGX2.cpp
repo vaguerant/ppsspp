@@ -285,7 +285,7 @@ void FramebufferManagerGX2::ReformatFramebufferFrom(VirtualFramebuffer *vfb, GEB
 
 		// TODO: There's no way this does anything useful :(
 		GX2SetDepthStencilControlReg(&StockGX2::depthDisabledStencilWrite);
-		GX2SetStencilMask(0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF); // TODO, and maye GX2SetStencilMaskReg?
+		GX2SetStencilMask(0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF); // TODO, and maybe GX2SetStencilMaskReg?
 		GX2SetColorControlReg(&StockGX2::blendColorDisabled);
 		GX2SetCullOnlyControl(GX2_FRONT_FACE_CCW, GX2_DISABLE, GX2_DISABLE);
 		GX2SetFetchShader(&quadFetchShader_);

@@ -108,6 +108,7 @@ GX2VertexShader GX2_vsCol = {
 	.uniformBlockCount = countof(uniform_blocks), uniform_blocks,
 	.uniformVarCount = countof(uniform_vars), uniform_vars,
 	.attribVarCount = 2, attributes,
+	.gx2rBuffer.flags = GX2R_RESOURCE_LOCKED_READ_ONLY,
 };
 
 GX2PixelShader GX2_fsCol = {
@@ -126,6 +127,7 @@ GX2PixelShader GX2_fsCol = {
 	.size = sizeof(fsColCode),
 	.program = (uint8_t *)&fsColCode,
 	.mode = GX2_SHADER_MODE_UNIFORM_BLOCK,
+	.gx2rBuffer.flags = GX2R_RESOURCE_LOCKED_READ_ONLY,
 };
 // clang-format off
 __attribute__((aligned(GX2_SHADER_ALIGNMENT)))
@@ -222,6 +224,7 @@ GX2VertexShader GX2_vsTexCol = {
 	.uniformBlockCount = countof(uniform_blocks), uniform_blocks,
 	.uniformVarCount = countof(uniform_vars), uniform_vars,
 	.attribVarCount = 3, attributes,
+	.gx2rBuffer.flags = GX2R_RESOURCE_LOCKED_READ_ONLY,
 };
 GX2PixelShader GX2_fsTexCol = {
 	{
@@ -240,4 +243,5 @@ GX2PixelShader GX2_fsTexCol = {
 	.program = (uint8_t *)&fsTexColCode,
 	.mode = GX2_SHADER_MODE_UNIFORM_BLOCK,
 	.samplerVarCount = countof(samplers), samplers,
+	.gx2rBuffer.flags = GX2R_RESOURCE_LOCKED_READ_ONLY,
 };

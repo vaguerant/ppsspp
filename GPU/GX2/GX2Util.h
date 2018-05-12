@@ -21,16 +21,16 @@
 #include <cstdint>
 #include <wiiu/gx2.h>
 #include <wiiu/os/memory.h>
+#include <Common/Log.h>
 
 class PushBufferGX2 {
 public:
-	PushBufferGX2(u32 size, u32 align) : align_(align) {
-		size = (size + align_ - 1) & ~(align_ - 1);
-		buffer_ = (u8 *)MEM1_alloc(size, align_);
+	PushBufferGX2(u32 size, u32 align) : align_(align), size_((size + align - 1) & ~(align - 1)) {
+		buffer_ = (u8 *)MEM2_alloc(size_, align_);
 	}
 	PushBufferGX2(PushBufferGX2 &) = delete;
 	~PushBufferGX2() {
-		MEM1_free(buffer_);
+		MEM2_free(buffer_);
 	}
 	void *Buf() const {
 		return buffer_;
@@ -44,15 +44,15 @@ public:
 
 	u8 *BeginPush(u32 *offset, u32 size) {
 		size = (size + align_ - 1) & ~(align_ - 1);
+		_assert_(size <= size_);
 		if (pos_ + size > size_) {
 			// Wrap! Note that with this method, since we return the same buffer as before, you have to do the draw immediately after.
 			EndPush();
 			pos_ = 0;
 		}
 		*offset = pos_;
-		u8 *retval = (u8 *)buffer_ + pos_;
 		push_size_ += size;
-		return retval;
+		return (u8 *)buffer_ + pos_;
 	}
 	void EndPush() {
 		if(push_size_) {
@@ -66,8 +66,8 @@ private:
 	u32 size_;
 	u32 align_;
 	u8 *buffer_;
-	u32 pos_;
-	u32 push_size_ ;
+	u32 pos_ = 0;
+	u32 push_size_ = 0;
 };
 
 class StockGX2 {
