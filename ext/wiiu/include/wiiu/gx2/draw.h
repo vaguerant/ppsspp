@@ -1,8 +1,6 @@
 #pragma once
 #include <wiiu/types.h>
 #include "enum.h"
-#include <wiiu/os/memory.h>
-#include <wiiu/os/debug.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,8 +47,12 @@ void GX2SetPrimitiveRestartIndex(uint32_t index);
 }
 #endif
 
-#if 0
-#include "event.h"
-#define GX2DrawEx(mode,count,offset, numInstances) do{GX2DrawEx(mode,count,offset, numInstances); GX2DrawDone(); DEBUG_BREAK_ONCE();}while(0)
-#define GX2DrawIndexedEx(mode,count,indexType,indices,offset,numInstances) do{GX2DrawIndexedEx(mode,count,indexType,indices,offset,numInstances); GX2DrawDone(); DEBUG_BREAK_ONCE();}while(0)
+//#define GX2_DISABLE_WRAPS
+#ifndef GX2_DISABLE_WRAPS
+#include "validation_layer.h"
+
+#define GX2DrawEx(...) GX2_WRAP(GX2DrawEx, __VA_ARGS__)
+#define GX2DrawIndexedEx(...) GX2_WRAP(GX2DrawIndexedEx, __VA_ARGS__)
+#define GX2SetAttribBuffer(...) GX2_WRAP(GX2SetAttribBuffer, __VA_ARGS__)
+
 #endif

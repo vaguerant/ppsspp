@@ -594,5 +594,3 @@ static inline uint32_t GX2CalcFetchShaderSize(uint32_t attribs)
 #ifdef __cplusplus
 }
 #endif
-
-/** @} */

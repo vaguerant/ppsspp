@@ -31,5 +31,3 @@ void GX2GetSwapStatus(uint32_t *swapCount, uint32_t *flipCount, OSTime *lastFlip
 #ifdef __cplusplus
 }
 #endif
-
-/** @} */

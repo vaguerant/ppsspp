@@ -233,8 +233,14 @@ void GX2SetViewportReg(GX2ViewportReg *reg);
 }
 #endif
 
-#if 0
-#include <wiiu/os/debug.h>
-#define GX2SetViewport(x, y, width, height, nearZ, farZ) do{GX2SetViewport(x, y, width, height, nearZ, farZ); printf("(%f,%f,%f,%f,%f,%f)\n", x, y, width, height, nearZ, farZ); DEBUG_LINE();}while(0)
-#define GX2SetViewportReg(reg) do{GX2SetViewportReg(reg); DEBUG_LINE();}while(0)
+//#define GX2_DISABLE_WRAPS
+#ifndef GX2_DISABLE_WRAPS
+#include "validation_layer.h"
+
+#define GX2SetViewport(...) GX2_WRAP(GX2SetViewport, __VA_ARGS__)
+#define GX2SetViewportReg(...) GX2_WRAP(GX2SetViewportReg, __VA_ARGS__)
+#define GX2SetScissor(...) GX2_WRAP(GX2SetScissor, __VA_ARGS__)
+#define GX2SetScissorReg(...) GX2_WRAP(GX2SetScissorReg, __VA_ARGS__)
+
 #endif
+
