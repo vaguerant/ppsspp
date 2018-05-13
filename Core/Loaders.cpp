@@ -125,9 +125,8 @@ IdentifiedFileType Identify_File(FileLoader *fileLoader) {
 		return IdentifiedFileType::ERROR_IDENTIFYING;
 	}
 
-	u32 psar_offset = 0, psar_id = 0;
-	u32 _id = id;
-	switch (_id) {
+	u32_le psar_offset = 0, psar_id = 0;
+	switch ((u32)id) {
 	case 'PBP\x00':
 		fileLoader->ReadAt(0x24, 4, 1, &psar_offset);
 		fileLoader->ReadAt(psar_offset, 4, 1, &psar_id);
