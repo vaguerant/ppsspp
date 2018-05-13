@@ -22,15 +22,23 @@
 #include "GPU/GX2/FragmentShaderGeneratorGX2.h"
 #include "GPU/Vulkan/FragmentShaderGeneratorVulkan.h"
 #include "GPU/GX2/GX2StaticShaders.h"
+#include "GPU/ge_constants.h"
 
 #include <wiiu/os/debug.h>
 
 void GenerateFragmentShaderGX2(const FShaderID &id, GX2PixelShader *ps) {
 	// TODO;
 	*ps = STPshaderGX2;
+
+	if (id.Bit(FS_BIT_CLEARMODE)) {
+		*ps = clearPShaderGX2;
+	} else if (id.Bit(FS_BIT_DO_TEXTURE) && id.Bit(FS_BIT_BGRA_TEXTURE) && (id.Bits(FS_BIT_TEXFUNC, 3) == GE_TEXFUNC_ADD)) {
+		*ps = cTexPShaderGX2;
+	}
+
 #if 1
 	DEBUG_STR(FragmentShaderDesc(id).c_str());
-	char glslcode [16384];
+	char glslcode[16384];
 	GenerateVulkanGLSLFragmentShader(id, glslcode);
 	puts(glslcode);
 #endif

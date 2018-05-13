@@ -57,7 +57,7 @@ const GX2AttribStream FramebufferManagerGX2::g_QuadAttribStream[2] = {
 
 // STRIP geometry
 __attribute__((aligned(GX2_VERTEX_BUFFER_ALIGNMENT)))
-const float FramebufferManagerGX2::fsQuadBuffer_[20] = {
+float FramebufferManagerGX2::fsQuadBuffer_[20] = {
 	-1.0f,-1.0f, 0.0f, 0.0f, 0.0f,
 	 1.0f,-1.0f, 0.0f, 1.0f, 0.0f,
 	-1.0f, 1.0f, 0.0f, 0.0f, 1.0f,

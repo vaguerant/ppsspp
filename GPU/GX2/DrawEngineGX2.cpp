@@ -57,8 +57,8 @@ enum {
 static const GX2AttribStream TransformedVertexElements[] = {
 	{ 0, 0, 0, GX2_ATTRIB_FORMAT_FLOAT_32_32_32_32, GX2_ATTRIB_INDEX_PER_VERTEX, 0, GX2_COMP_SEL(_x, _y, _z, _w), GX2_ENDIAN_SWAP_DEFAULT },
 	{ 1, 0, 16, GX2_ATTRIB_FORMAT_FLOAT_32_32_32, GX2_ATTRIB_INDEX_PER_VERTEX, 0, GX2_COMP_SEL(_x, _y, _z, _1), GX2_ENDIAN_SWAP_DEFAULT },
-	{ 2, 0, 28, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8, GX2_ATTRIB_INDEX_PER_VERTEX, 0, GX2_COMP_SEL(_r, _g, _b, _a), GX2_ENDIAN_SWAP_DEFAULT },
-	{ 3, 0, 32, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8, GX2_ATTRIB_INDEX_PER_VERTEX, 0, GX2_COMP_SEL(_r, _g, _b, _a), GX2_ENDIAN_SWAP_DEFAULT },
+	{ 2, 0, 28, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8, GX2_ATTRIB_INDEX_PER_VERTEX, 0, GX2_COMP_SEL(_a, _b, _g, _r), GX2_ENDIAN_SWAP_DEFAULT },
+	{ 3, 0, 32, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8, GX2_ATTRIB_INDEX_PER_VERTEX, 0, GX2_COMP_SEL(_a, _b, _g, _r), GX2_ENDIAN_SWAP_DEFAULT },
 };
 
 DrawEngineGX2::DrawEngineGX2(Draw::DrawContext *draw, GX2ContextState *context) : draw_(draw), context_(context), vai_(256), fetchShaderMap_(32), blendCache_(32), depthStencilCache_(64), rasterCache_(4) {
@@ -136,10 +136,10 @@ static const DeclTypeInfo VComp[] = {
 	{ GX2_COMP_SEL(_x, _y, _z, _w), GX2_ATTRIB_FORMAT_FLOAT_32_32_32_32 }, // DEC_FLOAT_4,
 	{ GX2_COMP_SEL(_x, _y, _z, _1), GX2_ATTRIB_FORMAT_SNORM_8_8_8_8 },     // DEC_S8_3,
 	{ GX2_COMP_SEL(_x, _y, _z, _1), GX2_ATTRIB_FORMAT_SNORM_16_16_16_16 }, // DEC_S16_3,
-	{ GX2_COMP_SEL(_r, _0, _0, _1), GX2_ATTRIB_FORMAT_UNORM_8_8_8_8 },     // DEC_U8_1,
-	{ GX2_COMP_SEL(_r, _g, _0, _1), GX2_ATTRIB_FORMAT_UNORM_8_8_8_8 },     // DEC_U8_2,
+	{ GX2_COMP_SEL(_r, _0, _0, _1), GX2_ATTRIB_FORMAT_UNORM_8 },           // DEC_U8_1,
+	{ GX2_COMP_SEL(_r, _g, _0, _1), GX2_ATTRIB_FORMAT_UNORM_8_8 },         // DEC_U8_2,
 	{ GX2_COMP_SEL(_r, _g, _b, _1), GX2_ATTRIB_FORMAT_UNORM_8_8_8_8 },     // DEC_U8_3,
-	{ GX2_COMP_SEL(_r, _g, _b, _a), GX2_ATTRIB_FORMAT_UNORM_8_8_8_8 },     // DEC_U8_4,
+	{ GX2_COMP_SEL(_a, _b, _g, _r), GX2_ATTRIB_FORMAT_UNORM_8_8_8_8 },     // DEC_U8_4,
 	{ GX2_COMP_SEL(_x, _0, _0, _1), GX2_ATTRIB_FORMAT_UINT_16 },           // DEC_U16_1,
 	{ GX2_COMP_SEL(_x, _y, _0, _1), GX2_ATTRIB_FORMAT_UINT_16 },           // DEC_U16_2,
 	{ GX2_COMP_SEL(_x, _y, _z, _1), GX2_ATTRIB_FORMAT_UNORM_16_16_16_16 }, // DEC_U16_3,
@@ -164,60 +164,61 @@ GX2FetchShader *DrawEngineGX2::SetupFetchShaderForDraw(GX2VertexShader *vshader,
 	GX2FetchShader *fetchShader = fetchShaderMap_.Get(key);
 	if (fetchShader) {
 		return fetchShader;
-	} else {
-		GX2AttribStream VertexElements[8];
-		GX2AttribStream *VertexElement = &VertexElements[0];
-		// TODO: use less registers.
-		// POSITION
-		// Always
-		VertexAttribSetup(VertexElement, decFmt.posfmt, decFmt.posoff, 0);
-		VertexElement++;
-
-		// TC
-		if (decFmt.uvfmt != 0) {
-			VertexAttribSetup(VertexElement, decFmt.uvfmt, decFmt.uvoff, 1);
-			VertexElement++;
-		}
-
-		// COLOR
-		if (decFmt.c0fmt != 0) {
-			VertexAttribSetup(VertexElement, decFmt.c0fmt, decFmt.c0off, 2);
-			VertexElement++;
-		}
-		// Never used ?
-		if (decFmt.c1fmt != 0) {
-			VertexAttribSetup(VertexElement, decFmt.c1fmt, decFmt.c1off, 3);
-			VertexElement++;
-		}
-
-		// NORMAL
-		if (decFmt.nrmfmt != 0) {
-			VertexAttribSetup(VertexElement, decFmt.nrmfmt, decFmt.nrmoff, 4);
-			VertexElement++;
-		}
-
-		// WEIGHT
-		if (decFmt.w0fmt != 0) {
-			VertexAttribSetup(VertexElement, decFmt.w0fmt, decFmt.w0off, 5);
-			VertexElement++;
-		}
-
-		if (decFmt.w1fmt != 0) {
-			VertexAttribSetup(VertexElement, decFmt.w1fmt, decFmt.w1off, 6);
-			VertexElement++;
-		}
-
-		// Create fetchShader
-		fetchShader = new GX2FetchShader;
-		fetchShader->size = GX2CalcFetchShaderSize(VertexElement - VertexElements);
-		fetchShader->program = (u8 *)MEM2_alloc(fetchShader->size, GX2_SHADER_ALIGNMENT);
-		GX2InitFetchShader(fetchShader, fetchShader->program, VertexElement - VertexElements, VertexElements);
-		GX2Invalidate(GX2_INVALIDATE_MODE_CPU_SHADER, fetchShader->program, fetchShader->size);
-
-		// Add it to map
-		fetchShaderMap_.Insert(key, fetchShader);
-		return fetchShader;
 	}
+
+	GX2AttribStream VertexElements[8];
+	GX2AttribStream *VertexElement = &VertexElements[0];
+
+	// POSITION
+	// Always
+	VertexAttribSetup(VertexElement, decFmt.posfmt, decFmt.posoff, 0);
+	VertexElement++;
+
+	// TC
+	if (decFmt.uvfmt != 0) {
+		VertexAttribSetup(VertexElement, decFmt.uvfmt, decFmt.uvoff, 1);
+		VertexElement++;
+	}
+
+	// COLOR
+	if (decFmt.c0fmt != 0) {
+		VertexAttribSetup(VertexElement, decFmt.c0fmt, decFmt.c0off, 2);
+		VertexElement++;
+	}
+
+	// Never used ?
+	if (decFmt.c1fmt != 0) {
+		VertexAttribSetup(VertexElement, decFmt.c1fmt, decFmt.c1off, 3);
+		VertexElement++;
+	}
+
+	// NORMAL
+	if (decFmt.nrmfmt != 0) {
+		VertexAttribSetup(VertexElement, decFmt.nrmfmt, decFmt.nrmoff, 4);
+		VertexElement++;
+	}
+
+	// WEIGHT
+	if (decFmt.w0fmt != 0) {
+		VertexAttribSetup(VertexElement, decFmt.w0fmt, decFmt.w0off, 5);
+		VertexElement++;
+	}
+
+	if (decFmt.w1fmt != 0) {
+		VertexAttribSetup(VertexElement, decFmt.w1fmt, decFmt.w1off, 6);
+		VertexElement++;
+	}
+
+	// Create fetchShader
+	fetchShader = new GX2FetchShader;
+	fetchShader->size = GX2CalcFetchShaderSize(VertexElement - VertexElements);
+	fetchShader->program = (u8 *)MEM2_alloc(fetchShader->size, GX2_SHADER_ALIGNMENT);
+	GX2InitFetchShader(fetchShader, fetchShader->program, VertexElement - VertexElements, VertexElements);
+	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_SHADER, fetchShader->program, fetchShader->size);
+
+	// Add it to map
+	fetchShaderMap_.Insert(key, fetchShader);
+	return fetchShader;
 }
 
 void DrawEngineGX2::MarkUnreliable(VertexArrayInfoGX2 *vai) {

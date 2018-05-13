@@ -1,6 +1,6 @@
 #pragma once
 #include <wiiu/types.h>
-#include <gx2/enum.h>
+#include <wiiu/gx2/enum.h>
 #include "resource.h"
 #include "buffer.h"
 

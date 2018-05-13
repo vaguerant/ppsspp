@@ -1,6 +1,6 @@
 #pragma once
 #include <wiiu/types.h>
-#include <gx2/surface.h>
+#include "surface.h"
 #include "resource.h"
 
 #ifdef __cplusplus

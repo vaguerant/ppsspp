@@ -83,7 +83,7 @@ private:
 	GX2Texture drawPixelsTex_ = {};
 
 	GX2FetchShader quadFetchShader_ = {};
-	static const float fsQuadBuffer_[20];
+	static float fsQuadBuffer_[20];
 	const u32 quadStride_ = ARRAY_SIZE(fsQuadBuffer_) * sizeof(float) / 4;
 	// Dynamic
 	float *quadBuffer_;
