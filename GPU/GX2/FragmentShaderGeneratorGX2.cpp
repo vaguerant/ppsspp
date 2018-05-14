@@ -36,7 +36,7 @@ void GenerateFragmentShaderGX2(const FShaderID &id, GX2PixelShader *ps) {
 		*ps = cTexPShaderGX2;
 	}
 
-#if 1
+#if 0
 	DEBUG_STR(FragmentShaderDesc(id).c_str());
 	char glslcode[16384];
 	GenerateVulkanGLSLFragmentShader(id, glslcode);

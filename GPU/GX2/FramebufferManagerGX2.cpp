@@ -73,7 +73,7 @@ FramebufferManagerGX2::FramebufferManagerGX2(Draw::DrawContext *draw) : Framebuf
 	GX2InitFetchShader(&quadFetchShader_, quadFetchShader_.program, ARRAY_SIZE(g_QuadAttribStream), g_QuadAttribStream);
 	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_SHADER, quadFetchShader_.program, quadFetchShader_.size);
 
-	quadBuffer_ = (float*)MEM2_alloc(quadStride_ * sizeof(float), GX2_VERTEX_BUFFER_ALIGNMENT);
+	quadBuffer_ = (float*)MEM2_alloc(quadStride_ * 4, GX2_VERTEX_BUFFER_ALIGNMENT);
 	postConstants_ = MEM2_alloc(ROUND_UP(sizeof(PostShaderUniforms), 64), GX2_UNIFORM_BLOCK_ALIGNMENT);
 
 	for (int i = 0; i < 256; i++) {
@@ -129,7 +129,6 @@ void FramebufferManagerGX2::CompilePostShader() {
 }
 
 void FramebufferManagerGX2::MakePixelTexture(const u8 *srcPixels, GEBufferFormat srcPixelFormat, int srcStride, int width, int height, float &u1, float &v1) {
-	// TODO: Check / use D3DCAPS2_DYNAMICTEXTURES?
 	if (drawPixelsTex_.surface.image && (drawPixelsTex_.surface.width != width || drawPixelsTex_.surface.height != height)) {
 		MEM2_free(drawPixelsTex_.surface.image);
 		drawPixelsTex_ = {};
@@ -171,6 +170,7 @@ void FramebufferManagerGX2::MakePixelTexture(const u8 *srcPixels, GEBufferFormat
 		}
 	}
 	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, drawPixelsTex_.surface.image, drawPixelsTex_.surface.imageSize);
+	GX2SetPixelTexture(&drawPixelsTex_, 0);
 }
 
 void FramebufferManagerGX2::DrawActiveTexture(float x, float y, float w, float h, float destW, float destH, float u0, float v0, float u1, float v1, int uvRotation, int flags) {

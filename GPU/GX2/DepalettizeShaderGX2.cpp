@@ -155,6 +155,8 @@ DepalShaderCacheGX2::DepalShaderGX2::DepalShaderGX2(GEBufferFormat pixelFormat) 
 }
 
 GX2PixelShader *DepalShaderCacheGX2::GetDepalettizePixelShader(u32 clutMode, GEBufferFormat pixelFormat) {
+	// TODO:
+	return nullptr;
 	u32 id = GenerateShaderID(clutMode, pixelFormat);
 
 	auto shader = cache_.find(id);

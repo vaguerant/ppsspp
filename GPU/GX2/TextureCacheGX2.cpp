@@ -53,7 +53,7 @@ GX2Sampler *SamplerCacheGX2::GetOrCreateSampler(const SamplerCacheKey &key) {
 	if (iter != cache_.end()) {
 		return iter->second;
 	}
-	GX2Sampler *sampler = new GX2Sampler;
+	GX2Sampler *sampler = new GX2Sampler();
 
 	GX2TexClampMode sClamp = key.sClamp ? GX2_TEX_CLAMP_MODE_CLAMP : GX2_TEX_CLAMP_MODE_WRAP;
 	GX2TexClampMode tClamp = key.tClamp ? GX2_TEX_CLAMP_MODE_CLAMP : GX2_TEX_CLAMP_MODE_WRAP;
@@ -556,7 +556,7 @@ ReplacedTextureFormat FromGX2Format(u32 fmt) {
 	}
 }
 
-GX2SurfaceFormat ToDXGIFormat(ReplacedTextureFormat fmt) {
+GX2SurfaceFormat ToGX2Format(ReplacedTextureFormat fmt) {
 	switch (fmt) {
 	case ReplacedTextureFormat::F_5650: return GX2_SURFACE_FORMAT_UNORM_R5_G6_B5;
 	case ReplacedTextureFormat::F_5551: return GX2_SURFACE_FORMAT_UNORM_R5_G5_B5_A1;
@@ -577,7 +577,7 @@ void TextureCacheGX2::LoadTextureLevel(TexCacheEntry &entry, ReplacedTexture &re
 		int tw = w, th = h;
 		GX2SurfaceFormat tfmt = dstFmt;
 		if (replaced.GetSize(level, tw, th)) {
-			tfmt = ToDXGIFormat(replaced.Format(level));
+			tfmt = ToGX2Format(replaced.Format(level));
 		} else {
 			tw *= scaleFactor;
 			th *= scaleFactor;
@@ -586,7 +586,7 @@ void TextureCacheGX2::LoadTextureLevel(TexCacheEntry &entry, ReplacedTexture &re
 			}
 		}
 
-		texture = new GX2Texture;
+		texture = new GX2Texture();
 		texture->surface.width = tw;
 		texture->surface.height = th;
 		texture->surface.depth = 1;
@@ -609,14 +609,12 @@ void TextureCacheGX2::LoadTextureLevel(TexCacheEntry &entry, ReplacedTexture &re
 	}
 
 	gpuStats.numTexturesDecoded++;
-	// For UpdateSubresource, we can't decode directly into the texture so we allocate a buffer :(
-	u32 *mapData = nullptr;
-	int mapRowPitch = 0;
+
+	u32 *mapData = (u32*)texture->surface.image;
+	int mapRowPitch = texture->surface.pitch * ((texture->surface.format == GX2_SURFACE_FORMAT_UNORM_R8_G8_B8_A8)? 4 : 2);
 	if (replaced.GetSize(level, w, h)) {
-		mapData = (u32 *)AllocateAlignedMemory(w * h * sizeof(u32), 16);
-		mapRowPitch = w * 4;
 		replaced.Load(level, mapData, mapRowPitch);
-		dstFmt = ToDXGIFormat(replaced.Format(level));
+		dstFmt = ToGX2Format(replaced.Format(level));
 	} else {
 		GETextureFormat tfmt = (GETextureFormat)entry.format;
 		GEPaletteFormat clutformat = gstate.getClutPaletteFormat();
@@ -630,22 +628,11 @@ void TextureCacheGX2::LoadTextureLevel(TexCacheEntry &entry, ReplacedTexture &re
 			pixelData = tmpTexBufRearrange_.data();
 			// We want to end up with a neatly packed texture for scaling.
 			decPitch = w * bpp;
-			mapData = (u32 *)AllocateAlignedMemory(sizeof(u32) * (w * scaleFactor) * (h * scaleFactor), 16);
-			mapRowPitch = w * scaleFactor * 4;
 		} else {
-			mapRowPitch = std::max(bufw, w) * bpp;
-			size_t bufSize = sizeof(u32) * (mapRowPitch / bpp) * h;
-			mapData = (u32 *)AllocateAlignedMemory(bufSize, 16);
-			if (!mapData) {
-				ERROR_LOG(G3D, "Ran out of RAM trying to allocate a temporary texture upload buffer (alloc size: %d, %dx%d)", bufSize, mapRowPitch / sizeof(u32), h);
-				return;
-			}
 			pixelData = (u32 *)mapData;
 			decPitch = mapRowPitch;
 		}
-
-		bool expand32 = !gstate_c.Supports(GPU_SUPPORTS_16BIT_FORMATS);
-		DecodeTextureLevel((u8 *)pixelData, decPitch, tfmt, clutformat, texaddr, level, bufw, false, false, expand32);
+		DecodeTextureLevel((u8 *)pixelData, decPitch, tfmt, clutformat, texaddr, level, bufw, false, false, false);
 
 		// We check before scaling since scaling shouldn't invent alpha from a full alpha texture.
 		if ((entry.status & TexCacheEntry::STATUS_CHANGE_FREQUENT) == 0) {
@@ -668,7 +655,6 @@ void TextureCacheGX2::LoadTextureLevel(TexCacheEntry &entry, ReplacedTexture &re
 			if (decPitch != mapRowPitch) {
 				// Rearrange in place to match the requested pitch.
 				// (it can only be larger than w * bpp, and a match is likely.)
-				// Note! This is bad because it reads the mapped memory! TODO: Look into if DX9 does this right.
 				for (int y = h - 1; y >= 0; --y) {
 					memcpy((u8 *)mapData + mapRowPitch * y, (u8 *)mapData + decPitch * y, w * bpp);
 				}
@@ -695,7 +681,7 @@ void TextureCacheGX2::LoadTextureLevel(TexCacheEntry &entry, ReplacedTexture &re
 	else
 		context_->UpdateSubresource(texture, level, nullptr, mapData, mapRowPitch, 0);
 #endif
-	FreeAlignedMemory(mapData);
+	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_TEXTURE, texture->surface.image, texture->surface.imageSize);
 }
 
 bool TextureCacheGX2::GetCurrentTextureDebug(GPUDebugBuffer &buffer, int level) {

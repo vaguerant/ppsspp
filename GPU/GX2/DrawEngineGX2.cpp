@@ -57,8 +57,8 @@ enum {
 static const GX2AttribStream TransformedVertexElements[] = {
 	{ 0, 0, 0, GX2_ATTRIB_FORMAT_FLOAT_32_32_32_32, GX2_ATTRIB_INDEX_PER_VERTEX, 0, GX2_COMP_SEL(_x, _y, _z, _w), GX2_ENDIAN_SWAP_DEFAULT },
 	{ 1, 0, 16, GX2_ATTRIB_FORMAT_FLOAT_32_32_32, GX2_ATTRIB_INDEX_PER_VERTEX, 0, GX2_COMP_SEL(_x, _y, _z, _1), GX2_ENDIAN_SWAP_DEFAULT },
-	{ 2, 0, 28, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8, GX2_ATTRIB_INDEX_PER_VERTEX, 0, GX2_COMP_SEL(_a, _b, _g, _r), GX2_ENDIAN_SWAP_DEFAULT },
-	{ 3, 0, 32, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8, GX2_ATTRIB_INDEX_PER_VERTEX, 0, GX2_COMP_SEL(_a, _b, _g, _r), GX2_ENDIAN_SWAP_DEFAULT },
+	{ 2, 0, 28, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8, GX2_ATTRIB_INDEX_PER_VERTEX, 0, GX2_COMP_SEL(_r, _g, _b, _a), GX2_ENDIAN_SWAP_DEFAULT },
+	{ 3, 0, 32, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8, GX2_ATTRIB_INDEX_PER_VERTEX, 0, GX2_COMP_SEL(_r, _g, _b, _a), GX2_ENDIAN_SWAP_DEFAULT },
 };
 
 DrawEngineGX2::DrawEngineGX2(Draw::DrawContext *draw, GX2ContextState *context) : draw_(draw), context_(context), vai_(256), fetchShaderMap_(32), blendCache_(32), depthStencilCache_(64), rasterCache_(4) {

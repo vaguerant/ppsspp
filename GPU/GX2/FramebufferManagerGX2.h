@@ -84,7 +84,7 @@ private:
 
 	GX2FetchShader quadFetchShader_ = {};
 	static float fsQuadBuffer_[20];
-	const u32 quadStride_ = ARRAY_SIZE(fsQuadBuffer_) * sizeof(float) / 4;
+	const u32 quadStride_ = sizeof(fsQuadBuffer_) / 4;
 	// Dynamic
 	float *quadBuffer_;
 

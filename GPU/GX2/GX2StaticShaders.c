@@ -51,24 +51,24 @@ __attribute__((aligned(GX2_SHADER_ALIGNMENT))) static struct {
 } quadPCode = {
 	{
 		TEX(32, 1) VALID_PIX,
-		EXP_DONE(PIX0, _R0, _x, _y, _z, _w)
+		EXP_DONE(PIX0, _R0, _r, _g, _b, _a)
 		END_OF_PROGRAM
 	},
 	{
-		TEX_SAMPLE(_R0, _x, _y, _z, _w, _R0, _x, _y, _0, _0, _t0, _s0)
+		TEX_SAMPLE(_R0, _r, _g, _b, _a, _R0, _x, _y, _0, _0, _t0, _s0)
 	}
 };
 // clang-format on
 
 GX2PixelShader defPShaderGX2 = {
 	{
-		.sq_pgm_resources_ps.num_gprs = 2,
+		.sq_pgm_resources_ps.num_gprs = 1,
 		.sq_pgm_exports_ps.export_mode = 0x2,
-		.spi_ps_in_control_0.num_interp = 2,
+		.spi_ps_in_control_0.num_interp = 1,
 		.spi_ps_in_control_0.persp_gradient_ena = 1,
 		.spi_ps_in_control_0.baryc_sample_cntl = spi_baryc_cntl_centers_only,
-		.num_spi_ps_input_cntl = 2,
-		{ { .semantic = 0, .default_val = 1 }, { .semantic = 1, .default_val = 1 } },
+		.num_spi_ps_input_cntl = 1,
+		{ { .semantic = 0, .default_val = 1 } },
 		.cb_shader_mask.output0_enable = 0xF,
 		.cb_shader_control.rt0_enable = TRUE,
 		.db_shader_control.z_order = db_z_order_early_z_then_late_z,
@@ -87,11 +87,11 @@ __attribute__((aligned(GX2_SHADER_ALIGNMENT))) static struct {
 } stencilPCode = {
 	{
 		TEX(32, 1) VALID_PIX,
-		EXP_DONE(PIX0, _R0, _x, _y, _z, _w)
+		EXP_DONE(PIX0, _R0, _r, _g, _b, _a)
 		END_OF_PROGRAM
 	},
 	{
-		TEX_SAMPLE(_R0, _x, _y, _z, _w, _R0, _x, _y, _0, _0, _t0, _s0)
+		TEX_SAMPLE(_R0, _r, _g, _b, _a, _R0, _x, _y, _0, _0, _t0, _s0)
 	}
 };
 // clang-format on
@@ -162,18 +162,18 @@ __attribute__((aligned(GX2_SHADER_ALIGNMENT))) static struct {
 	{
 		TEX(48, 1) VALID_PIX,
 		ALU(32, 4),
-		EXP_DONE(PIX0, _R0, _x, _y, _z, _w)
+		EXP_DONE(PIX0, _R0, _r, _g, _b, _a)
 		END_OF_PROGRAM
 	},
 	{
-		ALU_MUL(_R0, _x, _R0, _x, _R1, _x),
-		ALU_MUL(_R0, _y, _R0, _y, _R1, _y),
-		ALU_MUL(_R0, _z, _R0, _z, _R1, _z),
-		ALU_MUL(_R0, _w, _R0, _w, _R1, _w)
+		ALU_MUL(_R0, _r, _R0, _r, _R1, _r),
+		ALU_MUL(_R0, _g, _R0, _g, _R1, _g),
+		ALU_MUL(_R0, _b, _R0, _b, _R1, _b),
+		ALU_MUL(_R0, _a, _R0, _a, _R1, _a)
 		ALU_LAST
 	},
 	{
-		TEX_SAMPLE(_R0, _x, _y, _z, _w, _R0, _x, _y, _0, _0, _t0, _s0)
+		TEX_SAMPLE(_R0, _r, _g, _b, _a, _R0, _x, _y, _0, _0, _t0, _s0)
 	}
 };
 // clang-format on

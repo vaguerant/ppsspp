@@ -36,7 +36,7 @@ void GenerateVertexShaderGX2(const VShaderID &id, GX2VertexShader *vs) {
 		*vs = cTexVShaderGX2;
 	}
 
-#if 1
+#if 0
 	DEBUG_STR(VertexShaderDesc(id).c_str());
 	char glslcode[16384];
 	GenerateVulkanGLSLVertexShader(id, glslcode);
