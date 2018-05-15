@@ -1539,8 +1539,8 @@ void GPUCommon::Execute_Prim(u32 op, u32 diff) {
 	int totalVertCount = count;
 
 	// PRIMs are often followed by more PRIMs. Save some work and submit them immediately.
-	const u32 *src = (const u32 *)Memory::GetPointerUnchecked(currentList->pc + 4);
-	const u32 *stall = currentList->stall ? (const u32 *)Memory::GetPointerUnchecked(currentList->stall) : 0;
+	const u32_le *src = (const u32_le *)Memory::GetPointerUnchecked(currentList->pc + 4);
+	const u32_le *stall = currentList->stall ? (const u32_le *)Memory::GetPointerUnchecked(currentList->stall) : 0;
 	int cmdCount = 0;
 
 	// Optimized submission of sequences of PRIM. Allows us to avoid going through all the mess
