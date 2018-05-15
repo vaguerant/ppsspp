@@ -1385,8 +1385,8 @@ set(GPU_GX2
 	GPU/GX2/FramebufferManagerGX2.h
 	GPU/GX2/GPU_GX2.cpp
 	GPU/GX2/GPU_GX2.h
-	GPU/GX2/GX2StaticShaders.c
-	GPU/GX2/GX2StaticShaders.h
+	GPU/GX2/GX2Shaders.c
+	GPU/GX2/GX2Shaders.h
 	GPU/GX2/GX2Util.cpp
 	GPU/GX2/GX2Util.h
 	GPU/GX2/ShaderManagerGX2.cpp

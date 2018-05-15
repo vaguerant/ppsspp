@@ -15,31 +15,75 @@
 // Official git repository and contact information can be found at
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
-#include <wiiu/gx2/shaders_asm.h>
-#undef ARRAY_SIZE
-
 #include "GPU/Common/ShaderCommon.h"
-#include "GPU/GX2/FragmentShaderGeneratorGX2.h"
-#include "GPU/Vulkan/FragmentShaderGeneratorVulkan.h"
-#include "GPU/GX2/GX2StaticShaders.h"
+#include "GPU/Common/ShaderUniforms.h"
 #include "GPU/ge_constants.h"
 
+#include "GPU/GX2/FragmentShaderGeneratorGX2.h"
+#include "GPU/GX2/ShaderManagerGX2.h"
+
+#include <wiiu/gx2/shader_emitter.hpp>
+#include <wiiu/gx2/shader_info.h>
+
+#include "GPU/Vulkan/FragmentShaderGeneratorVulkan.h"
 #include <wiiu/os/debug.h>
 
+using namespace GX2Gen;
 void GenerateFragmentShaderGX2(const FShaderID &id, GX2PixelShader *ps) {
-	// TODO;
-	*ps = STPshaderGX2;
+	GX2PixelShaderEmitter emit_(ps);
 
-	if (id.Bit(FS_BIT_CLEARMODE)) {
-		*ps = clearPShaderGX2;
-	} else if (id.Bit(FS_BIT_DO_TEXTURE) && id.Bit(FS_BIT_BGRA_TEXTURE) && (id.Bits(FS_BIT_TEXFUNC, 3) == GE_TEXFUNC_ADD)) {
-		*ps = cTexPShaderGX2;
+	Reg color = emit_.allocReg(PSInput::COLOR0);
+
+	if (!id.Bit(FS_BIT_CLEARMODE)) {
+		if (id.Bit(FS_BIT_DO_TEXTURE)) {
+			// id.Bit(FS_BIT_BGRA_TEXTURE) needed ?
+			Reg coords = emit_.allocReg(PSInput::COORDS);
+			Reg sample = coords;
+			emit_.SAMPLE(sample, coords(x, y, _0_, _0_), 0, 0);
+			switch (id.Bits(FS_BIT_TEXFUNC, 3)) {
+			case GE_TEXFUNC_REPLACE:
+				emit_.MOV(color(r), sample(r));
+				emit_.MOV(color(g), sample(g));
+				emit_.MOV(color(b), sample(b));
+				emit_.ALU_LAST();
+				break;
+			case GE_TEXFUNC_DECAL:
+				// TODO
+				emit_.ADD(color(r), color(r), sample(r));
+				emit_.ADD(color(g), color(g), sample(g));
+				emit_.ADD(color(b), color(b), sample(b));
+				emit_.ALU_LAST();
+				break;
+			case GE_TEXFUNC_MODULATE:
+				// TODO
+				emit_.ADD(color(r), color(r), sample(r));
+				emit_.ADD(color(g), color(g), sample(g));
+				emit_.ADD(color(b), color(b), sample(b));
+				emit_.ALU_LAST();
+				break;
+			default:
+			case GE_TEXFUNC_ADD:
+			case GE_TEXFUNC_UNKNOWN1:
+			case GE_TEXFUNC_UNKNOWN2:
+			case GE_TEXFUNC_UNKNOWN3:
+				emit_.ADD(color(r), color(r), sample(r));
+				emit_.ADD(color(g), color(g), sample(g));
+				emit_.ADD(color(b), color(b), sample(b));
+				emit_.ALU_LAST();
+				break;
+			}
+		}
 	}
 
-#if 0
+	emit_.EXP_DONE_PIX(color);
+	emit_.END_OF_PROGRAM();
+
+#if 1
 	DEBUG_STR(FragmentShaderDesc(id).c_str());
-	char glslcode[16384];
-	GenerateVulkanGLSLFragmentShader(id, glslcode);
-	puts(glslcode);
+	char buffer[16384];
+	GenerateVulkanGLSLFragmentShader(id, buffer);
+	puts(buffer);
+	GX2PixelShaderInfo(ps, buffer);
+	puts(buffer);
 #endif
 }

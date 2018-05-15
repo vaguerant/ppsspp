@@ -55,6 +55,7 @@ add_library(wiiu STATIC
    ${WIIU_ROOT}/fs_utils.c
    ${WIIU_ROOT}/sd_fat_devoptab.c
    ${WIIU_ROOT}/gx2_validation.c
+   ${WIIU_ROOT}/shader_info.c
    ${WIIU_ROOT}/stubs.S
 
    ${WIIU_ROOT}/gthr-wup.cpp

@@ -27,7 +27,7 @@
 #include "GPU/GX2/ShaderManagerGX2.h"
 #include "GPU/GX2/TextureCacheGX2.h"
 #include "GPU/GX2/GX2Util.h"
-#include "GPU/GX2/GX2StaticShaders.h"
+#include "GPU/GX2/GX2Shaders.h"
 
 static const char *stencil_ps = R"(
 SamplerState samp : register(s0);

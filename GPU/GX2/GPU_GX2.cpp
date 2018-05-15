@@ -116,11 +116,7 @@ void GPU_GX2::CheckGPUFeatures() {
 		features |= GPU_SUPPORTS_ACCURATE_DEPTH;  // Breaks text in PaRappa for some reason.
 	}
 
-#ifndef _M_ARM
-	// TODO: Do proper feature detection
 	features |= GPU_SUPPORTS_ANISOTROPY;
-#endif
-
 	features |= GPU_SUPPORTS_OES_TEXTURE_NPOT;
 	features |= GPU_SUPPORTS_LARGE_VIEWPORTS;
 	if (draw_->GetDeviceCaps().dualSourceBlend)

@@ -25,7 +25,7 @@
 #include "GPU/ge_constants.h"
 #include "thin3d/thin3d.h"
 #include "GPU/Common/DepalettizeShaderCommon.h"
-#include "GPU/GX2/GX2StaticShaders.h"
+#include "GPU/GX2/GX2Shaders.h"
 
 // Caches both shaders and palette textures.
 class DepalShaderCacheGX2 : public DepalShaderCacheCommon {

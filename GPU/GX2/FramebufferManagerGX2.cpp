@@ -42,7 +42,7 @@
 #include "GPU/GX2/ShaderManagerGX2.h"
 #include "GPU/GX2/TextureCacheGX2.h"
 #include "GPU/GX2/DrawEngineGX2.h"
-#include "GPU/GX2/GX2StaticShaders.h"
+#include "GPU/GX2/GX2Shaders.h"
 
 #include "ext/native/thin3d/thin3d.h"
 

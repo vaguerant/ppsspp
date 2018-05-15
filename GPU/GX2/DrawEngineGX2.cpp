@@ -171,41 +171,41 @@ GX2FetchShader *DrawEngineGX2::SetupFetchShaderForDraw(GX2VertexShader *vshader,
 
 	// POSITION
 	// Always
-	VertexAttribSetup(VertexElement, decFmt.posfmt, decFmt.posoff, 0);
+	VertexAttribSetup(VertexElement, decFmt.posfmt, decFmt.posoff, (u32)GX2Gen::VSInput::POSITION);
 	VertexElement++;
 
 	// TC
 	if (decFmt.uvfmt != 0) {
-		VertexAttribSetup(VertexElement, decFmt.uvfmt, decFmt.uvoff, 1);
+		VertexAttribSetup(VertexElement, decFmt.uvfmt, decFmt.uvoff, (u32)GX2Gen::VSInput::COORDS);
 		VertexElement++;
 	}
 
 	// COLOR
 	if (decFmt.c0fmt != 0) {
-		VertexAttribSetup(VertexElement, decFmt.c0fmt, decFmt.c0off, 2);
+		VertexAttribSetup(VertexElement, decFmt.c0fmt, decFmt.c0off, (u32)GX2Gen::VSInput::COLOR0);
 		VertexElement++;
 	}
 
 	// Never used ?
 	if (decFmt.c1fmt != 0) {
-		VertexAttribSetup(VertexElement, decFmt.c1fmt, decFmt.c1off, 3);
+		VertexAttribSetup(VertexElement, decFmt.c1fmt, decFmt.c1off, (u32)GX2Gen::VSInput::COLOR1);
 		VertexElement++;
 	}
 
 	// NORMAL
 	if (decFmt.nrmfmt != 0) {
-		VertexAttribSetup(VertexElement, decFmt.nrmfmt, decFmt.nrmoff, 4);
+		VertexAttribSetup(VertexElement, decFmt.nrmfmt, decFmt.nrmoff, (u32)GX2Gen::VSInput::NORMAL);
 		VertexElement++;
 	}
 
 	// WEIGHT
 	if (decFmt.w0fmt != 0) {
-		VertexAttribSetup(VertexElement, decFmt.w0fmt, decFmt.w0off, 5);
+		VertexAttribSetup(VertexElement, decFmt.w0fmt, decFmt.w0off, (u32)GX2Gen::VSInput::WEIGHT0);
 		VertexElement++;
 	}
 
 	if (decFmt.w1fmt != 0) {
-		VertexAttribSetup(VertexElement, decFmt.w1fmt, decFmt.w1off, 6);
+		VertexAttribSetup(VertexElement, decFmt.w1fmt, decFmt.w1off, (u32)GX2Gen::VSInput::WEIGHT1);
 		VertexElement++;
 	}
 

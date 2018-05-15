@@ -18,6 +18,7 @@
 #pragma once
 
 #include <map>
+#include <vector>
 #include <wiiu/gx2.h>
 #include <wiiu/os/memory.h>
 
@@ -26,13 +27,39 @@
 #include "GPU/Common/ShaderId.h"
 #include "GPU/Common/ShaderUniforms.h"
 
-#include "GPU/GX2/GX2StaticShaders.h"
+#include "GPU/GX2/GX2Shaders.h"
+
+namespace GX2Gen {
+
+enum class VSInput : u32 {
+	POSITION,
+	COORDS,
+	COLOR0,
+	COLOR1,
+	NORMAL,
+	WEIGHT0,
+	WEIGHT1,
+};
+enum class PSInput : u32 {
+	COORDS,
+	COLOR0,
+	COLOR1,
+};
+
+enum class UB_Bindings : u32 {
+	Reserved,
+	Base,
+	Lights,
+	Bones,
+};
+
+} // namespace GX2Gen
 
 class GX2PShader : public GX2PixelShader {
 public:
 	GX2PShader(FShaderID id);
 	~GX2PShader() {
-		if(gx2rBuffer.flags & GX2R_RESOURCE_LOCKED_READ_ONLY)
+		if (gx2rBuffer.flags & GX2R_RESOURCE_LOCKED_READ_ONLY)
 			return;
 		MEM2_free(program);
 	}
@@ -49,7 +76,7 @@ class GX2VShader : public GX2VertexShader {
 public:
 	GX2VShader(VShaderID id);
 	~GX2VShader() {
-		if(gx2rBuffer.flags & GX2R_RESOURCE_LOCKED_READ_ONLY)
+		if (gx2rBuffer.flags & GX2R_RESOURCE_LOCKED_READ_ONLY)
 			return;
 		MEM2_free(program);
 	}
