@@ -570,7 +570,7 @@ void TextureCacheGX2::LoadTextureLevel(TexCacheEntry &entry, ReplacedTexture &re
 	int w = gstate.getTextureWidth(level);
 	int h = gstate.getTextureHeight(level);
 
-	GX2Texture *texture = DxTex(&entry);
+	GX2Texture *texture = GX2Tex(&entry);
 	if ((level == 0 || IsFakeMipmapChange()) && texture == nullptr) {
 		// Create texture
 		int levels = scaleFactor == 1 ? maxLevel + 1 : 1;
@@ -595,7 +595,22 @@ void TextureCacheGX2::LoadTextureLevel(TexCacheEntry &entry, ReplacedTexture &re
 		texture->surface.use = GX2_SURFACE_USE_TEXTURE;
 		texture->viewNumSlices = 1;
 		texture->surface.format = tfmt;
-		texture->compMap = GX2_COMP_SEL(_a, _r, _g, _b);
+		switch(tfmt)
+		{
+		case GX2_SURFACE_FORMAT_UNORM_R4_G4_B4_A4:
+			texture->compMap = GX2_COMP_SEL(_b, _a, _r, _g);
+			break;
+		case GX2_SURFACE_FORMAT_UNORM_R5_G5_B5_A1:
+			texture->compMap = GX2_COMP_SEL(_r, _g, _b, _a);
+			break;
+		case GX2_SURFACE_FORMAT_UNORM_R5_G6_B5:
+			texture->compMap = GX2_COMP_SEL(_r, _g, _b, _1);
+			break;
+		default:
+		case GX2_SURFACE_FORMAT_UNORM_R8_G8_B8_A8:
+			texture->compMap = GX2_COMP_SEL(_r, _g, _b, _a);
+			break;
+		}
 #if 0 // TODO: mipmapping
 		texture->surface.mipLevels = IsFakeMipmapChange() ? 1 : levels;
 #endif

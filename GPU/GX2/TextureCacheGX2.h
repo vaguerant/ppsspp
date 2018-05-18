@@ -81,7 +81,7 @@ private:
 
 	GX2ContextState *context_;
 
-	GX2Texture *&DxTex(TexCacheEntry *entry) {
+	GX2Texture *&GX2Tex(TexCacheEntry *entry) {
 		return (GX2Texture *&)entry->texturePtr;
 	}
 

@@ -30,6 +30,9 @@
 
 using namespace GX2Gen;
 void GenerateVertexShaderGX2(const VShaderID &id, GX2VertexShader *vs) {
+#if 1
+	*vs = VUberShaderGX2;
+#else
 	GX2VertexShaderEmitter emit_(vs);
 
 	Reg pos = emit_.allocReg(VSInput::POSITION);
@@ -74,7 +77,7 @@ void GenerateVertexShaderGX2(const VShaderID &id, GX2VertexShader *vs) {
 	}
 
 	emit_.END_OF_PROGRAM();
-
+#endif
 #if 1
 	DEBUG_STR(VertexShaderDesc(id).c_str());
 	char buffer[16384];

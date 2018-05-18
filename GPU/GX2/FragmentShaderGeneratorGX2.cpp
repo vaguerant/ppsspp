@@ -30,6 +30,9 @@
 
 using namespace GX2Gen;
 void GenerateFragmentShaderGX2(const FShaderID &id, GX2PixelShader *ps) {
+#if 1
+	*ps = PUberShaderGX2;
+#else
 	GX2PixelShaderEmitter emit_(ps);
 
 	Reg color = emit_.allocReg(PSInput::COLOR0);
@@ -63,9 +66,6 @@ void GenerateFragmentShaderGX2(const FShaderID &id, GX2PixelShader *ps) {
 				break;
 			default:
 			case GE_TEXFUNC_ADD:
-			case GE_TEXFUNC_UNKNOWN1:
-			case GE_TEXFUNC_UNKNOWN2:
-			case GE_TEXFUNC_UNKNOWN3:
 				emit_.ADD(color(r), color(r), sample(r));
 				emit_.ADD(color(g), color(g), sample(g));
 				emit_.ADD(color(b), color(b), sample(b));
@@ -77,7 +77,7 @@ void GenerateFragmentShaderGX2(const FShaderID &id, GX2PixelShader *ps) {
 
 	emit_.EXP_DONE_PIX(color);
 	emit_.END_OF_PROGRAM();
-
+#endif
 #if 1
 	DEBUG_STR(FragmentShaderDesc(id).c_str());
 	char buffer[16384];

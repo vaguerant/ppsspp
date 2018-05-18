@@ -22,6 +22,7 @@
 #include <wiiu/gx2.h>
 #include <wiiu/os/memory.h>
 
+#include "Common/Swap.h"
 #include "base/basictypes.h"
 #include "GPU/Common/ShaderCommon.h"
 #include "GPU/Common/ShaderId.h"
@@ -55,10 +56,84 @@ enum class UB_Bindings : u32 {
 
 } // namespace GX2Gen
 
+struct UB_VSID
+{
+	u32_le VS_BIT_LMODE;
+	u32_le VS_BIT_IS_THROUGH;
+	u32_le VS_BIT_ENABLE_FOG;
+	u32_le VS_BIT_HAS_COLOR;
+	u32_le VS_BIT_DO_TEXTURE;
+	u32_le VS_BIT_DO_TEXTURE_TRANSFORM;
+	u32_le VS_BIT_USE_HW_TRANSFORM;
+	u32_le VS_BIT_HAS_NORMAL;
+	u32_le VS_BIT_NORM_REVERSE;
+	u32_le VS_BIT_HAS_TEXCOORD;
+	u32_le VS_BIT_HAS_COLOR_TESS;
+	u32_le VS_BIT_HAS_TEXCOORD_TESS;
+	u32_le VS_BIT_NORM_REVERSE_TESS;
+	u32_le VS_BIT_UVGEN_MODE;
+	u32_le VS_BIT_UVPROJ_MODE;
+	u32_le VS_BIT_LS0;
+	u32_le VS_BIT_LS1;
+	u32_le VS_BIT_BONES;
+	u32_le VS_BIT_ENABLE_BONES;
+	u32_le VS_BIT_LIGHT0_COMP;
+	u32_le VS_BIT_LIGHT0_TYPE;
+	u32_le VS_BIT_LIGHT1_COMP;
+	u32_le VS_BIT_LIGHT1_TYPE;
+	u32_le VS_BIT_LIGHT2_COMP;
+	u32_le VS_BIT_LIGHT2_TYPE;
+	u32_le VS_BIT_LIGHT3_COMP;
+	u32_le VS_BIT_LIGHT3_TYPE;
+	u32_le VS_BIT_MATERIAL_UPDATE;
+	u32_le VS_BIT_SPLINE;
+	u32_le VS_BIT_LIGHT0_ENABLE;
+	u32_le VS_BIT_LIGHT1_ENABLE;
+	u32_le VS_BIT_LIGHT2_ENABLE;
+	u32_le VS_BIT_LIGHT3_ENABLE;
+	u32_le VS_BIT_LIGHTING_ENABLE;
+	u32_le VS_BIT_WEIGHT_FMTSCALE;
+	u32_le VS_BIT_FLATSHADE;
+	u32_le VS_BIT_BEZIER;
+}__attribute__((aligned(64)));
+
+struct UB_FSID
+{
+	u32_le FS_BIT_CLEARMODE;
+	u32_le FS_BIT_DO_TEXTURE;
+	u32_le FS_BIT_TEXFUNC;
+	u32_le FS_BIT_TEXALPHA;
+	u32_le FS_BIT_SHADER_DEPAL;
+	u32_le FS_BIT_SHADER_TEX_CLAMP;
+	u32_le FS_BIT_CLAMP_S;
+	u32_le FS_BIT_CLAMP_T;
+	u32_le FS_BIT_TEXTURE_AT_OFFSET;
+	u32_le FS_BIT_LMODE;
+	u32_le FS_BIT_ALPHA_TEST;
+	u32_le FS_BIT_ALPHA_TEST_FUNC;
+	u32_le FS_BIT_ALPHA_AGAINST_ZERO;
+	u32_le FS_BIT_COLOR_TEST;
+	u32_le FS_BIT_COLOR_TEST_FUNC;
+	u32_le FS_BIT_COLOR_AGAINST_ZERO;
+	u32_le FS_BIT_ENABLE_FOG;
+	u32_le FS_BIT_DO_TEXTURE_PROJ;
+	u32_le FS_BIT_COLOR_DOUBLE;
+	u32_le FS_BIT_STENCIL_TO_ALPHA;
+	u32_le FS_BIT_REPLACE_ALPHA_WITH_STENCIL_TYPE;
+	u32_le FS_BIT_REPLACE_LOGIC_OP_TYPE;
+	u32_le FS_BIT_REPLACE_BLEND;
+	u32_le FS_BIT_BLENDEQ;
+	u32_le FS_BIT_BLENDFUNC_A;
+	u32_le FS_BIT_BLENDFUNC_B;
+	u32_le FS_BIT_FLATSHADE;
+	u32_le FS_BIT_BGRA_TEXTURE;
+}__attribute__((aligned(64)));
+
 class GX2PShader : public GX2PixelShader {
 public:
 	GX2PShader(FShaderID id);
 	~GX2PShader() {
+		MEM2_free(ub_id);
 		if (gx2rBuffer.flags & GX2R_RESOURCE_LOCKED_READ_ONLY)
 			return;
 		MEM2_free(program);
@@ -68,6 +143,7 @@ public:
 	const u8 *bytecode() const { return program; }
 	std::string GetShaderString(DebugShaderStringType type) const;
 
+	UB_FSID* ub_id;
 protected:
 	FShaderID id_;
 };
@@ -76,6 +152,7 @@ class GX2VShader : public GX2VertexShader {
 public:
 	GX2VShader(VShaderID id);
 	~GX2VShader() {
+		MEM2_free(ub_id);
 		if (gx2rBuffer.flags & GX2R_RESOURCE_LOCKED_READ_ONLY)
 			return;
 		MEM2_free(program);
@@ -85,6 +162,7 @@ public:
 	const u8 *bytecode() const { return program; }
 	std::string GetShaderString(DebugShaderStringType type) const;
 
+	UB_VSID* ub_id;
 protected:
 	VShaderID id_;
 };
@@ -128,9 +206,9 @@ private:
 	UB_VS_Bones ub_bones;
 
 	// Not actual pushbuffers
-	void *push_base;
-	void *push_lights;
-	void *push_bones;
+	UB_VS_FS_Base *push_base;
+	UB_VS_Lights *push_lights;
+	UB_VS_Bones *push_bones;
 
 	GX2PShader *lastFShader_;
 	GX2VShader *lastVShader_;

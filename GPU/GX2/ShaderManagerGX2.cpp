@@ -39,6 +39,37 @@
 
 GX2PShader::GX2PShader(FShaderID id) : GX2PixelShader(), id_(id) {
 	GenerateFragmentShaderGX2(id, this);
+	ub_id = (UB_FSID *)MEM2_alloc(sizeof(UB_FSID), GX2_UNIFORM_BLOCK_ALIGNMENT);
+	memset(ub_id, 0, sizeof(UB_FSID));
+	ub_id->FS_BIT_CLEARMODE = id.Bit(FS_BIT_CLEARMODE);
+	ub_id->FS_BIT_DO_TEXTURE = id.Bit(FS_BIT_DO_TEXTURE);
+	ub_id->FS_BIT_TEXFUNC = id.Bits(FS_BIT_TEXFUNC, 3);
+	ub_id->FS_BIT_TEXALPHA = id.Bit(FS_BIT_TEXALPHA);
+	ub_id->FS_BIT_SHADER_DEPAL = id.Bit(FS_BIT_SHADER_DEPAL);
+	ub_id->FS_BIT_SHADER_TEX_CLAMP = id.Bit(FS_BIT_SHADER_TEX_CLAMP);
+	ub_id->FS_BIT_CLAMP_S = id.Bit(FS_BIT_CLAMP_S);
+	ub_id->FS_BIT_CLAMP_T = id.Bit(FS_BIT_CLAMP_T);
+	ub_id->FS_BIT_TEXTURE_AT_OFFSET = id.Bit(FS_BIT_TEXTURE_AT_OFFSET);
+	ub_id->FS_BIT_LMODE = id.Bit(FS_BIT_LMODE);
+	ub_id->FS_BIT_ALPHA_TEST = id.Bit(FS_BIT_ALPHA_TEST);
+	ub_id->FS_BIT_ALPHA_TEST_FUNC = id.Bits(FS_BIT_ALPHA_TEST_FUNC, 3);
+	ub_id->FS_BIT_ALPHA_AGAINST_ZERO = id.Bit(FS_BIT_ALPHA_AGAINST_ZERO);
+	ub_id->FS_BIT_COLOR_TEST = id.Bit(FS_BIT_COLOR_TEST);
+	ub_id->FS_BIT_COLOR_TEST_FUNC = id.Bits(FS_BIT_COLOR_TEST_FUNC, 2);
+	ub_id->FS_BIT_COLOR_AGAINST_ZERO = id.Bit(FS_BIT_COLOR_AGAINST_ZERO);
+	ub_id->FS_BIT_ENABLE_FOG = id.Bit(FS_BIT_ENABLE_FOG);
+	ub_id->FS_BIT_DO_TEXTURE_PROJ = id.Bit(FS_BIT_DO_TEXTURE_PROJ);
+	ub_id->FS_BIT_COLOR_DOUBLE = id.Bit(FS_BIT_COLOR_DOUBLE);
+	ub_id->FS_BIT_STENCIL_TO_ALPHA = id.Bits(FS_BIT_STENCIL_TO_ALPHA, 2);
+	ub_id->FS_BIT_REPLACE_ALPHA_WITH_STENCIL_TYPE = id.Bits(FS_BIT_REPLACE_ALPHA_WITH_STENCIL_TYPE, 4);
+	ub_id->FS_BIT_REPLACE_LOGIC_OP_TYPE = id.Bits(FS_BIT_REPLACE_LOGIC_OP_TYPE, 2);
+	ub_id->FS_BIT_REPLACE_BLEND = id.Bits(FS_BIT_REPLACE_BLEND, 3);
+	ub_id->FS_BIT_BLENDEQ = id.Bits(FS_BIT_BLENDEQ, 3);
+	ub_id->FS_BIT_BLENDFUNC_A = id.Bits(FS_BIT_BLENDFUNC_A, 4);
+	ub_id->FS_BIT_BLENDFUNC_B = id.Bits(FS_BIT_BLENDFUNC_B, 4);
+	ub_id->FS_BIT_FLATSHADE = id.Bit(FS_BIT_FLATSHADE);
+	ub_id->FS_BIT_BGRA_TEXTURE = id.Bit(FS_BIT_BGRA_TEXTURE);
+	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_UNIFORM_BLOCK, ub_id, sizeof(UB_FSID));
 }
 
 std::string GX2PShader::GetShaderString(DebugShaderStringType type) const {
@@ -53,6 +84,46 @@ std::string GX2PShader::GetShaderString(DebugShaderStringType type) const {
 
 GX2VShader::GX2VShader(VShaderID id) : GX2VertexShader(), id_(id) {
 	GenerateVertexShaderGX2(id, this);
+	ub_id = (UB_VSID *)MEM2_alloc(sizeof(UB_VSID), GX2_UNIFORM_BLOCK_ALIGNMENT);
+	memset(ub_id, 0, sizeof(UB_VSID));
+	ub_id->VS_BIT_LMODE = id.Bit(VS_BIT_LMODE);
+	ub_id->VS_BIT_IS_THROUGH = id.Bit(VS_BIT_IS_THROUGH);
+	ub_id->VS_BIT_ENABLE_FOG = id.Bit(VS_BIT_ENABLE_FOG);
+	ub_id->VS_BIT_HAS_COLOR = id.Bit(VS_BIT_HAS_COLOR);
+	ub_id->VS_BIT_DO_TEXTURE = id.Bit(VS_BIT_DO_TEXTURE);
+	ub_id->VS_BIT_DO_TEXTURE_TRANSFORM = id.Bit(VS_BIT_DO_TEXTURE_TRANSFORM);
+	ub_id->VS_BIT_USE_HW_TRANSFORM = id.Bit(VS_BIT_USE_HW_TRANSFORM);
+	ub_id->VS_BIT_HAS_NORMAL = id.Bit(VS_BIT_HAS_NORMAL);
+	ub_id->VS_BIT_NORM_REVERSE = id.Bit(VS_BIT_NORM_REVERSE);
+	ub_id->VS_BIT_HAS_TEXCOORD = id.Bit(VS_BIT_HAS_TEXCOORD);
+	ub_id->VS_BIT_HAS_COLOR_TESS = id.Bit(VS_BIT_HAS_COLOR_TESS);
+	ub_id->VS_BIT_HAS_TEXCOORD_TESS = id.Bit(VS_BIT_HAS_TEXCOORD_TESS);
+	ub_id->VS_BIT_NORM_REVERSE_TESS = id.Bit(VS_BIT_NORM_REVERSE_TESS);
+	ub_id->VS_BIT_UVGEN_MODE = id.Bit(VS_BIT_UVGEN_MODE);
+	ub_id->VS_BIT_UVPROJ_MODE = id.Bits(VS_BIT_UVPROJ_MODE, 2);
+	ub_id->VS_BIT_LS0 = id.Bits(VS_BIT_LS0, 2);
+	ub_id->VS_BIT_LS1 = id.Bits(VS_BIT_LS1, 2);
+	ub_id->VS_BIT_BONES = id.Bits(VS_BIT_BONES, 3);
+	ub_id->VS_BIT_ENABLE_BONES = id.Bit(VS_BIT_ENABLE_BONES);
+	ub_id->VS_BIT_LIGHT0_COMP = id.Bits(VS_BIT_LIGHT0_COMP, 2);
+	ub_id->VS_BIT_LIGHT0_TYPE = id.Bits(VS_BIT_LIGHT0_TYPE, 2);
+	ub_id->VS_BIT_LIGHT1_COMP = id.Bits(VS_BIT_LIGHT1_COMP, 2);
+	ub_id->VS_BIT_LIGHT1_TYPE = id.Bits(VS_BIT_LIGHT1_TYPE, 2);
+	ub_id->VS_BIT_LIGHT2_COMP = id.Bits(VS_BIT_LIGHT2_COMP, 2);
+	ub_id->VS_BIT_LIGHT2_TYPE = id.Bits(VS_BIT_LIGHT2_TYPE, 2);
+	ub_id->VS_BIT_LIGHT3_COMP = id.Bits(VS_BIT_LIGHT3_COMP, 2);
+	ub_id->VS_BIT_LIGHT3_TYPE = id.Bits(VS_BIT_LIGHT3_TYPE, 2);
+	ub_id->VS_BIT_MATERIAL_UPDATE = id.Bits(VS_BIT_MATERIAL_UPDATE, 3);
+	ub_id->VS_BIT_SPLINE = id.Bit(VS_BIT_SPLINE);
+	ub_id->VS_BIT_LIGHT0_ENABLE = id.Bit(VS_BIT_LIGHT0_ENABLE);
+	ub_id->VS_BIT_LIGHT1_ENABLE = id.Bit(VS_BIT_LIGHT1_ENABLE);
+	ub_id->VS_BIT_LIGHT2_ENABLE = id.Bit(VS_BIT_LIGHT2_ENABLE);
+	ub_id->VS_BIT_LIGHT3_ENABLE = id.Bit(VS_BIT_LIGHT3_ENABLE);
+	ub_id->VS_BIT_LIGHTING_ENABLE = id.Bit(VS_BIT_LIGHTING_ENABLE);
+	ub_id->VS_BIT_WEIGHT_FMTSCALE = id.Bits(VS_BIT_WEIGHT_FMTSCALE, 2);
+	ub_id->VS_BIT_FLATSHADE = id.Bit(VS_BIT_FLATSHADE);
+	ub_id->VS_BIT_BEZIER = id.Bit(VS_BIT_BEZIER);
+	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_UNIFORM_BLOCK, ub_id, sizeof(UB_VSID));
 }
 
 std::string GX2VShader::GetShaderString(DebugShaderStringType type) const {
@@ -75,9 +146,9 @@ ShaderManagerGX2::ShaderManagerGX2(GX2ContextState *context)
 	INFO_LOG(G3D, "sizeof(ub_lights): %d", (int)sizeof(ub_lights));
 	INFO_LOG(G3D, "sizeof(ub_bones): %d", (int)sizeof(ub_bones));
 
-	push_base = MEM2_alloc(sizeof(ub_base), GX2_UNIFORM_BLOCK_ALIGNMENT);
-	push_lights = MEM2_alloc(sizeof(ub_lights), GX2_UNIFORM_BLOCK_ALIGNMENT);
-	push_bones = MEM2_alloc(sizeof(ub_bones), GX2_UNIFORM_BLOCK_ALIGNMENT);
+	push_base = (UB_VS_FS_Base*)MEM2_alloc(sizeof(ub_base), GX2_UNIFORM_BLOCK_ALIGNMENT);
+	push_lights = (UB_VS_Lights*)MEM2_alloc(sizeof(ub_lights), GX2_UNIFORM_BLOCK_ALIGNMENT);
+	push_bones = (UB_VS_Bones*)MEM2_alloc(sizeof(ub_bones), GX2_UNIFORM_BLOCK_ALIGNMENT);
 }
 
 ShaderManagerGX2::~ShaderManagerGX2() {
@@ -202,6 +273,9 @@ void ShaderManagerGX2::GetShaders(int prim, u32 vertType, GX2VShader **vshader, 
 
 	*vshader = vs;
 	*fshader = fs;
+
+	GX2SetVertexUniformBlock(4, sizeof(UB_VSID), vs->ub_id);
+	GX2SetPixelUniformBlock(5, sizeof(UB_FSID), fs->ub_id);
 }
 
 std::vector<std::string> ShaderManagerGX2::DebugGetShaderIDs(DebugShaderType type) {

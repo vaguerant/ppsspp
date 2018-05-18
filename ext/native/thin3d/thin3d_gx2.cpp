@@ -789,7 +789,7 @@ uint32_t GX2DrawContext::GetDataFormatSupport(DataFormat fmt) const {
 }
 
 void GX2DrawContext::BindTextures(int start, int count, Texture **textures) {
-	GX2DrawDone();
+//	GX2DrawDone();
 	while (count--) {
 		GX2TextureObject *texture = (GX2TextureObject *)*textures++;
 		if (texture && texture->tex.surface.image) {
@@ -811,7 +811,7 @@ void GX2DrawContext::Clear(int mask, uint32_t colorval, float depthVal, int sten
 	float f[4];
 	Uint8x4ToFloat4(f, colorval);
 
-	GX2DrawDone();
+//	GX2DrawDone();
 	int flags = (mask >> 1) & 0x3;
 
 	if (flags && (mask & FBChannel::FB_COLOR_BIT)) {
@@ -822,7 +822,6 @@ void GX2DrawContext::Clear(int mask, uint32_t colorval, float depthVal, int sten
 		GX2ClearDepthStencilEx(current_depth_buffer_, depthVal, stencilVal, (GX2ClearFlags)flags);
 	}
 
-	GX2ClearColor(current_color_buffer_, 0.0, 0.0, 1.0, 1.0);
 	GX2SetContextState(context_state_);
 	GX2SetShaderMode(GX2_SHADER_MODE_UNIFORM_BLOCK);
 }
@@ -831,12 +830,12 @@ void GX2DrawContext::BeginFrame() {}
 
 void GX2DrawContext::CopyFramebufferImage(Framebuffer *srcfb, int level, int x, int y, int z, Framebuffer *dstfb, int dstLevel, int dstX, int dstY, int dstZ, int width, int height, int depth, int channelBit) {
 	// TODO
-	Crash();
+//	Crash();
 }
 
 bool GX2DrawContext::BlitFramebuffer(Framebuffer *srcfb, int srcX1, int srcY1, int srcX2, int srcY2, Framebuffer *dstfb, int dstX1, int dstY1, int dstX2, int dstY2, int channelBits, FBBlitFilter filter) {
 	// TODO
-	Crash();
+//	Crash();
 	return false;
 }
 
@@ -894,7 +893,7 @@ bool GX2DrawContext::CopyFramebufferToMemorySync(Framebuffer *src, int channelBi
 void GX2DrawContext::BindFramebufferAsRenderTarget(Framebuffer *fbo_, const RenderPassInfo &rp) {
 	GX2Framebuffer *fbo = (GX2Framebuffer *)fbo_;
 
-	GX2DrawDone();
+//	GX2DrawDone();
 	if (fbo) {
 		current_color_buffer_ = &fbo->colorBuffer;
 		current_depth_buffer_ = &fbo->depthBuffer;
@@ -928,13 +927,13 @@ void GX2DrawContext::BindFramebufferAsTexture(Framebuffer *fbo_, int binding, FB
 	GX2Framebuffer *fbo = (GX2Framebuffer *)fbo_;
 	_assert_(channelBit == FB_COLOR_BIT);
 
-	GX2DrawDone();
+//	GX2DrawDone();
 	GX2SetPixelTexture(&fbo->colorTexture, binding);
 }
 
 uintptr_t GX2DrawContext::GetFramebufferAPITexture(Framebuffer *fbo_, int channelBit, int attachment) {
 	GX2Framebuffer *fbo = (GX2Framebuffer *)fbo_;
-	GX2DrawDone();
+//	GX2DrawDone();
 	if (channelBit == FB_COLOR_BIT) {
 		return (uintptr_t)&fbo->colorTexture;
 	} else {

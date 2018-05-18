@@ -44,7 +44,7 @@
 #include "GPU/GX2/ShaderManagerGX2.h"
 #include "GPU/GX2/GPU_GX2.h"
 
-static const GX2PrimitiveMode GX2prim[8] = { GX2_PRIMITIVE_MODE_POINTS, GX2_PRIMITIVE_MODE_LINES, GX2_PRIMITIVE_MODE_LINE_STRIP, GX2_PRIMITIVE_MODE_TRIANGLES, GX2_PRIMITIVE_MODE_TRIANGLE_STRIP, GX2_PRIMITIVE_MODE_TRIANGLE_FAN, GX2_PRIMITIVE_MODE_QUADS, GX2_PRIMITIVE_MODE_INVALID };
+static const GX2PrimitiveMode GX2prim[8] = { GX2_PRIMITIVE_MODE_POINTS, GX2_PRIMITIVE_MODE_LINES, GX2_PRIMITIVE_MODE_LINE_STRIP, GX2_PRIMITIVE_MODE_TRIANGLES, GX2_PRIMITIVE_MODE_TRIANGLE_STRIP, GX2_PRIMITIVE_MODE_TRIANGLES, GX2_PRIMITIVE_MODE_TRIANGLES, GX2_PRIMITIVE_MODE_INVALID };
 
 #define VERTEXCACHE_DECIMATION_INTERVAL 17
 
@@ -140,8 +140,8 @@ static const DeclTypeInfo VComp[] = {
 	{ GX2_COMP_SEL(_r, _g, _0, _1), GX2_ATTRIB_FORMAT_UNORM_8_8 },         // DEC_U8_2,
 	{ GX2_COMP_SEL(_r, _g, _b, _1), GX2_ATTRIB_FORMAT_UNORM_8_8_8_8 },     // DEC_U8_3,
 	{ GX2_COMP_SEL(_a, _b, _g, _r), GX2_ATTRIB_FORMAT_UNORM_8_8_8_8 },     // DEC_U8_4,
-	{ GX2_COMP_SEL(_x, _0, _0, _1), GX2_ATTRIB_FORMAT_UINT_16 },           // DEC_U16_1,
-	{ GX2_COMP_SEL(_x, _y, _0, _1), GX2_ATTRIB_FORMAT_UINT_16 },           // DEC_U16_2,
+	{ GX2_COMP_SEL(_x, _0, _0, _1), GX2_ATTRIB_FORMAT_UNORM_16 },          // DEC_U16_1,
+	{ GX2_COMP_SEL(_x, _y, _0, _1), GX2_ATTRIB_FORMAT_UNORM_16_16 },       // DEC_U16_2,
 	{ GX2_COMP_SEL(_x, _y, _z, _1), GX2_ATTRIB_FORMAT_UNORM_16_16_16_16 }, // DEC_U16_3,
 	{ GX2_COMP_SEL(_x, _y, _z, _w), GX2_ATTRIB_FORMAT_UNORM_16_16_16_16 }, // DEC_U16_4,
 };
@@ -641,6 +641,7 @@ void DrawEngineGX2::DoFlush() {
 	gstate_c.vertBounds.maxU = 0;
 	gstate_c.vertBounds.maxV = 0;
 
+	GX2Flush();
 #if 0
 	// We only support GPU debugging on Windows, and that's the only use case for this.
 	host->GPUNotifyDraw();
