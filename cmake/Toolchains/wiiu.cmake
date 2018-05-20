@@ -37,7 +37,7 @@ include_directories($ENV{DEVKITPRO}/portlibs/ppc/include)
 link_directories($ENV{DEVKITPRO}/portlibs/ppc/lib)
 
 
-set(ARCH_FLAGS "-mwup -mcpu=750 -meabi -mhard-float")
+set(ARCH_FLAGS "-mwup -mcpu=750 -meabi -mhard-float -D__powerpc__ -DWORDS_BIGENDIAN")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ARCH_FLAGS}")
 set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${ARCH_FLAGS} -mregnames")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ARCH_FLAGS}")
@@ -101,8 +101,6 @@ endif()
 set(ELF2RPL "${WIIU_ROOT}/elf2rpl/elf2rpl")
 
 macro(add_rpx_target target)
-    add_custom_target(${target}.rpx ALL)
-    add_dependencies(${target}.rpx ${target})
-    add_custom_command(TARGET ${target}.rpx
+    add_custom_command(TARGET ${target} POST_BUILD
                        COMMAND ${ELF2RPL} ${target} ${target}.rpx)
 endmacro()
