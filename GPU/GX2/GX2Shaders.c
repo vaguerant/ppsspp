@@ -244,7 +244,7 @@ static struct
 	u64 alu8[16];        /* 54 */
 	u64 alu9[16];        /* 70 */
 	u64 alu10[2];        /* 86 */
-} VUberShaderCode =
+} ST_VShaderCode =
 {
 	{
 		CALL_FS NO_BARRIER,
@@ -264,7 +264,7 @@ static struct
 		ALU(54,16) KCACHE0(CB1, _0_15),
 		ELSE(1, 17),
 		ALU_POP_AFTER(70,16) KCACHE0(CB1, _0_15),
-		ALU(86,2) KCACHE0(CB4, _0_15),
+		ALU(86,2),
 		EXP_DONE(POS0, _R2,_x,_y,_z,_w),
 		EXP(PARAM0, _R1,_x,_y,_z,_w) NO_BARRIER,
 		EXP(PARAM1, _R5,_x,_y,_z,_w) NO_BARRIER,
@@ -279,7 +279,7 @@ static struct
 		ALU_MOV(_R5,_z, ALU_SRC_0,_x)
 		ALU_LAST,
 		/* 1 */
-		ALU_PRED_SETNE_INT(__,_x, KC0(1),_x, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_PRED_SETNE_INT(__,_x, KC0(5),_x, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
 		ALU_LAST,
 	},
 	{
@@ -287,12 +287,12 @@ static struct
 		ALU_MOV(_R0,_w, ALU_SRC_0,_x)
 		ALU_LAST,
 		/* 3 */
-		ALU_PRED_SETNE_INT(__,_x, KC0(1),_y, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_PRED_SETNE_INT(__,_x, KC0(5),_y, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
 		ALU_LAST,
 	},
 	{
 		/* 4 */
-		ALU_NOT_INT(__,_x, KC0(0),_y)
+		ALU_NOT_INT(__,_x, KC0(4),_y)
 		ALU_LAST,
 		/* 5 */
 		ALU_CNDE_INT(_R0,_w, ALU_SRC_PV,_x, ALU_SRC_0,_x, ALU_SRC_M_1_INT,_x)
@@ -311,14 +311,14 @@ static struct
 	},
 	{
 		/* 8 */
-		ALU_PRED_SETNE_INT(__,_x, KC0(0),_w, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_PRED_SETNE_INT(__,_x, KC0(4),_w, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
 		ALU_LAST,
 	},
 	{
 		/* 9 */
-		ALU_CNDE_INT(_R5,_x, KC0(0),_x, ALU_SRC_0,_x, _R2,_x),
-		ALU_CNDE_INT(_R5,_y, KC0(0),_x, ALU_SRC_0,_x, _R2,_y),
-		ALU_CNDE_INT(_R5,_z, KC0(0),_x, ALU_SRC_0,_x, _R2,_z)
+		ALU_CNDE_INT(_R5,_x, KC0(4),_x, ALU_SRC_0,_x, _R2,_x),
+		ALU_CNDE_INT(_R5,_y, KC0(4),_x, ALU_SRC_0,_x, _R2,_y),
+		ALU_CNDE_INT(_R5,_z, KC0(4),_x, ALU_SRC_0,_x, _R2,_z)
 		ALU_LAST,
 	},
 	{
@@ -331,7 +331,7 @@ static struct
 	},
 	{
 		/* 11 */
-		ALU_PRED_SETNE_INT(__,_x, KC0(0),_y, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_PRED_SETNE_INT(__,_x, KC0(4),_y, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
 		ALU_LAST,
 	},
 	{
@@ -389,12 +389,12 @@ static struct
 	{
 		/* 20 */
 		ALU_NOP(__,_x),
-		ALU_CNDE_INT(_R3,_x, KC0(0),_z, ALU_SRC_0,_x, _R3,_w) VEC_021
+		ALU_MOV(_R3,_x, _R3,_w)
 		ALU_LAST,
 	},
 };
 
-GX2VertexShader VUberShaderGX2 = {
+GX2VertexShader ST_VShaderGX2 = {
 	{
 		.sq_pgm_resources_vs.num_gprs = 6,
 		.sq_pgm_resources_vs.stack_size = 1,
@@ -420,8 +420,8 @@ GX2VertexShader VUberShaderGX2 = {
 		.vgt_vertex_reuse_block_cntl.vtx_reuse_depth = 0xE,
 		.vgt_hos_reuse_depth.reuse_depth = 0x10,
 	}, /* regs */
-	.size = sizeof(VUberShaderCode),
-	.program = (u8 *)&VUberShaderCode,
+	.size = sizeof(ST_VShaderCode),
+	.program = (u8 *)&ST_VShaderCode,
 	.mode = GX2_SHADER_MODE_UNIFORM_BLOCK,
 	.gx2rBuffer.flags = GX2R_RESOURCE_LOCKED_READ_ONLY,
 };
@@ -3323,4 +3323,1110 @@ GX2PixelShader PUberShaderGX2 = {
 	.program = (uint8_t *)&PUberShaderCode,
 	.mode = GX2_SHADER_MODE_UNIFORM_BLOCK,
 	.gx2rBuffer.flags = GX2R_RESOURCE_LOCKED_READ_ONLY,
+};
+
+__attribute__((aligned(GX2_SHADER_ALIGNMENT)))
+static struct
+{
+	u64 cf[128];
+	u64 alu[54];         /* 128 */
+	u64 alu1[27];        /* 182 */
+	u64 alu2[1];         /* 209 */
+	u64 alu3[12];        /* 210 */
+	u64 alu4[1];         /* 222 */
+	u64 alu5[8];         /* 223 */
+	u64 alu6[6];         /* 231 */
+	u64 alu7[12];        /* 237 */
+	u64 alu8[3];         /* 249 */
+	u64 alu9[5];         /* 252 */
+	u64 alu10[3];        /* 257 */
+	u64 alu11[1];        /* 260 */
+	u64 alu12[11];       /* 261 */
+	u64 alu13[13];       /* 272 */
+	u64 alu14[1];        /* 285 */
+	u64 alu15[2];        /* 286 */
+	u64 alu16[3];        /* 288 */
+	u64 alu17[20];       /* 291 */
+	u64 alu18[13];       /* 311 */
+	u64 alu19[17];       /* 324 */
+	u64 alu20[18];       /* 341 */
+	u64 alu21[3];        /* 359 */
+	u64 alu22[9];        /* 362 */
+	u64 alu23[1];        /* 371 */
+	u64 alu24[23];       /* 372 */
+	u64 alu25[1];        /* 395 */
+	u64 alu26[4];        /* 396 */
+	u64 alu27[4];        /* 400 */
+	u64 alu28[3];        /* 404 */
+	u64 alu29[1];        /* 407 */
+	u64 alu30[2];        /* 408 */
+	u64 alu31[2];        /* 410 */
+	u64 alu32[1];        /* 412 */
+	u64 alu33[3];        /* 413 */
+	u64 alu34[3];        /* 416 */
+	u64 alu35[9];        /* 419 */
+	u64 alu36[3];        /* 428 */
+	u64 alu37[2];        /* 431 */
+	u64 alu38[1];        /* 433 */
+	u64 alu39[3];        /* 434 */
+	u64 alu40[3];        /* 437 */
+	u64 alu41[9];        /* 440 */
+	u64 alu42[2];        /* 449 */
+	u64 alu43[1];        /* 451 */
+	u64 alu44[2];        /* 452 */
+	u64 alu45[8];        /* 454 */
+	u64 alu46[3];        /* 462 */
+	u64 alu47[1];        /* 465 */
+	u64 alu48[14];       /* 466 */
+	u64 alu49[5];        /* 480 */
+	u64 alu50[3];        /* 485 */
+	u64 alu51[1];        /* 488 */
+	u64 alu52[5];        /* 489 */
+	u64 alu53[5];        /* 494 */
+	u64 alu54[4];        /* 499 */
+	u64 alu55[14];       /* 503 */
+	u64 alu56[3];        /* 517 */
+	u64 alu57[3];        /* 520 */
+	u64 alu58[37];       /* 523 */
+	u64 alu59[16];       /* 560 */
+	u64 tex60[1 * 2];    /* 576 */
+	u64 tex61[1 * 2];    /* 578 */
+	u64 tex62[1 * 2];    /* 580 */
+	u64 tex63[1 * 2];    /* 582 */
+	u64 tex64[2 * 2];    /* 584 */
+	u64 tex65[2 * 2];    /* 588 */
+	u64 tex66[1 * 2];    /* 592 */
+	u64 tex67[2 * 2];    /* 594 */
+} TAL_VShaderCode =
+{
+	{
+		CALL_FS NO_BARRIER,
+		ALU_PUSH_BEFORE(128,54) KCACHE0(CB1, _0_15) KCACHE1(CB4, _0_15),
+		JUMP(1, 4),
+		ALU_POP_AFTER(182,27) KCACHE0(CB4, _0_15) KCACHE1(CB1, _0_15),
+		ALU_PUSH_BEFORE(209,1) KCACHE0(CB4, _0_15),
+		JUMP(0,44),
+		ALU(210,12) KCACHE0(CB1, _16_31) KCACHE1(CB2, _0_15),
+		ALU_PUSH_BEFORE(222,1) KCACHE0(CB4, _0_15),
+		JUMP(1, 11),
+		ALU(223,8) KCACHE0(CB4, _0_15) KCACHE1(CB1, _16_31),
+		ALU_POP_AFTER(231,6) KCACHE0(CB2, _0_15),
+		ALU(237,12) KCACHE0(CB2, _0_15),
+		LOOP_START_DX10(43),
+			ALU_BREAK(249,3),
+			TEX(576,1),
+			ALU_PUSH_BEFORE(252,5),
+			JUMP(1, 42),
+			TEX(578,1),
+			ALU(257,3),
+			TEX(580,1),
+			ALU_PUSH_BEFORE(260,1),
+			JUMP(0,25),
+			ALU(261,11),
+			TEX(582,1),
+			ALU(272,13),
+			ELSE(1, 27),
+			ALU_POP_AFTER(285,1),
+			ALU_PUSH_BEFORE(286,2),
+			JUMP(1, 32),
+			ALU(288,3),
+			TEX(584,2),
+			ALU_POP_AFTER(291,20),
+			ALU(311,13),
+			TEX(588,2),
+			ALU_PUSH_BEFORE(324,17) KCACHE0(CB2, _0_15),
+			JUMP(1, 41),
+			ALU_PUSH_BEFORE(341,18),
+			JUMP(2, 41),
+			ALU(359,3),
+			TEX(592,1),
+			ALU_POP2_AFTER(362,9) KCACHE0(CB2, _0_15),
+			ALU_POP_AFTER(371,1),
+			LOOP_END(13),
+		ALU(372,23) KCACHE0(CB4, _0_15),
+		ELSE(1, 51),
+		ALU_PUSH_BEFORE(395,1) KCACHE0(CB4, _0_15),
+		JUMP(0,48),
+		ALU(396,4) KCACHE0(CB1, _16_31),
+		ELSE(1, 50),
+		ALU_POP_AFTER(400,4),
+		ALU_POP_AFTER(404,3),
+		ALU_PUSH_BEFORE(407,1) KCACHE0(CB4, _0_15),
+		JUMP(1, 113),
+		ALU_PUSH_BEFORE(408,2) KCACHE0(CB4, _0_15),
+		JUMP(0,64),
+		ALU_PUSH_BEFORE(410,2) KCACHE0(CB4, _0_15),
+		JUMP(0,62),
+		ALU_PUSH_BEFORE(412,1) KCACHE0(CB4, _0_15),
+		JUMP(0,60),
+		ALU(413,3) KCACHE0(CB1, _16_31),
+		ELSE(1, 62),
+		ALU_POP_AFTER(416,3),
+		ELSE(1, 64),
+		ALU_POP_AFTER(419,9) KCACHE0(CB1, _16_31) KCACHE1(CB4, _0_15),
+		ELSE(1, 112),
+		ALU_PUSH_BEFORE(428,3) KCACHE0(CB4, _0_15),
+		JUMP(0,76),
+		ALU_PUSH_BEFORE(431,2) KCACHE0(CB4, _0_15),
+		JUMP(0,74),
+		ALU_PUSH_BEFORE(433,1) KCACHE0(CB4, _0_15),
+		JUMP(0,72),
+		ALU(434,3) KCACHE0(CB1, _16_31),
+		ELSE(1, 74),
+		ALU_POP_AFTER(437,3),
+		ELSE(1, 76),
+		ALU_POP_AFTER(440,9) KCACHE0(CB1, _16_31) KCACHE1(CB4, _0_15),
+		ELSE(0,111),
+		ALU_PUSH_BEFORE(449,2) KCACHE0(CB4, _0_15),
+		JUMP(0,105),
+		ALU_PUSH_BEFORE(451,1) KCACHE0(CB4, _0_15),
+		JUMP(0,102),
+		ALU_PUSH_BEFORE(452,2) KCACHE0(CB4, _0_15),
+		JUMP(0,84),
+		ALU(454,8) KCACHE0(CB4, _0_15),
+		ELSE(1, 102),
+		ALU_PUSH_BEFORE(462,3) KCACHE0(CB4, _0_15),
+		JUMP(0,92),
+		ALU_PUSH_BEFORE(465,1) KCACHE0(CB4, _0_15),
+		JUMP(0,90),
+		ALU(466,14) KCACHE0(CB4, _0_15),
+		ELSE(1, 92),
+		ALU_POP_AFTER(480,5),
+		ELSE(1, 101),
+		ALU_PUSH_BEFORE(485,3) KCACHE0(CB4, _0_15),
+		JUMP(3, 102),
+		ALU_PUSH_BEFORE(488,1) KCACHE0(CB4, _0_15),
+		JUMP(0,98),
+		ALU(489,5) KCACHE0(CB4, _0_15),
+		ELSE(1, 100),
+		ALU_POP_AFTER(494,5),
+		POP(2, 101),
+		POP(1, 102),
+		ELSE(1, 104),
+		ALU_POP_AFTER(499,4),
+		ALU(503,14) KCACHE0(CB1, _0_31),
+		ELSE(1, 111),
+		ALU_PUSH_BEFORE(517,3) KCACHE0(CB4, _0_15),
+		JUMP(5, 113),
+		ALU(520,3) KCACHE0(CB4, _0_15),
+		TEX(594,2),
+		ALU_POP2_AFTER(523,37) KCACHE0(CB1, _16_31),
+		POP(2, 112),
+		POP(1, 113),
+		ALU(560,2) KCACHE0(CB1, _16_31),
+		EXP_DONE(POS0, _R7,_x,_y,_z,_w),
+		EXP(PARAM0, _R5,_x,_y,_z,_w) NO_BARRIER,
+		EXP(PARAM1, _R10,_x,_y,_z,_w) NO_BARRIER,
+		EXP(PARAM2, _R6,_x,_y,_z,_w) NO_BARRIER,
+		EXP_DONE(PARAM3, _R0,_x,_y,_y,_y) NO_BARRIER
+		END_OF_PROGRAM
+	},
+	{
+		/* 0 */
+		ALU_MUL(_R127,_x, KC0(3),_z, ALU_SRC_1,_x),
+		ALU_MUL(_R127,_y, KC0(3),_y, ALU_SRC_1,_x),
+		ALU_MUL(_R127,_z, KC0(3),_x, ALU_SRC_1,_x),
+		ALU_MOV(_R2,_w, ALU_SRC_LITERAL,_x),
+		ALU_MUL(_R127,_w, KC0(3),_w, ALU_SRC_1,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x3F800000),
+		/* 1 */
+		ALU_DOT4(_R10,_x, _R3,_x, KC0(11),_x),
+		ALU_DOT4(__,_y, _R3,_y, KC0(11),_y),
+		ALU_DOT4(__,_z, _R3,_z, KC0(11),_z),
+		ALU_DOT4(__,_w, ALU_SRC_PV,_w, KC0(11),_w),
+		ALU_MOV(_R11,_x, ALU_SRC_0,_x)
+		ALU_LAST,
+		/* 2 */
+		ALU_DOT4(__,_x, _R3,_x, KC0(12),_x),
+		ALU_DOT4(_R5,_y, _R3,_y, KC0(12),_y),
+		ALU_DOT4(__,_z, _R3,_z, KC0(12),_z),
+		ALU_DOT4(__,_w, _R2,_w, KC0(12),_w),
+		ALU_MOV(_R9,_y, ALU_SRC_0,_x)
+		ALU_LAST,
+		/* 3 */
+		ALU_DOT4(__,_x, _R3,_x, KC0(13),_x),
+		ALU_DOT4(__,_y, _R3,_y, KC0(13),_y),
+		ALU_DOT4(_R4,_z, _R3,_z, KC0(13),_z),
+		ALU_DOT4(__,_w, _R2,_w, KC0(13),_w),
+		ALU_MOV(_R0,_w, ALU_SRC_LITERAL,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x3F800000),
+		/* 4 */
+		ALU_DOT4(_R9,_x, _R10,_x, KC0(10),_x),
+		ALU_DOT4(__,_y, _R5,_y, KC0(10),_y),
+		ALU_DOT4(__,_z, ALU_SRC_PV,_x, KC0(10),_z),
+		ALU_DOT4(__,_w, ALU_SRC_PS,_x, KC0(10),_w),
+		ALU_MOV(_R9,_z, ALU_SRC_0,_x)
+		ALU_LAST,
+		/* 5 */
+		ALU_DOT4(__,_x, _R10,_x, KC0(9),_x),
+		ALU_DOT4(__,_y, _R5,_y, KC0(9),_y),
+		ALU_DOT4(__,_z, _R4,_z, KC0(9),_z),
+		ALU_DOT4(_R126,_w, _R0,_w, KC0(9),_w),
+		ALU_MOV(_R3,_w, ALU_SRC_LITERAL,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x3F800000),
+		/* 6 */
+		ALU_MULADD(_R127,_x, _R9,_x, KC0(2),_z, _R127,_x),
+		ALU_MULADD(_R127,_y, _R9,_x, KC0(2),_y, _R127,_y),
+		ALU_MULADD(_R127,_z, _R9,_x, KC0(2),_x, _R127,_z),
+		ALU_MULADD(_R127,_w, _R9,_x, KC0(2),_w, _R127,_w),
+		ALU_MOV(_R8,_x, ALU_SRC_0,_x)
+		ALU_LAST,
+		/* 7 */
+		ALU_DOT4(__,_x, _R10,_x, KC0(8),_x),
+		ALU_DOT4(_R126,_y, _R5,_y, KC0(8),_y),
+		ALU_DOT4(__,_z, _R4,_z, KC0(8),_z),
+		ALU_DOT4(__,_w, _R0,_w, KC0(8),_w),
+		ALU_MOV(_R8,_y, ALU_SRC_0,_x)
+		ALU_LAST,
+		/* 8 */
+		ALU_MULADD(_R123,_x, _R126,_w, KC0(1),_z, _R127,_x),
+		ALU_MULADD(_R123,_y, _R126,_w, KC0(1),_y, _R127,_y),
+		ALU_MULADD(_R123,_z, _R126,_w, KC0(1),_x, _R127,_z),
+		ALU_MULADD(_R123,_w, _R126,_w, KC0(1),_w, _R127,_w),
+		ALU_MOV(_R8,_z, ALU_SRC_LITERAL,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x3F800000),
+		/* 9 */
+		ALU_MULADD(_R7,_x, _R126,_y, KC0(0),_x, ALU_SRC_PV,_z),
+		ALU_MULADD(_R7,_y, _R126,_y, KC0(0),_y, ALU_SRC_PV,_y),
+		ALU_MULADD(_R7,_z, _R126,_y, KC0(0),_z, ALU_SRC_PV,_x),
+		ALU_MULADD(_R7,_w, _R126,_y, KC0(0),_w, ALU_SRC_PV,_w)
+		ALU_LAST,
+		/* 10 */
+		ALU_PRED_SETNE_INT(__,_x, KC1(5),_w, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 11 */
+		ALU_CNDE_INT(_R127,_x, KC0(6),_x, _R2,_x, _R2 _NEG,_x),
+		ALU_CNDE_INT(_R127,_y, KC0(6),_x, _R2,_y, _R2 _NEG,_y),
+		ALU_CNDE_INT(_R127,_z, KC0(6),_x, _R2,_z, _R2 _NEG,_z)
+		ALU_LAST,
+		/* 12 */
+		ALU_DOT4(_R126,_x, KC1(11),_x, ALU_SRC_PV,_x),
+		ALU_DOT4(__,_y, KC1(11),_y, ALU_SRC_PV,_y),
+		ALU_DOT4(__,_z, KC1(11),_z, ALU_SRC_PV,_z),
+		ALU_DOT4(__,_w, ALU_SRC_LITERAL,_x, ALU_SRC_0,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x80000000),
+		/* 13 */
+		ALU_DOT4(__,_x, KC1(12),_x, _R127,_x),
+		ALU_DOT4(_R126,_y, KC1(12),_y, _R127,_y),
+		ALU_DOT4(__,_z, KC1(12),_z, _R127,_z),
+		ALU_DOT4(__,_w, ALU_SRC_LITERAL,_x, ALU_SRC_0,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x80000000),
+		/* 14 */
+		ALU_DOT4(__,_x, KC1(13),_x, _R127,_x),
+		ALU_DOT4(__,_y, KC1(13),_y, _R127,_y),
+		ALU_DOT4(_R127,_z, KC1(13),_z, _R127,_z),
+		ALU_DOT4(__,_w, ALU_SRC_LITERAL,_x, ALU_SRC_0,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x80000000),
+		/* 15 */
+		ALU_DOT4_IEEE(__,_x, _R126,_x, _R126,_x),
+		ALU_DOT4_IEEE(__,_y, _R126,_y, _R126,_y),
+		ALU_DOT4_IEEE(__,_z, ALU_SRC_PV,_x, ALU_SRC_PV,_x),
+		ALU_DOT4_IEEE(__,_w, ALU_SRC_LITERAL,_x, ALU_SRC_0,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x80000000),
+		/* 16 */
+		ALU_RECIPSQRT_IEEE(__,_x, ALU_SRC_PV,_x) SCL_210
+		ALU_LAST,
+		/* 17 */
+		ALU_MUL(_R8,_x, _R126,_x, ALU_SRC_PS,_x),
+		ALU_MUL(_R8,_y, _R126,_y, ALU_SRC_PS,_x),
+		ALU_MUL(_R8,_z, _R127,_z, ALU_SRC_PS,_x)
+		ALU_LAST,
+	},
+	{
+		/* 18 */
+		ALU_PRED_SETNE_INT(__,_x, KC0(9),_y, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 19 */
+		ALU_MOV(_R14,_x, KC0(4),_x),
+		ALU_MOV(_R14,_y, KC0(4),_y),
+		ALU_MOV(_R14,_z, KC0(4),_z),
+		ALU_MOV(_R14,_w, KC0(4),_w)
+		ALU_LAST,
+		/* 20 */
+		ALU_MOV(_R13,_x, KC1(1),_x),
+		ALU_MOV(_R13,_y, KC1(1),_y),
+		ALU_MOV(_R13,_z, KC1(1),_z),
+		ALU_MOV(_R0,_w, KC1(1),_w)
+		ALU_LAST,
+		/* 21 */
+		ALU_MOV(_R12,_x, KC1(2),_x),
+		ALU_MOV(_R12,_y, KC1(2),_y),
+		ALU_MOV(_R12,_z, KC1(2),_z),
+		ALU_MOV(_R0,_w, KC1(2),_w)
+		ALU_LAST,
+	},
+	{
+		/* 22 */
+		ALU_PRED_SETNE_INT(__,_x, KC0(4),_w, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 23 */
+		ALU_AND_INT(_R0,_x, KC0(8),_w, ALU_SRC_LITERAL,_x),
+		ALU_AND_INT(__,_y, KC0(8),_w, ALU_SRC_1_INT,_x),
+		ALU_AND_INT(_R0,_w, KC0(8),_w, ALU_SRC_LITERAL,_y)
+		ALU_LAST,
+		ALU_LITERAL2(0x00000002, 0x00000004),
+		/* 24 */
+		ALU_CNDE_INT(_R14,_x, ALU_SRC_PV,_y, KC1(4),_x, _R1,_x),
+		ALU_CNDE_INT(_R14,_y, ALU_SRC_PV,_y, KC1(4),_y, _R1,_y),
+		ALU_CNDE_INT(_R14,_z, ALU_SRC_PV,_y, KC1(4),_z, _R1,_z),
+		ALU_CNDE_INT(_R14,_w, ALU_SRC_PV,_y, KC1(4),_w, _R1,_w)
+		ALU_LAST,
+	},
+	{
+		/* 25 */
+		ALU_CNDE_INT(_R13,_x, _R0,_x, KC0(1),_x, _R1,_x),
+		ALU_CNDE_INT(_R13,_y, _R0,_x, KC0(1),_y, _R1,_y),
+		ALU_CNDE_INT(_R13,_z, _R0,_x, KC0(1),_z, _R1,_z)
+		ALU_LAST,
+		/* 26 */
+		ALU_CNDE_INT(_R12,_x, _R0,_w, KC0(2),_x, _R1,_x),
+		ALU_CNDE_INT(_R12,_y, _R0,_w, KC0(2),_y, _R1,_y),
+		ALU_CNDE_INT(_R12,_z, _R0,_w, KC0(2),_z, _R1,_z)
+		ALU_LAST,
+	},
+	{
+		/* 27 */
+		ALU_MOV(__,_x, ALU_SRC_0,_x),
+		ALU_MOV(__,_y, KC0(3),_z),
+		ALU_MOV(__,_z, KC0(3),_y),
+		ALU_MOV(__,_w, KC0(3),_x),
+		ALU_MOV(_R15,_x, ALU_SRC_0,_x)
+		ALU_LAST,
+		/* 28 */
+		ALU_MULADD(_R16,_x, _R14,_x, KC0(0),_x, ALU_SRC_PV,_w),
+		ALU_MULADD(_R16,_y, _R14,_y, KC0(0),_y, ALU_SRC_PV,_z),
+		ALU_MULADD(_R16,_z, _R14,_z, KC0(0),_z, ALU_SRC_PV,_y),
+		ALU_MULADD(_R16,_w, _R14,_w, KC0(0),_w, ALU_SRC_PV,_x),
+		ALU_MOV(_R15,_y, ALU_SRC_0,_x)
+		ALU_LAST,
+		/* 29 */
+		ALU_MOV(_R15,_z, ALU_SRC_0,_x),
+		ALU_MOV(_R4,_w, ALU_SRC_0,_x)
+		ALU_LAST,
+	},
+	{
+		/* 30 */
+		ALU_SETGT_INT(_R0,_x, ALU_SRC_LITERAL,_x, _R4,_w)
+		ALU_LAST,
+		ALU_LITERAL(0x00000004),
+		/* 31 */
+		ALU_PRED_SETNE_INT(__,_x, _R0,_x, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 32 */
+		ALU_CNDE_INT(_R0,_x, _R0,_z, ALU_SRC_LITERAL,_x, ALU_SRC_0,_x),
+		ALU_ADD_INT(__,_y, _R4,_w, ALU_SRC_1_INT,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x3F800000),
+		/* 33 */
+		ALU_CNDE_INT(_R4,_w, _R0,_z, ALU_SRC_PV,_y, _R4,_w)
+		ALU_LAST,
+		/* 34 */
+		ALU_PRED_SETE_INT(__,_x, _R0,_x, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 35 */
+		ALU_ADD_INT(_R0,_z, _R4,_w, ALU_SRC_LITERAL,_x),
+		ALU_SETE_INT(_R0,_w, _R18,_y, ALU_SRC_0,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x00000004),
+	},
+	{
+		/* 36 */
+		ALU_PRED_SETE_INT(__,_x, _R0,_w, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 37 */
+		ALU_ADD(_R5,_x, _R10 _NEG,_x, _R17,_x),
+		ALU_ADD_INT(_R0,_y, _R4,_w, ALU_SRC_LITERAL,_x),
+		ALU_ADD(_R0,_z, _R5 _NEG,_y, _R17,_y),
+		ALU_ADD(_R1,_w, _R4 _NEG,_z, _R17,_z),
+		ALU_MOV(_R0,_x, ALU_SRC_LITERAL,_y)
+		ALU_LAST,
+		ALU_LITERAL2(0x0000000C, 0x3F800000),
+		/* 38 */
+		ALU_DOT4(__,_x, ALU_SRC_PV,_x, ALU_SRC_PV,_x),
+		ALU_DOT4(__,_y, ALU_SRC_PV,_z, ALU_SRC_PV,_z),
+		ALU_DOT4(__,_z, ALU_SRC_PV,_w, ALU_SRC_PV,_w),
+		ALU_DOT4(_R0,_w, ALU_SRC_LITERAL,_x, ALU_SRC_0,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x80000000),
+	},
+	{
+		/* 39 */
+		ALU_SQRT_IEEE(__,_x, _R0,_w) SCL_210
+		ALU_LAST,
+		/* 40 */
+		ALU_MOV(__,_y, ALU_SRC_PS,_x),
+		ALU_MUL(__,_z, ALU_SRC_PS,_x, ALU_SRC_PS,_x),
+		ALU_RECIP_IEEE(_R127,_w, ALU_SRC_PS,_x) SCL_210
+		ALU_LAST,
+		/* 41 */
+		ALU_DOT4(__,_x, _R0,_x, _R1,_x),
+		ALU_DOT4(__,_y, ALU_SRC_PV,_y, _R1,_y),
+		ALU_DOT4(__,_z, ALU_SRC_PV,_z, _R1,_z),
+		ALU_DOT4(__,_w, ALU_SRC_LITERAL,_x, ALU_SRC_0,_x),
+		ALU_MUL_IEEE(_R17,_x, _R5,_x, ALU_SRC_PS,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x80000000),
+		/* 42 */
+		ALU_MUL_IEEE(_R17,_y, _R0,_z, _R127,_w),
+		ALU_MUL_IEEE(_R17,_z, _R1,_w, _R127,_w),
+		ALU_RECIP_IEEE(_R1,_w, ALU_SRC_PV,_x) CLAMP SCL_210
+		ALU_LAST,
+	},
+	{
+		/* 43 */
+		ALU_MOV(_R1,_w, _R3,_w)
+		ALU_LAST,
+	},
+	{
+		/* 44 */
+		ALU_PRED_SETGE_INT(__,_x, _R18,_y, ALU_SRC_LITERAL,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+		ALU_LITERAL(0x00000002),
+	},
+	{
+		/* 45 */
+		ALU_ADD_INT(_R0,_z, _R4,_w, ALU_SRC_LITERAL,_x),
+		ALU_ADD_INT(_R0,_w, _R4,_w, ALU_SRC_LITERAL,_y)
+		ALU_LAST,
+		ALU_LITERAL2(0x00000010, 0x00000008),
+	},
+	{
+		/* 46 */
+		ALU_DOT4_IEEE(__,_x, _R1,_x, _R1,_x),
+		ALU_DOT4_IEEE(__,_y, _R1,_y, _R1,_y),
+		ALU_DOT4_IEEE(__,_z, _R1,_z, _R1,_z),
+		ALU_DOT4_IEEE(__,_w, ALU_SRC_LITERAL,_x, ALU_SRC_0,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x80000000),
+		/* 47 */
+		ALU_RECIPSQRT_IEEE(__,_x, ALU_SRC_PV,_x) SCL_210
+		ALU_LAST,
+		/* 48 */
+		ALU_MUL(__,_x, _R1,_x, ALU_SRC_PS,_x),
+		ALU_MUL(__,_y, _R1,_y, ALU_SRC_PS,_x),
+		ALU_MUL(__,_z, _R1,_z, ALU_SRC_PS,_x)
+		ALU_LAST,
+		/* 49 */
+		ALU_DOT4(__,_x, _R17,_x, ALU_SRC_PV,_x),
+		ALU_DOT4(__,_y, _R17,_y, ALU_SRC_PV,_y),
+		ALU_DOT4(__,_z, _R17,_z, ALU_SRC_PV,_z),
+		ALU_DOT4(__,_w, ALU_SRC_LITERAL,_x, ALU_SRC_0,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x80000000),
+		/* 50 */
+		ALU_SETGE_DX10(_R127,_x, ALU_SRC_PV,_x, _R0,_x),
+		ALU_LOG_CLAMPED(__,_x, ALU_SRC_PV,_x) SCL_210
+		ALU_LAST,
+		/* 51 */
+		ALU_MUL(__,_z, _R0,_y, ALU_SRC_PS,_x)
+		ALU_LAST,
+		/* 52 */
+		ALU_EXP_IEEE(__,_x, ALU_SRC_PV,_z) SCL_210
+		ALU_LAST,
+		/* 53 */
+		ALU_MUL(__,_x, _R1,_w, ALU_SRC_PS,_x)
+		ALU_LAST,
+		/* 54 */
+		ALU_CNDE_INT(_R1,_w, _R127,_x, ALU_SRC_0,_x, ALU_SRC_PV,_x)
+		ALU_LAST,
+	},
+	{
+		/* 55 */
+		ALU_SETE_INT(_R5,_x, _R18,_x, ALU_SRC_LITERAL,_x),
+		ALU_ADD_INT(_R0,_y, _R4,_w, ALU_SRC_LITERAL,_y),
+		ALU_ADD_INT(_R0,_w, _R4,_w, ALU_SRC_LITERAL,_z),
+		ALU_MUL(__,_x, _R8,_z, _R17,_z)
+		ALU_LAST,
+		ALU_LITERAL3(0x00000002, 0x00000014, 0x00000018),
+		/* 56 */
+		ALU_DOT4(__,_x, _R8,_x, _R17,_x),
+		ALU_DOT4(__,_y, _R8,_y, _R17,_y),
+		ALU_DOT4(__,_z, ALU_SRC_PS,_x, ALU_SRC_1,_x),
+		ALU_DOT4(__,_w, ALU_SRC_LITERAL,_x, ALU_SRC_0,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x80000000),
+		/* 57 */
+		ALU_MAX(_R5,_z, ALU_SRC_PV,_x, ALU_SRC_LITERAL,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x33D6BF95),
+	},
+	{
+		/* 58 */
+		ALU_MUL(_R127,_x, _R13,_x, _R1,_x),
+		ALU_MUL(_R127,_z, _R13,_z, _R1,_z),
+		ALU_MUL(_R127,_w, _R13,_y, _R1,_y),
+		ALU_LOG_CLAMPED(__,_x, _R5,_z) SCL_210
+		ALU_LAST,
+		/* 59 */
+		ALU_MUL(_R126,_x, _R14,_x, _R0,_x),
+		ALU_MUL(_R127,_y, _R14,_y, _R0,_y),
+		ALU_MUL(_R126,_z, _R14,_z, _R0,_z),
+		ALU_MUL(__,_w, KC0(2),_w, ALU_SRC_PS,_x)
+		ALU_LAST,
+		/* 60 */
+		ALU_EXP_IEEE(__,_x, ALU_SRC_PV,_w) SCL_210
+		ALU_LAST,
+		/* 61 */
+		ALU_CNDE_INT(_R123,_y, _R5,_x, _R5,_z, ALU_SRC_PS,_x)
+		ALU_LAST,
+		/* 62 */
+		ALU_MULADD(_R123,_x, ALU_SRC_PV,_y, _R127,_w, _R127,_y),
+		ALU_MULADD(_R123,_y, ALU_SRC_PV,_y, _R127,_x, _R126,_x),
+		ALU_MULADD(_R123,_w, ALU_SRC_PV,_y, _R127,_z, _R126,_z)
+		ALU_LAST,
+		/* 63 */
+		ALU_MULADD(_R16,_x, _R1,_w, ALU_SRC_PV,_y, _R16,_x),
+		ALU_MULADD(_R16,_y, _R1,_w, ALU_SRC_PV,_x, _R16,_y),
+		ALU_MULADD(_R16,_z, _R1,_w, ALU_SRC_PV,_w, _R16,_z)
+		ALU_LAST,
+		/* 64 */
+		ALU_PRED_SETNE_INT(__,_x, ALU_SRC_0,_x, _R18,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 65 */
+		ALU_ADD(_R127,_x, _R17,_x, ALU_SRC_0,_x),
+		ALU_ADD(_R127,_y, _R17,_y, ALU_SRC_0,_x),
+		ALU_ADD(_R127,_z, _R17,_z, ALU_SRC_1,_x)
+		ALU_LAST,
+		/* 66 */
+		ALU_DOT4_IEEE(__,_x, ALU_SRC_PV,_x, ALU_SRC_PV,_x),
+		ALU_DOT4_IEEE(__,_y, ALU_SRC_PV,_y, ALU_SRC_PV,_y),
+		ALU_DOT4_IEEE(__,_z, ALU_SRC_PV,_z, ALU_SRC_PV,_z),
+		ALU_DOT4_IEEE(__,_w, ALU_SRC_LITERAL,_x, ALU_SRC_0,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x80000000),
+		/* 67 */
+		ALU_RECIPSQRT_IEEE(__,_x, ALU_SRC_PV,_x) SCL_210
+		ALU_LAST,
+		/* 68 */
+		ALU_MUL(__,_x, _R127,_x, ALU_SRC_PS,_x),
+		ALU_MUL(__,_y, _R127,_y, ALU_SRC_PS,_x),
+		ALU_MUL(__,_z, _R127,_z, ALU_SRC_PS,_x)
+		ALU_LAST,
+		/* 69 */
+		ALU_DOT4(_R0,_x, _R8,_x, ALU_SRC_PV,_x),
+		ALU_DOT4(__,_y, _R8,_y, ALU_SRC_PV,_y),
+		ALU_DOT4(__,_z, _R8,_z, ALU_SRC_PV,_z),
+		ALU_DOT4(__,_w, ALU_SRC_LITERAL,_x, ALU_SRC_0,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x80000000),
+		/* 70 */
+		ALU_PRED_SETGT(__,_x, _R0,_x, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 71 */
+		ALU_ADD_INT(_R0,_z, _R4,_w, ALU_SRC_LITERAL,_x),
+		ALU_LOG_CLAMPED(_R1,_z, _R0,_x) SCL_210
+		ALU_LAST,
+		ALU_LITERAL(0x0000001C),
+	},
+	{
+		/* 72 */
+		ALU_MUL(_R127,_x, _R12,_x, _R0,_x),
+		ALU_MUL(__,_y, KC0(2),_w, _R1,_z),
+		ALU_MUL(_R127,_z, _R12,_y, _R0,_y),
+		ALU_MUL(_R127,_w, _R12,_z, _R0,_z) VEC_021
+		ALU_LAST,
+		/* 73 */
+		ALU_EXP_IEEE(__,_x, ALU_SRC_PV,_y) SCL_210
+		ALU_LAST,
+		/* 74 */
+		ALU_MUL(__,_w, _R1,_w, ALU_SRC_PS,_x)
+		ALU_LAST,
+		/* 75 */
+		ALU_MULADD(_R15,_x, ALU_SRC_PV,_w, _R127,_x, _R15,_x),
+		ALU_MULADD(_R15,_y, ALU_SRC_PV,_w, _R127,_z, _R15,_y),
+		ALU_MULADD(_R15,_z, ALU_SRC_PV,_w, _R127,_w, _R15,_z)
+		ALU_LAST,
+	},
+	{
+		/* 76 */
+		ALU_ADD_INT(_R4,_w, _R4,_w, ALU_SRC_1_INT,_x)
+		ALU_LAST,
+	},
+	{
+		/* 77 */
+		ALU_MOV(_R127,_x, _R16,_z) CLAMP,
+		ALU_MOV(_R127,_y, _R16,_y) CLAMP,
+		ALU_MOV(_R127,_z, _R16,_x) CLAMP,
+		ALU_MOV(_R0,_w, ALU_SRC_0,_x),
+		ALU_MOV(__,_x, _R16,_w) CLAMP
+		ALU_LAST,
+		/* 78 */
+		ALU_MOV(_R126,_x, _R16,_z) CLAMP,
+		ALU_MOV(_R126,_y, _R16,_y) CLAMP,
+		ALU_MOV(_R126,_z, _R16,_x) CLAMP,
+		ALU_ADD(_R127,_w, ALU_SRC_PV,_w, ALU_SRC_PS,_x) CLAMP,
+		ALU_MOV(_R126,_w, _R16,_w) CLAMP
+		ALU_LAST,
+		/* 79 */
+		ALU_MOV(_R125,_x, _R15,_z) CLAMP,
+		ALU_MOV(_R127,_y, _R15,_y) CLAMP,
+		ALU_MOV(_R127,_z, _R15,_x) CLAMP,
+		ALU_ADD(__,_w, _R15,_x, _R127,_z) CLAMP,
+		ALU_ADD(__,_x, _R15,_y, _R127,_y) CLAMP
+		ALU_LAST,
+		/* 80 */
+		ALU_ADD(__,_x, _R15,_z, _R127,_x) CLAMP,
+		ALU_CNDE_INT(_R5,_y, KC0(4),_x, ALU_SRC_PS,_x, _R126,_y),
+		ALU_CNDE_INT(_R5,_x, KC0(4),_x, ALU_SRC_PV,_w, _R126,_z) VEC_021
+		ALU_LAST,
+		/* 81 */
+		ALU_CNDE_INT(_R10,_x, KC0(4),_x, ALU_SRC_0,_x, _R127,_z),
+		ALU_CNDE_INT(_R10,_y, KC0(4),_x, ALU_SRC_0,_x, _R127,_y),
+		ALU_CNDE_INT(_R5,_z, KC0(4),_x, ALU_SRC_PV,_x, _R126,_x) VEC_021,
+		ALU_CNDE_INT(_R5,_w, KC0(4),_x, _R127,_w, _R126,_w),
+		ALU_CNDE_INT(_R10,_z, KC0(4),_x, ALU_SRC_0,_x, _R125,_x) VEC_021
+		ALU_LAST,
+	},
+	{
+		/* 82 */
+		ALU_PRED_SETE_INT(__,_x, KC0(4),_w, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 83 */
+		ALU_MOV(_R5,_x, KC0(4),_x),
+		ALU_MOV(_R5,_y, KC0(4),_y),
+		ALU_MOV(_R5,_z, KC0(4),_z),
+		ALU_MOV(_R5,_w, KC0(4),_w)
+		ALU_LAST,
+	},
+	{
+		/* 84 */
+		ALU_MOV(_R5,_x, _R1,_x),
+		ALU_MOV(_R5,_y, _R1,_y),
+		ALU_MOV(_R5,_z, _R1,_z),
+		ALU_MOV(_R5,_w, _R1,_w)
+		ALU_LAST,
+	},
+	{
+		/* 85 */
+		ALU_MOV(_R10,_x, _R11,_x),
+		ALU_MOV(_R10,_y, _R9,_y),
+		ALU_MOV(_R10,_z, _R9,_z)
+		ALU_LAST,
+	},
+	{
+		/* 86 */
+		ALU_PRED_SETNE_INT(__,_x, KC0(5),_x, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 87 */
+		ALU_SETNE_INT(_R0,_x, KC0(7),_y, ALU_SRC_0,_x)
+		ALU_LAST,
+		/* 88 */
+		ALU_PRED_SETE_INT(__,_x, _R0,_x, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 89 */
+		ALU_NOT_INT(_R0,_w, KC0(4),_y)
+		ALU_LAST,
+		/* 90 */
+		ALU_PRED_SETNE_INT(__,_x, _R0,_w, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 91 */
+		ALU_PRED_SETNE_INT(__,_x, KC0(6),_y, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 92 */
+		ALU_MUL(_R6,_x, _R4,_x, KC0(1),_x),
+		ALU_MUL(_R6,_y, _R4,_y, KC0(1),_y),
+		ALU_MOV(_R6,_z, ALU_SRC_0,_x)
+		ALU_LAST,
+	},
+	{
+		/* 93 */
+		ALU_MOV(_R6,_x, _R11,_x),
+		ALU_MOV(_R6,_y, _R9,_y),
+		ALU_MOV(_R6,_z, _R9,_z)
+		ALU_LAST,
+	},
+	{
+		/* 94 */
+		ALU_MULADD(_R127,_x, _R4,_x, KC0(1),_x, KC0(1),_z),
+		ALU_MOV(_R127,_y, ALU_SRC_0,_x),
+		ALU_MOV(_R127,_z, ALU_SRC_0,_x),
+		ALU_MULADD(_R127,_w, _R4,_y, KC0(1),_y, KC0(1),_w)
+		ALU_LAST,
+		/* 95 */
+		ALU_MOV(__,_x, KC0(1),_w),
+		ALU_MOV(__,_y, KC0(1),_z)
+		ALU_LAST,
+		/* 96 */
+		ALU_CNDE_INT(_R6,_x, KC1(6),_y, ALU_SRC_PV,_y, _R127,_x),
+		ALU_CNDE_INT(_R6,_y, KC1(6),_y, ALU_SRC_PV,_x, _R127,_w),
+		ALU_CNDE_INT(_R6,_z, KC1(6),_y, _R127,_y, _R127,_z)
+		ALU_LAST,
+	},
+	{
+		/* 97 */
+		ALU_SETNE_INT(_R0,_z, KC0(7),_y, ALU_SRC_LITERAL,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x00000003),
+		/* 98 */
+		ALU_PRED_SETE_INT(__,_x, _R0,_z, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 99 */
+		ALU_NOT_INT(_R0,_y, KC0(4),_y)
+		ALU_LAST,
+		/* 100 */
+		ALU_PRED_SETNE_INT(__,_x, _R0,_y, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 101 */
+		ALU_PRED_SETNE_INT(__,_x, KC0(6),_y, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 102 */
+		ALU_MUL(_R6,_x, _R4,_x, KC0(1),_x),
+		ALU_MUL(_R6,_y, _R4,_y, KC0(1),_y),
+		ALU_MOV(_R6,_z, ALU_SRC_0,_x)
+		ALU_LAST,
+	},
+	{
+		/* 103 */
+		ALU_MOV(_R6,_x, _R11,_x),
+		ALU_MOV(_R6,_y, _R9,_y),
+		ALU_MOV(_R6,_z, _R9,_z)
+		ALU_LAST,
+	},
+	{
+		/* 104 */
+		ALU_MULADD(_R127,_x, _R4,_x, KC0(1),_x, KC0(1),_z),
+		ALU_MOV(_R127,_y, ALU_SRC_0,_x),
+		ALU_MOV(_R127,_z, ALU_SRC_0,_x),
+		ALU_MULADD(_R127,_w, _R4,_y, KC0(1),_y, KC0(1),_w)
+		ALU_LAST,
+		/* 105 */
+		ALU_MOV(__,_x, KC0(1),_w),
+		ALU_MOV(__,_y, KC0(1),_z)
+		ALU_LAST,
+		/* 106 */
+		ALU_CNDE_INT(_R6,_x, KC1(6),_y, ALU_SRC_PV,_y, _R127,_x),
+		ALU_CNDE_INT(_R6,_y, KC1(6),_y, ALU_SRC_PV,_x, _R127,_w),
+		ALU_CNDE_INT(_R6,_z, KC1(6),_y, _R127,_y, _R127,_z)
+		ALU_LAST,
+	},
+	{
+		/* 107 */
+		ALU_SETNE_INT(_R0,_x, KC0(7),_y, ALU_SRC_1_INT,_x)
+		ALU_LAST,
+		/* 108 */
+		ALU_PRED_SETE_INT(__,_x, _R0,_x, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 109 */
+		ALU_PRED_SETNE_INT(__,_x, KC0(7),_z, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 110 */
+		ALU_SETNE_INT(_R0,_w, KC0(7),_z, ALU_SRC_1_INT,_x)
+		ALU_LAST,
+		/* 111 */
+		ALU_PRED_SETE_INT(__,_x, _R0,_w, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 112 */
+		ALU_CNDE_INT(_R6,_x, KC0(6),_y, ALU_SRC_0,_x, _R4,_x),
+		ALU_CNDE_INT(_R6,_y, KC0(6),_y, ALU_SRC_0,_x, _R4,_y),
+		ALU_MOV(_R0,_z, ALU_SRC_0,_x),
+		ALU_MOV(_R0,_w, ALU_SRC_LITERAL,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x3F800000),
+		/* 113 */
+		ALU_CNDE_INT(_R6,_z, KC0(6),_y, ALU_SRC_0,_x, ALU_SRC_PV,_z),
+		ALU_CNDE_INT(_R6,_w, KC0(6),_y, ALU_SRC_LITERAL,_x, ALU_SRC_PV,_w)
+		ALU_LAST,
+		ALU_LITERAL(0x3F800000),
+	},
+	{
+		/* 114 */
+		ALU_SETNE_INT(_R0,_z, KC0(7),_z, ALU_SRC_LITERAL,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x00000002),
+		/* 115 */
+		ALU_PRED_SETE_INT(__,_x, _R0,_z, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 116 */
+		ALU_PRED_SETNE_INT(__,_x, KC0(5),_w, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 117 */
+		ALU_CNDE_INT(_R127,_x, KC0(6),_x, _R2,_x, _R2 _NEG,_x),
+		ALU_CNDE_INT(_R127,_y, KC0(6),_x, _R2,_y, _R2 _NEG,_y),
+		ALU_CNDE_INT(_R127,_z, KC0(6),_x, _R2,_z, _R2 _NEG,_z)
+		ALU_LAST,
+		/* 118 */
+		ALU_DOT4_IEEE(__,_x, ALU_SRC_PV,_x, ALU_SRC_PV,_x),
+		ALU_DOT4_IEEE(__,_y, ALU_SRC_PV,_y, ALU_SRC_PV,_y),
+		ALU_DOT4_IEEE(__,_z, ALU_SRC_PV,_z, ALU_SRC_PV,_z),
+		ALU_DOT4_IEEE(__,_w, ALU_SRC_LITERAL,_x, ALU_SRC_0,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x80000000),
+		/* 119 */
+		ALU_RECIPSQRT_IEEE(__,_x, ALU_SRC_PV,_x) SCL_210
+		ALU_LAST,
+		/* 120 */
+		ALU_MUL(_R6,_x, _R127,_x, ALU_SRC_PS,_x),
+		ALU_MUL(_R6,_y, _R127,_y, ALU_SRC_PS,_x),
+		ALU_MUL(_R6,_z, _R127,_z, ALU_SRC_PS,_x),
+		ALU_MOV(_R6,_w, ALU_SRC_LITERAL,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x3F800000),
+	},
+	{
+		/* 121 */
+		ALU_MOV(_R6,_x, ALU_SRC_0,_x),
+		ALU_MOV(_R6,_y, ALU_SRC_0,_x),
+		ALU_MOV(_R6,_z, ALU_SRC_LITERAL,_x),
+		ALU_MOV(_R6,_w, ALU_SRC_LITERAL,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x3F800000),
+	},
+	{
+		/* 122 */
+		ALU_SETNE_INT(_R0,_w, KC0(7),_z, ALU_SRC_LITERAL,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x00000003),
+		/* 123 */
+		ALU_PRED_SETE_INT(__,_x, _R0,_w, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 124 */
+		ALU_PRED_SETNE_INT(__,_x, KC0(5),_w, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 125 */
+		ALU_CNDE_INT(_R6,_x, KC0(6),_x, _R2,_x, _R2 _NEG,_x),
+		ALU_CNDE_INT(_R6,_y, KC0(6),_x, _R2,_y, _R2 _NEG,_y),
+		ALU_CNDE_INT(_R6,_z, KC0(6),_x, _R2,_z, _R2 _NEG,_z),
+		ALU_MOV(_R6,_w, ALU_SRC_LITERAL,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x3F800000),
+	},
+	{
+		/* 126 */
+		ALU_MOV(_R6,_x, ALU_SRC_0,_x),
+		ALU_MOV(_R6,_y, ALU_SRC_0,_x),
+		ALU_MOV(_R6,_z, ALU_SRC_LITERAL,_x),
+		ALU_MOV(_R6,_w, ALU_SRC_LITERAL,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x3F800000),
+	},
+	{
+		/* 127 */
+		ALU_MOV(_R6,_x, _R3,_x),
+		ALU_MOV(_R6,_y, _R3,_y),
+		ALU_MOV(_R6,_z, _R3,_z),
+		ALU_MOV(_R6,_w, _R2,_w)
+		ALU_LAST,
+	},
+	{
+		/* 128 */
+		ALU_DOT4(_R127,_x, _R6,_x, KC0(14),_x),
+		ALU_DOT4(__,_y, _R6,_y, KC0(14),_y),
+		ALU_DOT4(__,_z, _R6,_z, KC0(14),_z),
+		ALU_DOT4(__,_w, _R6,_w, KC0(14),_w)
+		ALU_LAST,
+		/* 129 */
+		ALU_DOT4(__,_x, _R6,_x, KC0(15),_x),
+		ALU_DOT4(__,_y, _R6,_y, KC0(15),_y),
+		ALU_DOT4(__,_z, _R6,_z, KC0(15),_z),
+		ALU_DOT4(_R127,_w, _R6,_w, KC0(15),_w)
+		ALU_LAST,
+		/* 130 */
+		ALU_DOT4(__,_x, _R6,_x, KC0(16),_x),
+		ALU_DOT4(__,_y, _R6,_y, KC0(16),_y),
+		ALU_DOT4(_R6,_z, _R6,_z, KC0(16),_z),
+		ALU_DOT4(__,_w, _R6,_w, KC0(16),_w)
+		ALU_LAST,
+		/* 131 */
+		ALU_MUL(_R6,_x, KC0(17),_x, _R127,_x),
+		ALU_MUL(_R6,_y, KC0(17),_y, _R127,_w)
+		ALU_LAST,
+	},
+	{
+		/* 132 */
+		ALU_SETNE_INT(_R0,_z, KC0(7),_y, ALU_SRC_LITERAL,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x00000002),
+		/* 133 */
+		ALU_PRED_SETE_INT(__,_x, _R0,_z, ALU_SRC_0,_x) UPDATE_EXEC_MASK(DEACTIVATE) UPDATE_PRED
+		ALU_LAST,
+	},
+	{
+		/* 134 */
+		ALU_ADD_INT(_R0,_x, KC0(8),_x, ALU_SRC_LITERAL,_x),
+		ALU_ADD_INT(_R0,_w, KC0(7),_w, ALU_SRC_LITERAL,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x00000004),
+	},
+	{
+		/* 135 */
+		ALU_DOT4_IEEE(__,_x, _R1,_x, _R1,_x),
+		ALU_DOT4_IEEE(__,_y, _R1,_y, _R1,_y),
+		ALU_DOT4_IEEE(__,_z, _R1,_z, _R1,_z),
+		ALU_DOT4_IEEE(__,_w, ALU_SRC_LITERAL,_x, ALU_SRC_0,_x),
+		ALU_MUL_IEEE(__,_x, _R0,_z, _R0,_z)
+		ALU_LAST,
+		ALU_LITERAL(0x80000000),
+		/* 136 */
+		ALU_DOT4_IEEE(__,_x, _R0,_x, _R0,_x),
+		ALU_DOT4_IEEE(__,_y, _R0,_y, _R0,_y),
+		ALU_DOT4_IEEE(__,_z, ALU_SRC_PS,_x, ALU_SRC_1,_x),
+		ALU_DOT4_IEEE(__,_w, ALU_SRC_LITERAL,_x, ALU_SRC_0,_x),
+		ALU_RECIPSQRT_IEEE(__,_x, ALU_SRC_PV,_x) SCL_210
+		ALU_LAST,
+		ALU_LITERAL(0x80000000),
+		/* 137 */
+		ALU_MUL(_R127,_x, _R1,_x, ALU_SRC_PS,_x),
+		ALU_MUL(_R127,_y, _R1,_y, ALU_SRC_PS,_x),
+		ALU_MUL(__,_z, _R1,_z, ALU_SRC_PS,_x),
+		ALU_RECIPSQRT_IEEE(__,_x, ALU_SRC_PV,_x) SCL_210
+		ALU_LAST,
+		/* 138 */
+		ALU_MUL(_R126,_x, _R0,_x, ALU_SRC_PS,_x),
+		ALU_MUL(_R126,_y, _R0,_y, ALU_SRC_PS,_x),
+		ALU_MUL(__,_z, _R0,_z, ALU_SRC_PS,_x),
+		ALU_MUL(__,_x, _R8,_z, ALU_SRC_PV,_z)
+		ALU_LAST,
+		/* 139 */
+		ALU_DOT4(__,_x, _R8,_x, _R127,_x),
+		ALU_DOT4(__,_y, _R8,_y, _R127,_y),
+		ALU_DOT4(__,_z, ALU_SRC_PS,_x, ALU_SRC_1,_x),
+		ALU_DOT4(__,_w, ALU_SRC_LITERAL,_x, ALU_SRC_0,_x),
+		ALU_MUL(__,_x, _R8,_z, ALU_SRC_PV,_z)
+		ALU_LAST,
+		ALU_LITERAL(0x80000000),
+		/* 140 */
+		ALU_DOT4(__,_x, _R8,_x, _R126,_x),
+		ALU_DOT4(__,_y, _R8,_y, _R126,_y),
+		ALU_DOT4(__,_z, ALU_SRC_PS,_x, ALU_SRC_1,_x),
+		ALU_DOT4(__,_w, ALU_SRC_LITERAL,_x, ALU_SRC_0,_x),
+		ALU_ADD_D2(__,_x, ALU_SRC_PV,_x, ALU_SRC_1,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x80000000),
+		/* 141 */
+		ALU_MUL(_R6,_x, ALU_SRC_PS,_x, KC0(1),_x),
+		ALU_ADD_D2(__,_w, ALU_SRC_PV,_x, ALU_SRC_1,_x)
+		ALU_LAST,
+		/* 142 */
+		ALU_MUL(_R6,_y, ALU_SRC_PV,_w, KC0(1),_y),
+		ALU_MOV(_R6,_z, ALU_SRC_LITERAL,_x)
+		ALU_LAST,
+		ALU_LITERAL(0x3F800000),
+	},
+	{
+		/* 143 */
+		ALU_ADD(__,_w, _R9,_x, KC0(3),_x)
+		ALU_LAST,
+		/* 144 */
+		ALU_MUL(_R0,_x, KC0(3),_y, ALU_SRC_PV,_w)
+		ALU_LAST,
+	},
+	{
+		VTX_FETCH(_R0,_m,_m,_z,_m, _R4,_w, 132, FETCH_TYPE(NO_INDEX_OFFSET), MEGA(16), OFFSET(0)),
+	},
+	{
+		VTX_FETCH(_R18,_x,_y,_m,_m, _R4,_w, 132, FETCH_TYPE(NO_INDEX_OFFSET), MEGA(16), OFFSET(0)),
+	},
+	{
+		VTX_FETCH(_R17,_x,_y,_z,_m, _R0,_z, 130, FETCH_TYPE(NO_INDEX_OFFSET), MEGA(16), OFFSET(0)),
+	},
+	{
+		VTX_FETCH(_R1,_x,_y,_z,_m, _R0,_y, 130, FETCH_TYPE(NO_INDEX_OFFSET), MEGA(16), OFFSET(0)),
+	},
+	{
+		VTX_FETCH(_R1,_x,_y,_z,_m, _R0,_w, 130, FETCH_TYPE(NO_INDEX_OFFSET), MEGA(16), OFFSET(0)),
+		VTX_FETCH(_R0,_x,_y,_m,_m, _R0,_z, 130, FETCH_TYPE(NO_INDEX_OFFSET), MEGA(16), OFFSET(0)),
+	},
+	{
+		VTX_FETCH(_R1,_x,_y,_z,_m, _R0,_w, 130, FETCH_TYPE(NO_INDEX_OFFSET), MEGA(16), OFFSET(0)),
+		VTX_FETCH(_R0,_x,_y,_z,_m, _R0,_y, 130, FETCH_TYPE(NO_INDEX_OFFSET), MEGA(16), OFFSET(0)),
+	},
+	{
+		VTX_FETCH(_R0,_x,_y,_z,_m, _R0,_z, 130, FETCH_TYPE(NO_INDEX_OFFSET), MEGA(16), OFFSET(0)),
+	},
+	{
+		VTX_FETCH(_R1,_x,_y,_z,_m, _R0,_w, 130, FETCH_TYPE(NO_INDEX_OFFSET), MEGA(16), OFFSET(0)),
+		VTX_FETCH(_R0,_x,_y,_z,_m, _R0,_x, 130, FETCH_TYPE(NO_INDEX_OFFSET), MEGA(16), OFFSET(0)),
+	},
+};
+static GX2LoopVar TAL_VShaderLoopVars[] =
+{
+	{ 0x00000000, 0xFFFFFFFF },
+};
+
+GX2VertexShader TAL_VShaderGX2 = {
+	{
+		.sq_pgm_resources_vs.num_gprs = 19,
+		.sq_pgm_resources_vs.stack_size = 3,
+		.spi_vs_out_config.vs_export_count = 3,
+		.num_spi_vs_out_id = 1,
+		{
+			{ .semantic_0 = 0x00, .semantic_1 = 0x01, .semantic_2 = 0x03, .semantic_3 = 0x02 },
+			{ .semantic_0 = 0xFF, .semantic_1 = 0xFF, .semantic_2 = 0xFF, .semantic_3 = 0xFF },
+			{ .semantic_0 = 0xFF, .semantic_1 = 0xFF, .semantic_2 = 0xFF, .semantic_3 = 0xFF },
+			{ .semantic_0 = 0xFF, .semantic_1 = 0xFF, .semantic_2 = 0xFF, .semantic_3 = 0xFF },
+			{ .semantic_0 = 0xFF, .semantic_1 = 0xFF, .semantic_2 = 0xFF, .semantic_3 = 0xFF },
+			{ .semantic_0 = 0xFF, .semantic_1 = 0xFF, .semantic_2 = 0xFF, .semantic_3 = 0xFF },
+			{ .semantic_0 = 0xFF, .semantic_1 = 0xFF, .semantic_2 = 0xFF, .semantic_3 = 0xFF },
+			{ .semantic_0 = 0xFF, .semantic_1 = 0xFF, .semantic_2 = 0xFF, .semantic_3 = 0xFF },
+			{ .semantic_0 = 0xFF, .semantic_1 = 0xFF, .semantic_2 = 0xFF, .semantic_3 = 0xFF },
+			{ .semantic_0 = 0xFF, .semantic_1 = 0xFF, .semantic_2 = 0xFF, .semantic_3 = 0xFF },
+		},
+		.sq_vtx_semantic_clear = ~0xF,
+		.num_sq_vtx_semantic = 4,
+		{
+			2, 4, 0, 1, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		},
+		.vgt_vertex_reuse_block_cntl.vtx_reuse_depth = 0xE,
+		.vgt_hos_reuse_depth.reuse_depth = 0x10,
+	}, /* regs */
+	.size = sizeof(TAL_VShaderCode),
+	.program = (u8 *)&TAL_VShaderCode,
+	.mode = GX2_SHADER_MODE_UNIFORM_BLOCK,
+	.loopVarCount = countof(TAL_VShaderLoopVars), TAL_VShaderLoopVars,
+	.gx2rBuffer.flags = GX2R_RESOURCE_LOCKED_READ_ONLY,
+
 };

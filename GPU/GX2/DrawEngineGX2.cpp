@@ -19,6 +19,7 @@
 
 #include "base/logging.h"
 #include "base/timeutil.h"
+#include "profiler/profiler.h"
 
 #include "Common/MemoryUtil.h"
 #include "Core/MemMap.h"
@@ -280,6 +281,7 @@ static u32 SwapRB(u32 c) { return (c & 0xFF00FF00) | ((c >> 16) & 0xFF) | ((c <<
 
 // The inline wrapper in the header checks for numDrawCalls == 0
 void DrawEngineGX2::DoFlush() {
+	PROFILE_THIS_SCOPE("Flush");
 	gpuStats.numFlushes++;
 	gpuStats.numTrackedVertexArrays = (int)vai_.size();
 
@@ -290,8 +292,6 @@ void DrawEngineGX2::DoFlush() {
 	ApplyDrawState(prim);
 
 	bool useHWTransform = CanUseHardwareTransform(prim);
-	// let's keep it simple for now.
-	useHWTransform = false;
 
 	if (useHWTransform) {
 		void *vb_ = nullptr;
@@ -308,6 +308,7 @@ void DrawEngineGX2::DoFlush() {
 			useCache = false;
 
 		if (useCache) {
+			PROFILE_THIS_SCOPE("vcache");
 			u32 id = dcid_ ^ gstate.getUVGenMode(); // This can have an effect on which UV decoder we need to use! And hence what the decoded data will look like. See #9263
 
 			VertexArrayInfoGX2 *vai = vai_.Get(id);
@@ -335,6 +336,7 @@ void DrawEngineGX2::DoFlush() {
 				// Hashing - still gaining confidence about the buffer.
 				// But if we get this far it's likely to be worth creating a vertex buffer.
 			case VertexArrayInfoGX2::VAI_HASHING: {
+				PROFILE_THIS_SCOPE("vcachehash");
 				vai->numDraws++;
 				if (vai->lastFrame != gpuStats.numFlips) {
 					vai->numFrames++;
@@ -485,16 +487,13 @@ void DrawEngineGX2::DoFlush() {
 			u8 *vptr = pushVerts_->BeginPush(&vOffset, vSize);
 			memcpy(vptr, decoded, vSize);
 			pushVerts_->EndPush();
-			void *buf = pushVerts_->Buf();
-			GX2Invalidate(GX2_INVALIDATE_MODE_CPU_ATTRIBUTE_BUFFER, buf, vSize);
-			GX2SetAttribBuffer(0, vSize, stride, buf);
+			GX2SetAttribBuffer(0, vSize, stride, vptr);
 			if (useElements) {
 				u32 iOffset;
 				int iSize = 2 * indexGen.VertexCount();
 				u8 *iptr = pushInds_->BeginPush(&iOffset, iSize);
 				memcpy(iptr, decIndex, iSize);
 				pushInds_->EndPush();
-				GX2Invalidate(GX2_INVALIDATE_MODE_CPU_ATTRIBUTE_BUFFER, iptr, iSize);
 				if (gstate_c.bezier || gstate_c.spline)
 					GX2DrawIndexedEx(GX2prim[prim], vertexCount, GX2_INDEX_TYPE_U16, iptr, 0, numPatches);
 				else
@@ -514,6 +513,7 @@ void DrawEngineGX2::DoFlush() {
 			}
 		}
 	} else {
+		PROFILE_THIS_SCOPE("soft");
 		DecodeVerts(decoded);
 		bool hasColor = (lastVType_ & GE_VTYPE_COL_MASK) != GE_VTYPE_COL_NONE;
 		if (gstate.isModeThrough()) {
@@ -642,6 +642,7 @@ void DrawEngineGX2::DoFlush() {
 	gstate_c.vertBounds.maxV = 0;
 
 	GX2Flush();
+	GX2DrawDone(); // TODO: use a push buffer for uniforms to get rid of this blocking call.
 #if 0
 	// We only support GPU debugging on Windows, and that's the only use case for this.
 	host->GPUNotifyDraw();

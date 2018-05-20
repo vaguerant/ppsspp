@@ -56,8 +56,13 @@ enum class UB_Bindings : u32 {
 
 } // namespace GX2Gen
 
-struct UB_VSID
-{
+struct UB_VSID {
+	struct {
+		u32_le COMP;
+		u32_le TYPE;
+		u32_le ENABLE;
+		u32_le pad_;
+	} VS_BIT_LIGHT[4];
 	u32_le VS_BIT_LMODE;
 	u32_le VS_BIT_IS_THROUGH;
 	u32_le VS_BIT_ENABLE_FOG;
@@ -77,28 +82,15 @@ struct UB_VSID
 	u32_le VS_BIT_LS1;
 	u32_le VS_BIT_BONES;
 	u32_le VS_BIT_ENABLE_BONES;
-	u32_le VS_BIT_LIGHT0_COMP;
-	u32_le VS_BIT_LIGHT0_TYPE;
-	u32_le VS_BIT_LIGHT1_COMP;
-	u32_le VS_BIT_LIGHT1_TYPE;
-	u32_le VS_BIT_LIGHT2_COMP;
-	u32_le VS_BIT_LIGHT2_TYPE;
-	u32_le VS_BIT_LIGHT3_COMP;
-	u32_le VS_BIT_LIGHT3_TYPE;
 	u32_le VS_BIT_MATERIAL_UPDATE;
 	u32_le VS_BIT_SPLINE;
-	u32_le VS_BIT_LIGHT0_ENABLE;
-	u32_le VS_BIT_LIGHT1_ENABLE;
-	u32_le VS_BIT_LIGHT2_ENABLE;
-	u32_le VS_BIT_LIGHT3_ENABLE;
 	u32_le VS_BIT_LIGHTING_ENABLE;
 	u32_le VS_BIT_WEIGHT_FMTSCALE;
 	u32_le VS_BIT_FLATSHADE;
 	u32_le VS_BIT_BEZIER;
-}__attribute__((aligned(64)));
+} __attribute__((aligned(64)));
 
-struct UB_FSID
-{
+struct UB_FSID {
 	u32_le FS_BIT_CLEARMODE;
 	u32_le FS_BIT_DO_TEXTURE;
 	u32_le FS_BIT_TEXFUNC;
@@ -127,7 +119,7 @@ struct UB_FSID
 	u32_le FS_BIT_BLENDFUNC_B;
 	u32_le FS_BIT_FLATSHADE;
 	u32_le FS_BIT_BGRA_TEXTURE;
-}__attribute__((aligned(64)));
+} __attribute__((aligned(64)));
 
 class GX2PShader : public GX2PixelShader {
 public:
@@ -143,7 +135,8 @@ public:
 	const u8 *bytecode() const { return program; }
 	std::string GetShaderString(DebugShaderStringType type) const;
 
-	UB_FSID* ub_id;
+	UB_FSID *ub_id;
+
 protected:
 	FShaderID id_;
 };
@@ -162,7 +155,8 @@ public:
 	const u8 *bytecode() const { return program; }
 	std::string GetShaderString(DebugShaderStringType type) const;
 
-	UB_VSID* ub_id;
+	UB_VSID *ub_id;
+
 protected:
 	VShaderID id_;
 };

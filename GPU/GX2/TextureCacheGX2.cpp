@@ -24,6 +24,7 @@
 
 #include "Core/MemMap.h"
 #include "Core/Reporting.h"
+#include "profiler/profiler.h"
 #include "GPU/ge_constants.h"
 #include "GPU/GPUState.h"
 #include "GPU/GX2/FragmentShaderGeneratorGX2.h"
@@ -567,6 +568,7 @@ GX2SurfaceFormat ToGX2Format(ReplacedTextureFormat fmt) {
 }
 
 void TextureCacheGX2::LoadTextureLevel(TexCacheEntry &entry, ReplacedTexture &replaced, int level, int maxLevel, int scaleFactor, GX2SurfaceFormat dstFmt) {
+	PROFILE_THIS_SCOPE("decodetex");
 	int w = gstate.getTextureWidth(level);
 	int h = gstate.getTextureHeight(level);
 
