@@ -1,5 +1,6 @@
 #include "ppsspp_config.h"
 
+#include "profiler/profiler.h"
 #include "thin3d/thin3d.h"
 #include "base/display.h"
 #include "math/dataconv.h"
@@ -840,13 +841,13 @@ bool GX2DrawContext::BlitFramebuffer(Framebuffer *srcfb, int srcX1, int srcY1, i
 }
 
 bool GX2DrawContext::CopyFramebufferToMemorySync(Framebuffer *src, int channelBits, int bx, int by, int bw, int bh, Draw::DataFormat format, void *pixels, int pixelStride) {
+	PROFILE_THIS_SCOPE("fbcpy_sync");
 	GX2Framebuffer *fb = (GX2Framebuffer *)src;
+	_assert_(fb->colorBuffer.surface.format == GX2_SURFACE_FORMAT_UNORM_R8_G8_B8_A8);
+	_assert_(format == Draw::DataFormat::R8G8B8A8_UNORM);
+
 	GX2DrawDone();
 	GX2Invalidate(GX2_INVALIDATE_MODE_COLOR_BUFFER, fb->colorBuffer.surface.image, fb->colorBuffer.surface.imageSize);
-
-	if (fb) {
-		assert(fb->colorBuffer.surface.format == GX2_SURFACE_FORMAT_UNORM_R8_G8_B8_A8);
-	}
 
 	if (bx >= fb->colorBuffer.surface.width || by >= fb->colorBuffer.surface.height)
 		return true;
@@ -863,8 +864,12 @@ bool GX2DrawContext::CopyFramebufferToMemorySync(Framebuffer *src, int channelBi
 	switch (channelBits) {
 	case FB_COLOR_BIT: {
 		// Pixel size always 4 here because we always request BGRA8888.
-		const u32 *src = (u32 *)fb->colorBuffer.surface.image + by * fb->colorBuffer.surface.pitch + bx;
+		const u32 *src = nullptr;
+		u32 handle;
+		GX2AllocateTilingApertureEx(&fb->colorBuffer.surface, 0, 0, GX2_ENDIAN_SWAP_8_IN_32, &handle, (void **)&src);
+		src += by * fb->colorBuffer.surface.pitch + bx;
 		ConvertFromRGBA8888((u8 *)pixels, (u8 *)src, pixelStride, fb->colorBuffer.surface.pitch, bw, bh, format);
+		GX2FreeTilingAperture(handle);
 		break;
 	}
 	case FB_DEPTH_BIT:

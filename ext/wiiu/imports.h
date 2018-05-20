@@ -31,6 +31,8 @@ IMPORT(OSResumeThread);
 IMPORT(OSIsThreadSuspended);
 IMPORT(OSSuspendThread);
 IMPORT(OSGetCurrentThread);
+IMPORT(OSGetThreadSpecific);
+IMPORT(OSSetThreadSpecific);
 IMPORT(OSExitThread);
 IMPORT(OSJoinThread);
 IMPORT(OSYieldThread);
@@ -188,6 +190,8 @@ IMPORT(GX2SetTVBuffer);
 IMPORT(GX2CalcDRCSize);
 IMPORT(GX2SetDRCBuffer);
 IMPORT(GX2CalcSurfaceSizeAndAlignment);
+IMPORT(GX2CopySurface);
+IMPORT(GX2CopySurfaceEx);
 IMPORT(GX2InitColorBufferRegs);
 IMPORT(GX2InitDepthBufferRegs);
 IMPORT(GX2SetupContextStateEx);
@@ -256,6 +260,8 @@ IMPORT(GX2DrawIndexedEx);
 IMPORT(GX2WaitForFlip);
 IMPORT(GX2GetSwapStatus);
 IMPORT(GX2ResetGPU);
+IMPORT(GX2AllocateTilingApertureEx);
+IMPORT(GX2FreeTilingAperture);
 
 IMPORT_END();
 
