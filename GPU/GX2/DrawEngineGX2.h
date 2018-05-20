@@ -171,6 +171,7 @@ private:
 	// Pushbuffers
 	PushBufferGX2 *pushVerts_;
 	PushBufferGX2 *pushInds_;
+	PushBufferGX2 *pushUBO_;
 
 	// GX2 state object caches.
 

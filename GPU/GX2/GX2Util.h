@@ -23,9 +23,12 @@
 #include <wiiu/os/memory.h>
 #include <Common/Log.h>
 
+#define aligndown(x, y)		((x) & ~((y) - 1))
+#define alignup(x, y)		aligndown(((x) + ((y) - 1)), y)
+
 class PushBufferGX2 {
 public:
-	PushBufferGX2(u32 size, u32 align) : align_(align), size_((size + align - 1) & ~(align - 1)) {
+	PushBufferGX2(u32 size, u32 align, GX2InvalidateMode mode) : size_(alignup(size, align)), align_(align), mode_(mode) {
 		buffer_ = (u8 *)MEM2_alloc(size_, align_);
 	}
 	PushBufferGX2(PushBufferGX2 &) = delete;
@@ -43,20 +46,21 @@ public:
 	}
 
 	u8 *BeginPush(u32 *offset, u32 size) {
-		size = (size + align_ - 1) & ~(align_ - 1);
+		size = alignup(size, align_);
 		_assert_(size <= size_);
-		if (pos_ + size > size_) {
+		if (pos_ + push_size_ + size > size_) {
 			// Wrap! Note that with this method, since we return the same buffer as before, you have to do the draw immediately after.
 			EndPush();
 			pos_ = 0;
 		}
-		*offset = pos_;
+		if(offset)
+			*offset = pos_;
 		push_size_ += size;
-		return (u8 *)buffer_ + pos_;
+		return (u8 *)buffer_ + pos_ + push_size_ - size;
 	}
 	void EndPush() {
 		if(push_size_) {
-			GX2Invalidate(GX2_INVALIDATE_MODE_CPU_ATTRIBUTE_BUFFER, buffer_ + pos_, push_size_);
+			GX2Invalidate(mode_, buffer_ + pos_, push_size_);
 			pos_ += push_size_;
 			push_size_ = 0;
 		}
@@ -65,6 +69,7 @@ public:
 private:
 	u32 size_;
 	u32 align_;
+	GX2InvalidateMode mode_;
 	u8 *buffer_;
 	u32 pos_ = 0;
 	u32 push_size_ = 0;

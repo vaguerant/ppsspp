@@ -145,16 +145,9 @@ ShaderManagerGX2::ShaderManagerGX2(GX2ContextState *context)
 	INFO_LOG(G3D, "sizeof(ub_base): %d", (int)sizeof(ub_base));
 	INFO_LOG(G3D, "sizeof(ub_lights): %d", (int)sizeof(ub_lights));
 	INFO_LOG(G3D, "sizeof(ub_bones): %d", (int)sizeof(ub_bones));
-
-	push_base = (UB_VS_FS_Base*)MEM2_alloc(sizeof(ub_base), GX2_UNIFORM_BLOCK_ALIGNMENT);
-	push_lights = (UB_VS_Lights*)MEM2_alloc(sizeof(ub_lights), GX2_UNIFORM_BLOCK_ALIGNMENT);
-	push_bones = (UB_VS_Bones*)MEM2_alloc(sizeof(ub_bones), GX2_UNIFORM_BLOCK_ALIGNMENT);
 }
 
 ShaderManagerGX2::~ShaderManagerGX2() {
-	MEM2_free(push_base);
-	MEM2_free(push_lights);
-	MEM2_free(push_bones);
 	ClearShaders();
 }
 
@@ -186,37 +179,37 @@ void ShaderManagerGX2::DirtyLastShader() {
 	gstate_c.Dirty(DIRTY_VERTEXSHADER_STATE | DIRTY_FRAGMENTSHADER_STATE);
 }
 
-uint64_t ShaderManagerGX2::UpdateUniforms() {
+uint64_t ShaderManagerGX2::UpdateUniforms(PushBufferGX2 *push) {
 	uint64_t dirty = gstate_c.GetDirtyUniforms();
 	if (dirty != 0) {
 		if (dirty & DIRTY_BASE_UNIFORMS) {
 			BaseUpdateUniforms(&ub_base, dirty, true);
+			u32_le* push_base = (u32_le*)push->BeginPush(nullptr, sizeof(ub_base));
 			for(int i = 0; i < sizeof(ub_base) / 4; i++)
-				((u32_le*)push_base)[i] = ((u32*)&ub_base)[i];
-			GX2Invalidate(GX2_INVALIDATE_MODE_CPU_UNIFORM_BLOCK, push_base, sizeof(ub_base));
+				push_base[i] = ((u32*)&ub_base)[i];
+			push->EndPush();
+			GX2SetVertexUniformBlock(1, sizeof(ub_base), push_base);
+			GX2SetPixelUniformBlock(1, sizeof(ub_base), push_base);
 		}
 		if (dirty & DIRTY_LIGHT_UNIFORMS) {
 			LightUpdateUniforms(&ub_lights, dirty);
+			u32_le* push_lights = (u32_le*)push->BeginPush(nullptr, sizeof(ub_lights));
 			for(int i = 0; i < sizeof(ub_lights) / 4; i++)
-				((u32_le*)push_lights)[i] = ((u32*)&ub_lights)[i];
-			GX2Invalidate(GX2_INVALIDATE_MODE_CPU_UNIFORM_BLOCK, push_lights, sizeof(ub_lights));
+				push_lights[i] = ((u32*)&ub_lights)[i];
+			push->EndPush();
+			GX2SetVertexUniformBlock(2, sizeof(ub_lights), push_lights);
 		}
 		if (dirty & DIRTY_BONE_UNIFORMS) {
 			BoneUpdateUniforms(&ub_bones, dirty);
+			u32_le* push_bones = (u32_le*)push->BeginPush(nullptr, sizeof(ub_bones));
 			for(int i = 0; i < sizeof(ub_bones) / 4; i++)
-				((u32_le*)push_bones)[i] = ((u32*)&ub_bones)[i];
-			GX2Invalidate(GX2_INVALIDATE_MODE_CPU_UNIFORM_BLOCK, push_bones, sizeof(ub_bones));
+				push_bones[i] = ((u32*)&ub_bones)[i];
+			push->EndPush();
+			GX2SetVertexUniformBlock(3, sizeof(ub_bones), push_bones);
 		}
 	}
 	gstate_c.CleanUniforms();
 	return dirty;
-}
-
-void ShaderManagerGX2::BindUniforms() {
-	GX2SetVertexUniformBlock(1, sizeof(ub_base), push_base);
-	GX2SetVertexUniformBlock(2, sizeof(ub_lights), push_lights);
-	GX2SetVertexUniformBlock(3, sizeof(ub_bones), push_bones);
-	GX2SetPixelUniformBlock(1, sizeof(ub_base), push_base);
 }
 
 void ShaderManagerGX2::GetShaders(int prim, u32 vertType, GX2VShader **vshader, GX2PShader **fshader, bool useHWTransform) {

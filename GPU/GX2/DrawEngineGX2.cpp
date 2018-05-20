@@ -15,6 +15,7 @@
 // Official git repository and contact information can be found at
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
+#define GX2_DISABLE_WRAPS
 #include <algorithm>
 
 #include "base/logging.h"
@@ -53,6 +54,7 @@ enum { VAI_KILL_AGE = 120, VAI_UNRELIABLE_KILL_AGE = 240, VAI_UNRELIABLE_KILL_MA
 enum {
 	VERTEX_PUSH_SIZE = 1024 * 1024 * 16,
 	INDEX_PUSH_SIZE = 1024 * 1024 * 4,
+	UBO_PUSH_SIZE = 1024 * 1024 * 16,
 };
 
 static const GX2AttribStream TransformedVertexElements[] = {
@@ -86,8 +88,9 @@ DrawEngineGX2::~DrawEngineGX2() {
 }
 
 void DrawEngineGX2::InitDeviceObjects() {
-	pushVerts_ = new PushBufferGX2(VERTEX_PUSH_SIZE, GX2_VERTEX_BUFFER_ALIGNMENT);
-	pushInds_ = new PushBufferGX2(INDEX_PUSH_SIZE, GX2_INDEX_BUFFER_ALIGNMENT);
+	pushVerts_ = new PushBufferGX2(VERTEX_PUSH_SIZE, GX2_VERTEX_BUFFER_ALIGNMENT, GX2_INVALIDATE_MODE_CPU_ATTRIBUTE_BUFFER);
+	pushInds_ = new PushBufferGX2(INDEX_PUSH_SIZE, GX2_INDEX_BUFFER_ALIGNMENT, GX2_INVALIDATE_MODE_CPU_ATTRIBUTE_BUFFER);
+	pushUBO_ = new PushBufferGX2(UBO_PUSH_SIZE, GX2_UNIFORM_BLOCK_ALIGNMENT, GX2_INVALIDATE_MODE_CPU_UNIFORM_BLOCK);
 
 	tessDataTransfer = new TessellationDataTransferGX2(context_);
 }
@@ -116,6 +119,7 @@ void DrawEngineGX2::DestroyDeviceObjects() {
 	delete tessDataTransfer;
 	delete pushVerts_;
 	delete pushInds_;
+	delete pushUBO_;
 	depthStencilCache_.Iterate([&](const u64 &key, GX2DepthStencilControlReg *ds) { free(ds); });
 	depthStencilCache_.Clear();
 	blendCache_.Iterate([&](const u64 &key, GX2BlendState *bs) { free(bs); });
@@ -235,6 +239,7 @@ void DrawEngineGX2::MarkUnreliable(VertexArrayInfoGX2 *vai) {
 void DrawEngineGX2::BeginFrame() {
 	pushVerts_->Reset();
 	pushInds_->Reset();
+	pushUBO_->Reset();
 
 	if (--decimationCounter_ <= 0) {
 		decimationCounter_ = VERTEXCACHE_DECIMATION_INTERVAL;
@@ -474,8 +479,7 @@ void DrawEngineGX2::DoFlush() {
 		GX2FetchShader *fetchShader = SetupFetchShaderForDraw(vshader, dec_->GetDecVtxFmt(), dec_->VertexType());
 		GX2SetPixelShader(fshader);
 		GX2SetVertexShader(vshader);
-		shaderManager_->UpdateUniforms();
-		shaderManager_->BindUniforms();
+		shaderManager_->UpdateUniforms(pushUBO_);
 
 		GX2SetFetchShader(fetchShader);
 		u32 stride = dec_->GetDecVtxFmt().stride;
@@ -554,8 +558,7 @@ void DrawEngineGX2::DoFlush() {
 			shaderManager_->GetShaders(prim, lastVType_, &vshader, &fshader, false);
 			GX2SetPixelShader(fshader);
 			GX2SetVertexShader(vshader);
-			shaderManager_->UpdateUniforms();
-			shaderManager_->BindUniforms();
+			shaderManager_->UpdateUniforms(pushUBO_);
 
 			// We really do need a vertex layout for each vertex shader (or at least check its ID bits for what inputs it uses)!
 			// Some vertex shaders ignore one of the inputs, and then the layout created from it will lack it, which will be a problem for others.
@@ -642,7 +645,6 @@ void DrawEngineGX2::DoFlush() {
 	gstate_c.vertBounds.maxV = 0;
 
 	GX2Flush();
-	GX2DrawDone(); // TODO: use a push buffer for uniforms to get rid of this blocking call.
 #if 0
 	// We only support GPU debugging on Windows, and that's the only use case for this.
 	host->GPUNotifyDraw();

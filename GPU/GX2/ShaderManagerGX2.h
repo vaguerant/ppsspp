@@ -29,6 +29,7 @@
 #include "GPU/Common/ShaderUniforms.h"
 
 #include "GPU/GX2/GX2Shaders.h"
+#include "GPU/GX2/GX2Util.h"
 
 namespace GX2Gen {
 
@@ -176,8 +177,7 @@ public:
 	std::vector<std::string> DebugGetShaderIDs(DebugShaderType type);
 	std::string DebugGetShaderString(std::string id, DebugShaderType type, DebugShaderStringType stringType);
 
-	uint64_t UpdateUniforms();
-	void BindUniforms();
+	uint64_t UpdateUniforms(PushBufferGX2* push);
 
 	// TODO: Avoid copying these buffers if same as last draw, can still point to it assuming we're still in the same pushbuffer.
 	// Applies dirty changes and copies the buffer.
@@ -198,11 +198,6 @@ private:
 	UB_VS_FS_Base ub_base;
 	UB_VS_Lights ub_lights;
 	UB_VS_Bones ub_bones;
-
-	// Not actual pushbuffers
-	UB_VS_FS_Base *push_base;
-	UB_VS_Lights *push_lights;
-	UB_VS_Bones *push_bones;
 
 	GX2PShader *lastFShader_;
 	GX2VShader *lastVShader_;
