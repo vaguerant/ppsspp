@@ -91,7 +91,7 @@ bool GX2GraphicsContext::Init() {
 	GX2SetViewport(0.0f, 0.0f, color_buffer_.surface.width, color_buffer_.surface.height, 0.0f, 1.0f);
 	GX2SetScissor(0, 0, color_buffer_.surface.width, color_buffer_.surface.height);
 	GX2SetDepthOnlyControl(GX2_DISABLE, GX2_DISABLE, GX2_COMPARE_FUNC_ALWAYS);
-	GX2SetColorControl(GX2_LOGIC_OP_COPY, GX2_ENABLE, GX2_DISABLE, GX2_ENABLE);
+	GX2SetColorControl(GX2_LOGIC_OP_COPY, 0xFF, GX2_DISABLE, GX2_ENABLE);
 	GX2SetBlendControl(GX2_RENDER_TARGET_0, GX2_BLEND_MODE_SRC_ALPHA, GX2_BLEND_MODE_INV_SRC_ALPHA, GX2_BLEND_COMBINE_MODE_ADD, GX2_ENABLE, GX2_BLEND_MODE_SRC_ALPHA, GX2_BLEND_MODE_INV_SRC_ALPHA, GX2_BLEND_COMBINE_MODE_ADD);
 	GX2SetCullOnlyControl(GX2_FRONT_FACE_CCW, GX2_DISABLE, GX2_DISABLE);
 
@@ -103,6 +103,7 @@ bool GX2GraphicsContext::Init() {
 
 	draw_ = Draw::T3DCreateGX2Context(ctx_state_, &color_buffer_, &depth_buffer_);
 	SetGPUBackend(GPUBackend::GX2);
+	GX2SetSwapInterval(0);
 	return draw_->CreatePresets();
 }
 
@@ -130,14 +131,15 @@ void GX2GraphicsContext::Shutdown() {
 	MEMBucket_free(drc_scan_buffer_);
 	drc_scan_buffer_ = nullptr;
 }
-
+#include "profiler/profiler.h"
 void GX2GraphicsContext::SwapBuffers() {
+	PROFILE_THIS_SCOPE("swap");
 	GX2DrawDone();
 	GX2CopyColorBufferToScanBuffer(&color_buffer_, GX2_SCAN_TARGET_DRC);
 	GX2CopyColorBufferToScanBuffer(&color_buffer_, GX2_SCAN_TARGET_TV);
 	GX2SwapScanBuffers();
 	GX2Flush();
-	GX2WaitForVsync();
+//	GX2WaitForVsync();
 	GX2WaitForFlip();
 	GX2SetContextState(ctx_state_);
 	GX2SetShaderMode(GX2_SHADER_MODE_UNIFORM_BLOCK);

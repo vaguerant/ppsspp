@@ -25,6 +25,7 @@
 #include "Core/Config.h"
 #include "Core/Reporting.h"
 
+#include "profiler/profiler.h"
 #include "GPU/Common/FramebufferCommon.h"
 #include "GPU/GX2/DrawEngineGX2.h"
 #include "GPU/GX2/StateMappingGX2.h"
@@ -127,6 +128,7 @@ class FramebufferManagerGX2;
 class ShaderManagerGX2;
 
 void DrawEngineGX2::ApplyDrawState(int prim) {
+	PROFILE_THIS_SCOPE("drawState");
 	dynState_.topology = primToGX2[prim];
 
 	if (!gstate_c.IsDirty(DIRTY_BLEND_STATE | DIRTY_TEXTURE_IMAGE | DIRTY_TEXTURE_PARAMS | DIRTY_VIEWPORTSCISSOR_STATE | DIRTY_RASTER_STATE | DIRTY_DEPTHSTENCIL_STATE)) {
@@ -233,8 +235,8 @@ void DrawEngineGX2::ApplyDrawState(int prim) {
 		GX2BlendState *bs1 = blendCache_.Get(keys_.blend.value);
 		if (bs1 == nullptr) {
 			bs1 = new GX2BlendState;
-			GX2InitColorControlReg(&bs1->color, keys_.blend.logicOpEnable ? keys_.blend.logicOp : GX2_LOGIC_OP_COPY, keys_.blend.blendEnable, false, keys_.blend.colorWriteMask != 0);
-			GX2InitTargetChannelMasksReg(&bs1->mask, keys_.blend.colorWriteMask, GX2_CHANNEL_MASK_RGBA, GX2_CHANNEL_MASK_RGBA, GX2_CHANNEL_MASK_RGBA, GX2_CHANNEL_MASK_RGBA, GX2_CHANNEL_MASK_RGBA, GX2_CHANNEL_MASK_RGBA, GX2_CHANNEL_MASK_RGBA);
+			GX2InitColorControlReg(&bs1->color, keys_.blend.logicOpEnable ? keys_.blend.logicOp : GX2_LOGIC_OP_COPY, keys_.blend.blendEnable ? 0xFF : 0x00, false, keys_.blend.colorWriteMask != 0);
+			GX2InitTargetChannelMasksReg(&bs1->mask, keys_.blend.colorWriteMask, (GX2ChannelMask)0, (GX2ChannelMask)0, (GX2ChannelMask)0, (GX2ChannelMask)0, (GX2ChannelMask)0, (GX2ChannelMask)0, (GX2ChannelMask)0);
 			GX2InitBlendControlReg(&bs1->blend, GX2_RENDER_TARGET_0, keys_.blend.srcColor, keys_.blend.destColor, keys_.blend.blendOpColor, keys_.blend.srcAlpha && keys_.blend.destAlpha, keys_.blend.srcAlpha, keys_.blend.destAlpha, keys_.blend.blendOpAlpha);
 			blendCache_.Insert(keys_.blend.value, bs1);
 		}
@@ -381,6 +383,7 @@ void DrawEngineGX2::ApplyDrawState(int prim) {
 }
 
 void DrawEngineGX2::ApplyDrawStateLate(bool applyStencilRef, uint8_t stencilRef) {
+	PROFILE_THIS_SCOPE("late drawState");
 	if (!gstate.isModeClear()) {
 		if (fboTexNeedBind_) {
 			framebufferManager_->BindFramebufferAsColorTexture(1, framebufferManager_->GetCurrentRenderVFB(), BINDFBCOLOR_MAY_COPY);
@@ -393,8 +396,13 @@ void DrawEngineGX2::ApplyDrawStateLate(bool applyStencilRef, uint8_t stencilRef)
 
 	// we go through Draw here because it automatically handles screen rotation, as needed in UWP on mobiles.
 	if (gstate_c.IsDirty(DIRTY_VIEWPORTSCISSOR_STATE)) {
+		GX2ColorBuffer *current_color_buffer = (GX2ColorBuffer *)draw_->GetNativeObject(Draw::NativeObject::BACKBUFFER_COLOR_VIEW);
 		draw_->SetViewports(1, &dynState_.viewport);
-		draw_->SetScissorRect(dynState_.scissor.left, dynState_.scissor.top, dynState_.scissor.right - dynState_.scissor.left, dynState_.scissor.bottom - dynState_.scissor.top);
+		int left = std::min(std::max(0, dynState_.scissor.left), (int)current_color_buffer->surface.width - 1);
+		int top = std::min(std::max(0, dynState_.scissor.top), (int)current_color_buffer->surface.height - 1);
+		int width = std::min(dynState_.scissor.right - dynState_.scissor.left, (int)current_color_buffer->surface.width - left);
+		int height = std::min(dynState_.scissor.bottom - dynState_.scissor.top, (int)current_color_buffer->surface.height - top);
+		draw_->SetScissorRect(left, top, width, height);
 	}
 	if (gstate_c.IsDirty(DIRTY_RASTER_STATE)) {
 		GX2SetCullOnlyControl(rasterState_->frontFace_, rasterState_->cullFront_, rasterState_->cullBack_);
