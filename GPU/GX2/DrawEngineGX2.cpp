@@ -60,8 +60,8 @@ enum {
 static const GX2AttribStream TransformedVertexElements[] = {
 	{ 0, 0, 0, GX2_ATTRIB_FORMAT_FLOAT_32_32_32_32, GX2_ATTRIB_INDEX_PER_VERTEX, 0, GX2_COMP_SEL(_x, _y, _z, _w), GX2_ENDIAN_SWAP_DEFAULT },
 	{ 1, 0, 16, GX2_ATTRIB_FORMAT_FLOAT_32_32_32, GX2_ATTRIB_INDEX_PER_VERTEX, 0, GX2_COMP_SEL(_x, _y, _z, _1), GX2_ENDIAN_SWAP_DEFAULT },
-	{ 2, 0, 28, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8, GX2_ATTRIB_INDEX_PER_VERTEX, 0, GX2_COMP_SEL(_r, _g, _b, _a), GX2_ENDIAN_SWAP_DEFAULT },
-	{ 3, 0, 32, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8, GX2_ATTRIB_INDEX_PER_VERTEX, 0, GX2_COMP_SEL(_r, _g, _b, _a), GX2_ENDIAN_SWAP_DEFAULT },
+	{ 2, 0, 28, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8, GX2_ATTRIB_INDEX_PER_VERTEX, 0, GX2_COMP_SEL(_r, _g, _b, _a), GX2_ENDIAN_SWAP_8_IN_32 },
+	{ 3, 0, 32, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8, GX2_ATTRIB_INDEX_PER_VERTEX, 0, GX2_COMP_SEL(_r, _g, _b, _a), GX2_ENDIAN_SWAP_8_IN_32 },
 };
 
 DrawEngineGX2::DrawEngineGX2(Draw::DrawContext *draw, GX2ContextState *context) : draw_(draw), context_(context), vai_(256), fetchShaderMap_(32), blendCache_(32), depthStencilCache_(64), rasterCache_(4) {
@@ -130,25 +130,26 @@ void DrawEngineGX2::DestroyDeviceObjects() {
 
 struct DeclTypeInfo {
 	u32 mask;
+	GX2EndianSwapMode endianSwap;
 	GX2AttribFormat format;
 };
 
 static const DeclTypeInfo VComp[] = {
-	{ GX2_COMP_SEL(_0, _0, _0, _0), GX2_ATTRIB_FORMAT_FLOAT_32_32_32_32 }, // DEC_NONE,
-	{ GX2_COMP_SEL(_x, _0, _0, _1), GX2_ATTRIB_FORMAT_FLOAT_32 },          // DEC_FLOAT_1,
-	{ GX2_COMP_SEL(_x, _y, _0, _1), GX2_ATTRIB_FORMAT_FLOAT_32_32 },       // DEC_FLOAT_2,
-	{ GX2_COMP_SEL(_x, _y, _z, _1), GX2_ATTRIB_FORMAT_FLOAT_32_32_32 },    // DEC_FLOAT_3,
-	{ GX2_COMP_SEL(_x, _y, _z, _w), GX2_ATTRIB_FORMAT_FLOAT_32_32_32_32 }, // DEC_FLOAT_4,
-	{ GX2_COMP_SEL(_x, _y, _z, _1), GX2_ATTRIB_FORMAT_SNORM_8_8_8_8 },     // DEC_S8_3,
-	{ GX2_COMP_SEL(_x, _y, _z, _1), GX2_ATTRIB_FORMAT_SNORM_16_16_16_16 }, // DEC_S16_3,
-	{ GX2_COMP_SEL(_x, _0, _0, _1), GX2_ATTRIB_FORMAT_UNORM_8 },           // DEC_U8_1,
-	{ GX2_COMP_SEL(_x, _y, _0, _1), GX2_ATTRIB_FORMAT_UNORM_8_8 },         // DEC_U8_2,
-	{ GX2_COMP_SEL(_x, _y, _z, _1), GX2_ATTRIB_FORMAT_UNORM_8_8_8_8 },     // DEC_U8_3,
-	{ GX2_COMP_SEL(_x, _y, _z, _w), GX2_ATTRIB_FORMAT_UNORM_8_8_8_8 },     // DEC_U8_4,
-	{ GX2_COMP_SEL(_x, _0, _0, _1), GX2_ATTRIB_FORMAT_UNORM_16 },          // DEC_U16_1,
-	{ GX2_COMP_SEL(_x, _y, _0, _1), GX2_ATTRIB_FORMAT_UNORM_16_16 },       // DEC_U16_2,
-	{ GX2_COMP_SEL(_x, _y, _z, _1), GX2_ATTRIB_FORMAT_UNORM_16_16_16_16 }, // DEC_U16_3,
-	{ GX2_COMP_SEL(_x, _y, _z, _w), GX2_ATTRIB_FORMAT_UNORM_16_16_16_16 }, // DEC_U16_4,
+	{ GX2_COMP_SEL(_0, _0, _0, _0), GX2_ENDIAN_SWAP_DEFAULT, GX2_ATTRIB_FORMAT_FLOAT_32_32_32_32 }, // DEC_NONE,
+	{ GX2_COMP_SEL(_x, _0, _0, _1), GX2_ENDIAN_SWAP_DEFAULT, GX2_ATTRIB_FORMAT_FLOAT_32 },          // DEC_FLOAT_1,
+	{ GX2_COMP_SEL(_x, _y, _0, _1), GX2_ENDIAN_SWAP_DEFAULT, GX2_ATTRIB_FORMAT_FLOAT_32_32 },       // DEC_FLOAT_2,
+	{ GX2_COMP_SEL(_x, _y, _z, _1), GX2_ENDIAN_SWAP_DEFAULT, GX2_ATTRIB_FORMAT_FLOAT_32_32_32 },    // DEC_FLOAT_3,
+	{ GX2_COMP_SEL(_x, _y, _z, _w), GX2_ENDIAN_SWAP_DEFAULT, GX2_ATTRIB_FORMAT_FLOAT_32_32_32_32 }, // DEC_FLOAT_4,
+	{ GX2_COMP_SEL(_x, _y, _z, _1), GX2_ENDIAN_SWAP_8_IN_32, GX2_ATTRIB_FORMAT_SNORM_8_8_8_8 },     // DEC_S8_3,
+	{ GX2_COMP_SEL(_x, _y, _z, _1), GX2_ENDIAN_SWAP_8_IN_16, GX2_ATTRIB_FORMAT_SNORM_16_16_16_16 }, // DEC_S16_3,
+	{ GX2_COMP_SEL(_x, _0, _0, _1), GX2_ENDIAN_SWAP_DEFAULT, GX2_ATTRIB_FORMAT_UNORM_8 },           // DEC_U8_1,
+	{ GX2_COMP_SEL(_x, _y, _0, _1), GX2_ENDIAN_SWAP_8_IN_16, GX2_ATTRIB_FORMAT_UNORM_8_8 },         // DEC_U8_2,
+	{ GX2_COMP_SEL(_x, _y, _z, _1), GX2_ENDIAN_SWAP_8_IN_32, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8 },     // DEC_U8_3,
+	{ GX2_COMP_SEL(_x, _y, _z, _w), GX2_ENDIAN_SWAP_8_IN_32, GX2_ATTRIB_FORMAT_UNORM_8_8_8_8 },     // DEC_U8_4,
+	{ GX2_COMP_SEL(_x, _0, _0, _1), GX2_ENDIAN_SWAP_8_IN_16, GX2_ATTRIB_FORMAT_UNORM_16 },          // DEC_U16_1,
+	{ GX2_COMP_SEL(_x, _y, _0, _1), GX2_ENDIAN_SWAP_8_IN_16, GX2_ATTRIB_FORMAT_UNORM_16_16 },       // DEC_U16_2,
+	{ GX2_COMP_SEL(_x, _y, _z, _1), GX2_ENDIAN_SWAP_8_IN_16, GX2_ATTRIB_FORMAT_UNORM_16_16_16_16 }, // DEC_U16_3,
+	{ GX2_COMP_SEL(_x, _y, _z, _w), GX2_ENDIAN_SWAP_8_IN_16, GX2_ATTRIB_FORMAT_UNORM_16_16_16_16 }, // DEC_U16_4,
 };
 
 static void VertexAttribSetup(GX2AttribStream *VertexElement, u8 fmt, u8 offset, u8 location) {
@@ -159,7 +160,7 @@ static void VertexAttribSetup(GX2AttribStream *VertexElement, u8 fmt, u8 offset,
 	VertexElement->type = GX2_ATTRIB_INDEX_PER_VERTEX;
 	VertexElement->aluDivisor = 0;
 	VertexElement->mask = VComp[fmt & 0xF].mask;
-	VertexElement->endianSwap = GX2_ENDIAN_SWAP_DEFAULT;
+	VertexElement->endianSwap = VComp[fmt & 0xF].endianSwap;
 }
 
 GX2FetchShader *DrawEngineGX2::SetupFetchShaderForDraw(GX2VertexShader *vshader, const DecVtxFormat &decFmt, u32 pspFmt) {
