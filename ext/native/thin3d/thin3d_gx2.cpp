@@ -835,9 +835,20 @@ void GX2DrawContext::Clear(int mask, uint32_t colorval, float depthVal, int sten
 void GX2DrawContext::BeginFrame() {}
 
 void GX2DrawContext::CopyFramebufferImage(Framebuffer *srcfb, int level, int x, int y, int z, Framebuffer *dstfb, int dstLevel, int dstX, int dstY, int dstZ, int width, int height, int depth, int channelBit) {
-	// TODO
-	DEBUG_LINE();
-//		Crash();
+	_assert_(level == 0 && dstLevel == 0 && z == 0 && dstZ == 0 && depth == 1);
+	GX2Rect srcRegion = {x, y, x + width, y + height};
+	GX2Point dstCoords = {dstX, dstY};
+	GX2Surface* srcSurface, *dstSurface;
+	if(channelBit == Draw::FB_COLOR_BIT) {
+		 srcSurface = &((GX2Framebuffer*)srcfb)->colorBuffer.surface;
+		 dstSurface = &((GX2Framebuffer*)dstfb)->colorBuffer.surface;
+	} else {
+		srcSurface = &((GX2Framebuffer*)srcfb)->depthBuffer.surface;
+		dstSurface = &((GX2Framebuffer*)dstfb)->depthBuffer.surface;
+	}
+	GX2CopySurfaceEx(srcSurface, level, z, dstSurface, dstLevel, dstZ, 1, &srcRegion, &dstCoords);
+	GX2SetContextState(context_state_);
+	GX2SetShaderMode(GX2_SHADER_MODE_UNIFORM_BLOCK);
 }
 
 bool GX2DrawContext::BlitFramebuffer(Framebuffer *srcfb, int srcX1, int srcY1, int srcX2, int srcY2, Framebuffer *dstfb, int dstX1, int dstY1, int dstX2, int dstY2, int channelBits, FBBlitFilter filter) {
