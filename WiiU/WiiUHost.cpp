@@ -80,6 +80,10 @@ static void VPADCallback(s32 chan) {
 				NativeKey({ DEVICE_ID_PAD_0 + chan, keymap[i], (vpad.trigger & (1 << i)) ? KEY_DOWN : KEY_UP });
 			}
 		}
+		NativeAxis({ DEVICE_ID_PAD_0 + chan, JOYSTICK_AXIS_X, vpad.leftStick.x});
+		NativeAxis({ DEVICE_ID_PAD_0 + chan, JOYSTICK_AXIS_Y, vpad.leftStick.y});
+		NativeAxis({ DEVICE_ID_PAD_0 + chan, JOYSTICK_AXIS_RX, vpad.rightStick.x});
+		NativeAxis({ DEVICE_ID_PAD_0 + chan, JOYSTICK_AXIS_RY, vpad.rightStick.y});
 #if 1
 		if (vpad.trigger & VPAD_BUTTON_ZL) {
 			System_SendMessage("finish", "");
@@ -137,7 +141,6 @@ static void AXCallback() {
 
 	int count = NativeMix(mixBuffer, AX_FRAME_SIZE);
 	int extra = AX_FRAME_SIZE - count;
-	_assert_(count <= AX_FRAME_SIZE);
 
 	const s16 *src = mixBuffer;
 	s16 *dst_l = axBuffers[0][pos];
