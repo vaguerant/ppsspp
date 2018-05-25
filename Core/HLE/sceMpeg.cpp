@@ -109,10 +109,10 @@ static AVPixelFormat pmp_want_pix_fmt;
 
 struct SceMpegLLI
 {
-	u32 pSrc;
-	u32 pDst;
-	u32 Next;
-	int iSize;
+	u32_le pSrc;
+	u32_le pDst;
+	u32_le Next;
+	s32_le iSize;
 };
 
 void SceMpegAu::read(u32 addr) {
