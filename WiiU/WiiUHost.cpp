@@ -80,11 +80,19 @@ static void VPADCallback(s32 chan) {
 				NativeKey({ DEVICE_ID_PAD_0 + chan, keymap[i], (vpad.trigger & (1 << i)) ? KEY_DOWN : KEY_UP });
 			}
 		}
-		NativeAxis({ DEVICE_ID_PAD_0 + chan, JOYSTICK_AXIS_X, vpad.leftStick.x});
-		NativeAxis({ DEVICE_ID_PAD_0 + chan, JOYSTICK_AXIS_Y, vpad.leftStick.y});
-		NativeAxis({ DEVICE_ID_PAD_0 + chan, JOYSTICK_AXIS_RX, vpad.rightStick.x});
-		NativeAxis({ DEVICE_ID_PAD_0 + chan, JOYSTICK_AXIS_RY, vpad.rightStick.y});
-#if 1
+
+		static VPADVec2D prevLeftStick, prevRightStick;
+		if (prevLeftStick.x != vpad.leftStick.x || prevLeftStick.y != vpad.leftStick.y) {
+			NativeAxis({ DEVICE_ID_PAD_0 + chan, JOYSTICK_OUYA_AXIS_LS_X, vpad.leftStick.x });
+			NativeAxis({ DEVICE_ID_PAD_0 + chan, JOYSTICK_OUYA_AXIS_LS_Y, vpad.leftStick.y });
+			prevLeftStick = vpad.leftStick;
+		}
+		if (prevRightStick.x != vpad.rightStick.x || prevRightStick.y != vpad.rightStick.y) {
+			NativeAxis({ DEVICE_ID_PAD_0 + chan, JOYSTICK_OUYA_AXIS_RS_X, vpad.rightStick.x });
+			NativeAxis({ DEVICE_ID_PAD_0 + chan, JOYSTICK_OUYA_AXIS_RS_Y, vpad.rightStick.y });
+			prevRightStick = vpad.rightStick;
+		}
+#if 0
 		if (vpad.trigger & VPAD_BUTTON_ZL) {
 			System_SendMessage("finish", "");
 		}
@@ -134,7 +142,7 @@ static void AXCallback() {
 #if 0
 	AXVoiceOffsets offsets;
 	AXGetVoiceOffsets(mvoice->v[0], &offsets);
-	if (((offsets.currentOffset / AX_FRAME_SIZE) - pos) & (AX_FRAMES - 1) == 0) {
+	if ((offsets.currentOffset / AX_FRAME_SIZE) == pos) {
 		pos = ((offsets.currentOffset / AX_FRAME_SIZE) + (AX_FRAMES >> 1)) & (AX_FRAMES - 1);
 	}
 #endif
@@ -163,7 +171,7 @@ static void AXCallback() {
 }
 
 void WiiUHost::InitSound() {
-	if(InitSoundRefCount_++)
+	if (InitSoundRefCount_++)
 		return;
 
 	AXInitParams initParams = { AX_INIT_RENDERER_48KHZ };
@@ -200,7 +208,7 @@ void WiiUHost::InitSound() {
 }
 
 void WiiUHost::ShutdownSound() {
-	if(--InitSoundRefCount_)
+	if (--InitSoundRefCount_)
 		return;
 
 	AXSetMultiVoiceState(mvoice, AX_VOICE_STATE_STOPPED);
