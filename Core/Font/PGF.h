@@ -24,6 +24,7 @@
 
 #include "Common/Log.h"
 #include "Common/CommonTypes.h"
+#include "Common/Swap.h"
 
 class PointerWrap;
 
@@ -65,7 +66,7 @@ enum Language {
 	FONT_LANGUAGE_CHINESE  = 4,
 };
 
-enum FontPixelFormat {
+enum FontPixelFormat : u32 {
 	PSP_FONT_PIXELFORMAT_4     = 0, // 2 pixels packed in 1 byte (natural order)
 	PSP_FONT_PIXELFORMAT_4_REV = 1, // 2 pixels packed in 1 byte (reversed order)
 	PSP_FONT_PIXELFORMAT_8     = 2, // 1 pixel in 1 byte
@@ -110,15 +111,8 @@ struct Glyph {
 	u32 ptr;
 };
 
-
-#if COMMON_LITTLE_ENDIAN
-typedef FontPixelFormat FontPixelFormat_le;
-#else
-typedef swap_struct_t<FontPixelFormat, swap_32_t<FontPixelFormat> > FontPixelFormat_le;
-#endif
-
 struct GlyphImage {
-	FontPixelFormat_le pixelFormat;
+	LEndian<FontPixelFormat> pixelFormat;
 	s32_le xPos64;
 	s32_le yPos64;
 	u16_le bufWidth;

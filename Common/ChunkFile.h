@@ -463,9 +463,9 @@ public:
 
 	void Do(tm &t);
 
-	template<typename T, typename F>
-	void Do(swap_struct_t<T, F> &x) {
-		T v = x.swap();
+	template<typename T>
+	void Do(swap_t<T> &x) {
+		T v = x;
 		Do(v);
 		x = v;
 	}
