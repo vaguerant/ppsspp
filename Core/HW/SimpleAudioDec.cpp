@@ -342,6 +342,7 @@ u32 AuCtx::AuDecode(u32 pcmAddr)
 		int pcmframesize;
 		// decode
 		decoder->Decode((void*)sourcebuff.c_str(), (int)sourcebuff.size(), outbuf, &pcmframesize);
+		endian_convert((u16_le*)outbuf, (u16*)outbuf, pcmframesize / 2);
 		if (pcmframesize == 0){
 			// no output pcm, we are at the end of the stream
 			AuBufAvailable = 0;

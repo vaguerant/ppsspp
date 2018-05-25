@@ -1225,6 +1225,8 @@ u32 _AtracDecodeData(int atracID, u8 *outbuf, u32 outbufPtr, u32 *SamplesNum, u3
 							}
 							if (avret < 0) {
 								ERROR_LOG(ME, "swr_convert: Error while converting %d", avret);
+							} else {
+								endian_convert((s16_le*)out, (s16*)out, avret * atrac->outputChannels_);
 							}
 						}
 #endif // USE_FFMPEG

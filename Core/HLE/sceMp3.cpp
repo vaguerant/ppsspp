@@ -556,6 +556,7 @@ static u32 sceMp3LowLevelDecode(u32 mp3, u32 sourceAddr, u32 sourceBytesConsumed
 	
 	int outpcmbytes = 0;
 	ctx->decoder->Decode((void*)inbuff, 4096, outbuff, &outpcmbytes);
+	endian_convert((s16_le*)outbuff, (s16*)outbuff, outpcmbytes / 2);
 	
 	Memory::Write_U32(ctx->decoder->GetSourcePos(), sourceBytesConsumedAddr);
 	Memory::Write_U32(outpcmbytes, sampleBytesAddr);

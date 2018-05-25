@@ -115,7 +115,9 @@ static int sceAudiocodecDecode(u32 ctxPtr, int codec) {
 
 		if (decoder != NULL) {
 			// Decode audio
-			decoder->Decode(Memory::GetPointer(ctx->inDataPtr), ctx->inDataSize, Memory::GetPointer(ctx->outDataPtr), &outbytes);
+			u8* outbuf = Memory::GetPointer(ctx->outDataPtr);
+			decoder->Decode(Memory::GetPointer(ctx->inDataPtr), ctx->inDataSize, outbuf, &outbytes);
+			endian_convert((s16_le*)outbuf, (s16*)outbuf, outbytes / 2);
 		}
 		DEBUG_LOG(ME, "sceAudiocodecDec(%08x, %i (%s))", ctxPtr, codec, GetCodecName(codec));
 		return 0;

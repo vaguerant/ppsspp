@@ -18,6 +18,7 @@
 #pragma once
 
 #include <cstdlib>
+#include <cstring>
 
 #include "Common/CommonTypes.h"
 
@@ -163,3 +164,19 @@ typedef BEndian<s64> s64_be;
 
 typedef BEndian<float> float_be;
 typedef BEndian<double> double_be;
+
+template <typename T> static inline void endian_convert(swap_t<T> *dst, T *src, size_t count) {
+	for (int i = 0; i < count; i++) {
+		dst[i] = src[i];
+	}
+}
+template <typename T> static inline void endian_convert(T *dst, swap_t<T> *src, size_t count) {
+	for (int i = 0; i < count; i++) {
+		dst[i] = src[i];
+	}
+}
+template <typename T> static inline void endian_convert(T *dst, T *src, size_t count) {
+	if (src == dst)
+		return;
+	memcpy(dst, src, count * sizeof(T));
+}
