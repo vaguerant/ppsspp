@@ -408,6 +408,9 @@ static int Replace_fabsf() {
 }
 
 static int Replace_vmmul_q_transp() {
+#ifdef COMMON_BIG_ENDIAN
+	Crash(); // TODO
+#endif
 	float *out = (float *)Memory::GetPointer(PARAM(0));
 	const float *a = (const float *)Memory::GetPointer(PARAM(1));
 	const float *b = (const float *)Memory::GetPointer(PARAM(2));
@@ -482,15 +485,15 @@ static int Replace_gta_dl_write_matrix() {
 // TODO: Inline into a few NEON or SSE instructions - especially if a1 is a known immediate!
 // Anyway, not sure if worth it. There's not that many matrices written per frame normally.
 static int Replace_dl_write_matrix() {
-	u32 *dlStruct = (u32 *)Memory::GetPointer(PARAM(0));
-	u32 *src = (u32 *)Memory::GetPointer(PARAM(2));
+	u32_le *dlStruct = (u32_le *)Memory::GetPointer(PARAM(0));
+	u32_le *src = (u32_le *)Memory::GetPointer(PARAM(2));
 
 	if (!dlStruct || !src) {
 		RETURN(0);
 		return 60;
 	}
 
-	u32 *dest = (u32 *)Memory::GetPointer(dlStruct[2]);
+	u32_le *dest = (u32_le *)Memory::GetPointer(dlStruct[2]);
 	if (!dest) {
 		RETURN(0);
 		return 60;

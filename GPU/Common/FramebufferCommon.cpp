@@ -1520,7 +1520,7 @@ void FramebufferManagerCommon::ApplyClearToMemory(int x1, int y1, int x2, int y2
 			u64 val64 = clearBits | ((u64)clearBits << 32);
 			int xstride = 8 / bpp;
 
-			u64 *addr64 = (u64 *)addr;
+			u64_le *addr64 = (u64_le *)addr;
 			const int stride64 = stride / xstride;
 			const int x1_64 = x1 / xstride;
 			const int x2_64 = x2 / xstride;
@@ -1530,14 +1530,14 @@ void FramebufferManagerCommon::ApplyClearToMemory(int x1, int y1, int x2, int y2
 				}
 			}
 		} else if (bpp == 4) {
-			u32 *addr32 = (u32 *)addr;
+			u32_le *addr32 = (u32_le *)addr;
 			for (int y = y1; y < y2; ++y) {
 				for (int x = x1; x < x2; ++x) {
 					addr32[y * stride + x] = clearBits;
 				}
 			}
 		} else if (bpp == 2) {
-			u16 *addr16 = (u16 *)addr;
+			u16_le *addr16 = (u16_le *)addr;
 			for (int y = y1; y < y2; ++y) {
 				for (int x = x1; x < x2; ++x) {
 					addr16[y * stride + x] = (u16)clearBits;
