@@ -30,3 +30,6 @@
 #define _0 4
 #define _1 5
 #endif
+
+
+#define GX2_DISABLE_WRAPS

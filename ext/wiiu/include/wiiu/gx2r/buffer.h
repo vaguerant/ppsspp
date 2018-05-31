@@ -14,8 +14,8 @@ typedef struct
    void *buffer;
 } GX2RBuffer;
 
-BOOL X2RBufferExists(GX2RBuffer *buffer);
-BOOL X2RCreateBuffer(GX2RBuffer *buffer);
+BOOL GX2RBufferExists(GX2RBuffer *buffer);
+BOOL GX2RCreateBuffer(GX2RBuffer *buffer);
 BOOL GX2RCreateBufferUserMemory(GX2RBuffer *buffer, void *memory, uint32_t size);
 void GX2RDestroyBufferEx(GX2RBuffer *buffer, GX2RResourceFlags flags);
 uint32_t GX2RGetBufferAlignment(GX2RResourceFlags flags);

@@ -62,7 +62,7 @@ void net_print_exp(const char *str) {
 		OSConsoleWrite(str, strlen(str));
 	else
 		send(wiiu_log_socket, str, strlen(str), 0);
-	OSunlockMutex(&wiiu_log_mutex);
+	OSUnlockMutex(&wiiu_log_mutex);
 }
 
 void wiiu_log_init(void) {

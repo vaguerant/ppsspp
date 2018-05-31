@@ -28,6 +28,10 @@
 #include <fcntl.h>
 #endif
 
+#ifndef O_CLOEXEC
+#define O_CLOEXEC 0
+#endif
+
 LocalFileLoader::LocalFileLoader(const std::string &filename)
 	: filesize_(0), filename_(filename) {
 

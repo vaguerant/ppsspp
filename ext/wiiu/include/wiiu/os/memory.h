@@ -37,6 +37,16 @@ void OSGetAvailPhysAddrRange(u32* paddr, u32* size);
 BOOL OSMapMemory(void* vaddr, u32 paddr, int size, int mode);
 BOOL OSUnmapMemory(void* vaddr, int size);
 
+static inline void* OSMappedToEffective(void *addr)
+{
+   return (void*)((OSEffectiveToPhysical(addr) & ~(OS_MMAP_PAGE_SIZE - 1)) + ((uintptr_t)addr & (OS_MMAP_PAGE_SIZE - 1)) - 0x40000000);
+}
+
+static inline bool AddrIsAligned(void* addr, u32 align)
+{
+   return !((uintptr_t)addr & (align - 1));
+
+}
 void memoryInitialize(void);
 void memoryRelease(void);
 

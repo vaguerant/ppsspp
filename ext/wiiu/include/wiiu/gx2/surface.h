@@ -1,6 +1,8 @@
 #pragma once
 #include <wiiu/types.h>
+#include <wiiu/gx2r/resource.h>
 #include "enum.h"
+#include "common.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,7 +17,10 @@ typedef struct GX2Surface
    uint32_t mipLevels;
    GX2SurfaceFormat format;
    GX2AAMode aa;
-   GX2SurfaceUse use;
+   union{
+      GX2SurfaceUse use;
+      int flags;
+   };
    uint32_t imageSize;
    void *image;
    uint32_t mipmapSize;
@@ -98,7 +103,6 @@ void GX2FreeTilingAperture(u32 handle);
 #endif
 
 
-//#define GX2_DISABLE_WRAPS
 #ifndef GX2_DISABLE_WRAPS
 #include "validation_layer.h"
 

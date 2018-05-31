@@ -1,6 +1,7 @@
 #pragma once
 #include <wiiu/types.h>
 #include "enum.h"
+#include "common.h"
 #include "surface.h"
 
 #ifdef __cplusplus
@@ -233,7 +234,6 @@ void GX2SetViewportReg(GX2ViewportReg *reg);
 }
 #endif
 
-//#define GX2_DISABLE_WRAPS
 #ifndef GX2_DISABLE_WRAPS
 #include "validation_layer.h"
 

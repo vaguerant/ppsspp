@@ -168,7 +168,6 @@ bool FramebufferManagerGX2::NotifyStencilUpload(u32 addr, int size, bool skipZer
 	GX2SetFetchShader(&quadFetchShader_);
 	GX2SetPixelShader(&stencilUploadPSshaderGX2);
 	GX2SetVertexShader(&stencilUploadVSshaderGX2);
-	GX2SetPixelTexture(&drawPixelsTex_, 0);
 	GX2SetCullOnlyControl(GX2_FRONT_FACE_CCW, GX2_DISABLE, GX2_DISABLE);
 	GX2SetAttribBuffer(0, 4 * quadStride_, quadStride_, fsQuadBuffer_);
 	GX2SetPixelSampler(&StockGX2::samplerPoint2DClamp, 0);

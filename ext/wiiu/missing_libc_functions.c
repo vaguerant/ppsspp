@@ -1,7 +1,7 @@
 /* devkitPPC is missing a few functions that are kinda needed for some cores.
  * This should add them back in.
  */
-#define _GNU_SOURCE
+#define _GNU_SOURCE 1
 
 #include <unistd.h>
 #include <string.h>
@@ -40,9 +40,7 @@ int access(const char *path, int mode) {
 
 /* Just hardcode the Linux User ID, we're not on linux anyway */
 /* Feasible cool addition: nn::act for this? */
-uid_t getuid() {
-   return 1000;
-}
+uid_t getuid() { return 1000; }
 
 /* Fake user info */
 /* Not thread safe, but avoids returning local variable, so... */
@@ -76,7 +74,7 @@ int _gettimeofday_r(struct _reent *ptr, struct timeval *ptimeval, void *ptimezon
    cosTime = OSGetTime();
    cosSecs = ticks_to_sec(cosTime);
 
-   /* Get extra milliseconds */
+   /* Get extra microseconds */
    cosUSecs = ticks_to_us(cosTime) - (cosSecs * 1000000);
 
    /* Convert to Unix time, epoch 1970-01-01 00:00.
@@ -119,7 +117,7 @@ char *realpath(const char *path, char *resolved_path) {
    const char *end = path + strlen(path);
    const char *next;
 
-   if(!resolved_path)
+   if (!resolved_path)
       resolved_path = malloc(end - ptr);
 
    size_t res_len = 0;
@@ -147,7 +145,7 @@ char *realpath(const char *path, char *resolved_path) {
          break;
       case 0: continue;
       }
-      if(!memchr(ptr, ':', len))
+      if (!memchr(ptr, ':', len))
          resolved_path[res_len++] = '/';
       memcpy(&resolved_path[res_len], ptr, len);
       res_len += len;
@@ -165,4 +163,10 @@ mode_t umask(mode_t __mask) {
    mode_t old_mask = mask;
    mask = __mask & 0777;
    return old_mask;
+}
+long sysconf(int name) {
+   switch (name) {
+   case _SC_NPROCESSORS_ONLN: return 3;
+   }
+   return 0;
 }

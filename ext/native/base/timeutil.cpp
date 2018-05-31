@@ -40,7 +40,7 @@ double real_time_now() {
 	static OSTime start;
 	if(!start)
 		start = OSGetSystemTime();
-	return (double)(OSGetSystemTime() - start) / (double) wiiu_timer_clock;
+	return (double)(OSGetSystemTime() - start) * (1.0 / (double) wiiu_timer_clock);
 }
 #else
 

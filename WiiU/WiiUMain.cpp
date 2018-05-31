@@ -77,7 +77,11 @@ int main(int argc, char **argv) {
 	g_Config.bVertexDecoderJit = false;
 	g_Config.bSoftwareRendering = false;
 	g_Config.bFrameSkipUnthrottle = false;
-	g_Config.iFpsLimit = 0;
+//	g_Config.iFpsLimit = 0;
+	g_Config.bHardwareTransform = true;
+	g_Config.bSoftwareSkinning = false;
+	g_Config.bVertexCache = true;
+//	g_Config.bTextureBackoffCache = true;
 	std::string error_string;
 	GraphicsContext *ctx;
 	host->InitGraphics(&error_string, &ctx);

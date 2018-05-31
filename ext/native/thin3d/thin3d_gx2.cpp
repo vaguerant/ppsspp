@@ -70,9 +70,13 @@ static GX2SurfaceFormat dataFormatToGX2SurfaceFormat(DataFormat format) {
 	case DataFormat::R16_FLOAT: return GX2_SURFACE_FORMAT_FLOAT_R16;
 	case DataFormat::R16G16_FLOAT: return GX2_SURFACE_FORMAT_FLOAT_R16_G16;
 	case DataFormat::R16G16B16A16_FLOAT: return GX2_SURFACE_FORMAT_FLOAT_R16_G16_B16_A16;
-	case DataFormat::D24_S8: return GX2_SURFACE_FORMAT_FLOAT_D24_S8;
-	case DataFormat::D16: return GX2_SURFACE_FORMAT_UNORM_R16;
-	case DataFormat::D32F: return GX2_SURFACE_FORMAT_FLOAT_R32;
+
+	case DataFormat::D16: return GX2_SURFACE_FORMAT_UNORM_D16;
+	case DataFormat::D24_S8: return GX2_SURFACE_FORMAT_UNORM_D24_S8;
+	case DataFormat::S8: return GX2_SURFACE_FORMAT_INVALID;
+	case DataFormat::D32F: return GX2_SURFACE_FORMAT_FLOAT_D32;
+	case DataFormat::D32F_S8: return GX2_SURFACE_FORMAT_FLOAT_D32_UINT_S8_X24;
+
 	case DataFormat::ETC1:
 	default: return GX2_SURFACE_FORMAT_INVALID;
 	}
@@ -192,9 +196,9 @@ public:
 		default:
 		case GENERIC: align = GX2_UNIFORM_BLOCK_ALIGNMENT; invMode_ = GX2_INVALIDATE_MODE_CPU_UNIFORM_BLOCK;
 		}
-		data_ = (u8 *)MEM1_alloc(size_, align);
+		data_ = (u8 *)MEM2_alloc(size_, align);
 	}
-	~GX2Buffer() { MEM1_free(data_); }
+	~GX2Buffer() { MEM2_free(data_); }
 
 	size_t size_;
 	u8 *data_;
@@ -435,7 +439,7 @@ public:
 		GX2CalcSurfaceSizeAndAlignment(&colorBuffer.surface);
 		GX2InitColorBufferRegs(&colorBuffer);
 
-		colorBuffer.surface.image = MEM2_alloc(colorBuffer.surface.imageSize, colorBuffer.surface.alignment);
+		colorBuffer.surface.image = MEM1_alloc(colorBuffer.surface.imageSize, colorBuffer.surface.alignment);
 		_assert_(colorBuffer.surface.image);
 		GX2Invalidate(GX2_INVALIDATE_MODE_COLOR_BUFFER, colorBuffer.surface.image, colorBuffer.surface.imageSize);
 
@@ -452,11 +456,11 @@ public:
 			depthBuffer.surface.tileMode = GX2_TILE_MODE_DEFAULT;
 			depthBuffer.surface.use = (GX2SurfaceUse)(GX2_SURFACE_USE_DEPTH_BUFFER | GX2_SURFACE_USE_TEXTURE);
 			depthBuffer.viewNumSlices = 1;
-			depthBuffer.surface.format = GX2_SURFACE_FORMAT_FLOAT_D24_S8;
+			depthBuffer.surface.format = GX2_SURFACE_FORMAT_UNORM_D24_S8;
 			GX2CalcSurfaceSizeAndAlignment(&depthBuffer.surface);
 			GX2InitDepthBufferRegs(&depthBuffer);
 
-			depthBuffer.surface.image = MEM2_alloc(depthBuffer.surface.imageSize, depthBuffer.surface.alignment);
+			depthBuffer.surface.image = MEM1_alloc(depthBuffer.surface.imageSize, depthBuffer.surface.alignment);
 			_assert_(depthBuffer.surface.image);
 			GX2Invalidate(GX2_INVALIDATE_MODE_DEPTH_BUFFER, depthBuffer.surface.image, depthBuffer.surface.imageSize);
 
@@ -467,8 +471,8 @@ public:
 		}
 	}
 	~GX2Framebuffer() {
-		MEM2_free(colorBuffer.surface.image);
-		MEM2_free(depthBuffer.surface.image);
+		MEM1_free(colorBuffer.surface.image);
+		MEM1_free(depthBuffer.surface.image);
 	}
 	GX2ColorBuffer colorBuffer = {};
 	GX2DepthBuffer depthBuffer = {};
@@ -752,6 +756,7 @@ void GX2DrawContext::Draw(int vertexCount, int offset) {
 
 	GX2DrawEx(pipeline_->prim_, vertexCount, offset, 1);
 	// TODO: get rid of this call, which is currently needed to prevent overwriting arribute memory during draw
+	PROFILE_THIS_SCOPE("GX2DrawDone");
 	GX2DrawDone();
 #endif
 }
@@ -768,8 +773,7 @@ void GX2DrawContext::DrawIndexed(int indexCount, int offset) {
 	if (!indexCount)
 		return;
 
-	GX2DrawIndexedEx(pipeline_->prim_, indexCount, GX2_INDEX_TYPE_U32, indexBuffer_, offset, 1);
-	GX2DrawDone();
+	GX2DrawIndexedImmediateEx(pipeline_->prim_, indexCount, GX2_INDEX_TYPE_U32, indexBuffer_, offset, 1);
 }
 
 void GX2DrawContext::DrawUP(const void *vdata, int vertexCount) { DEBUG_LINE(); }
@@ -782,15 +786,18 @@ uint32_t GX2DrawContext::GetDataFormatSupport(DataFormat fmt) const {
 	if (afmt != (GX2AttribFormat)-1)
 		support |= FMT_INPUTLAYOUT;
 
-	if (sfmt == GX2_SURFACE_FORMAT_INVALID)
-		return support;
+	if (sfmt != GX2_SURFACE_FORMAT_INVALID) {
+		if (DataFormatIsDepthStencil(fmt)) {
+			support |= FMT_DEPTHSTENCIL;
+			if (sfmt != GX2_SURFACE_FORMAT_FLOAT_D24_S8) {
+				support |= FMT_TEXTURE;
+			}
+		} else {
+			support |= FMT_TEXTURE | FMT_RENDERTARGET;
+		}
+		//	support |= FMT_AUTOGEN_MIPS;
+	}
 
-	if (DataFormatIsDepthStencil(fmt))
-		support |= FMT_DEPTHSTENCIL;
-	else
-		support |= FMT_TEXTURE | FMT_RENDERTARGET;
-
-	//	support |= FMT_AUTOGEN_MIPS;
 	return support;
 }
 
@@ -836,15 +843,15 @@ void GX2DrawContext::BeginFrame() {}
 
 void GX2DrawContext::CopyFramebufferImage(Framebuffer *srcfb, int level, int x, int y, int z, Framebuffer *dstfb, int dstLevel, int dstX, int dstY, int dstZ, int width, int height, int depth, int channelBit) {
 	_assert_(level == 0 && dstLevel == 0 && z == 0 && dstZ == 0 && depth == 1);
-	GX2Rect srcRegion = {x, y, x + width, y + height};
-	GX2Point dstCoords = {dstX, dstY};
-	GX2Surface* srcSurface, *dstSurface;
-	if(channelBit == Draw::FB_COLOR_BIT) {
-		 srcSurface = &((GX2Framebuffer*)srcfb)->colorBuffer.surface;
-		 dstSurface = &((GX2Framebuffer*)dstfb)->colorBuffer.surface;
+	GX2Rect srcRegion = { x, y, x + width, y + height };
+	GX2Point dstCoords = { dstX, dstY };
+	GX2Surface *srcSurface, *dstSurface;
+	if (channelBit == Draw::FB_COLOR_BIT) {
+		srcSurface = &((GX2Framebuffer *)srcfb)->colorBuffer.surface;
+		dstSurface = &((GX2Framebuffer *)dstfb)->colorBuffer.surface;
 	} else {
-		srcSurface = &((GX2Framebuffer*)srcfb)->depthBuffer.surface;
-		dstSurface = &((GX2Framebuffer*)dstfb)->depthBuffer.surface;
+		srcSurface = &((GX2Framebuffer *)srcfb)->depthBuffer.surface;
+		dstSurface = &((GX2Framebuffer *)dstfb)->depthBuffer.surface;
 	}
 	GX2CopySurfaceEx(srcSurface, level, z, dstSurface, dstLevel, dstZ, 1, &srcRegion, &dstCoords);
 	GX2SetContextState(context_state_);
@@ -859,23 +866,31 @@ bool GX2DrawContext::BlitFramebuffer(Framebuffer *srcfb, int srcX1, int srcY1, i
 }
 
 bool GX2DrawContext::CopyFramebufferToMemorySync(Framebuffer *src, int channelBits, int bx, int by, int bw, int bh, Draw::DataFormat format, void *pixels, int pixelStride) {
+	_assert_(channelBits == FB_COLOR_BIT);
 	PROFILE_THIS_SCOPE("fbcpy_sync");
 	GX2Framebuffer *fb = (GX2Framebuffer *)src;
-	_assert_(fb->colorBuffer.surface.format == GX2_SURFACE_FORMAT_UNORM_R8_G8_B8_A8);
-
 	GX2DrawDone();
-	GX2Invalidate(GX2_INVALIDATE_MODE_COLOR_BUFFER, fb->colorBuffer.surface.image, fb->colorBuffer.surface.imageSize);
 
-	if (bx >= fb->colorBuffer.surface.width || by >= fb->colorBuffer.surface.height)
+	GX2Surface *surface;
+	if (channelBits == FB_COLOR_BIT) {
+		surface = fb ? &fb->colorBuffer.surface : &current_color_buffer_->surface;
+		GX2Invalidate(GX2_INVALIDATE_MODE_COLOR_BUFFER, surface->image, surface->imageSize);
+		_assert_(surface->format == GX2_SURFACE_FORMAT_UNORM_R8_G8_B8_A8);
+	} else {
+		surface = fb ? &fb->depthBuffer.surface : &current_depth_buffer_->surface;
+		GX2Invalidate(GX2_INVALIDATE_MODE_DEPTH_BUFFER, surface->image, surface->imageSize);
+	}
+
+	if (bx >= surface->width || by >= surface->height)
 		return true;
 
 	// TODO: Figure out where the badness really comes from.
-	if (bx + bw > fb->colorBuffer.surface.width) {
-		bw = fb->colorBuffer.surface.width - bx;
+	if (bx + bw > surface->width) {
+		bw = surface->width - bx;
 	}
 
-	if (by + bh > fb->colorBuffer.surface.height) {
-		bh = fb->colorBuffer.surface.height - by;
+	if (by + bh > surface->height) {
+		bh = surface->height - by;
 	}
 
 	switch (channelBits) {
@@ -883,9 +898,9 @@ bool GX2DrawContext::CopyFramebufferToMemorySync(Framebuffer *src, int channelBi
 		// Pixel size always 4 here because we always request BGRA8888.
 		const u32 *src = nullptr;
 		u32 handle;
-		GX2AllocateTilingApertureEx(&fb->colorBuffer.surface, 0, 0, GX2_ENDIAN_SWAP_8_IN_32, &handle, (void **)&src);
-		src += by * fb->colorBuffer.surface.pitch + bx;
-		ConvertFromRGBA8888((u8 *)pixels, (u8 *)src, pixelStride, fb->colorBuffer.surface.pitch, bw, bh, format);
+		GX2AllocateTilingApertureEx(surface, 0, 0, GX2_ENDIAN_SWAP_8_IN_32, &handle, (void **)&src);
+		src += by * surface->pitch + bx;
+		ConvertFromRGBA8888((u8 *)pixels, (u8 *)src, pixelStride, surface->pitch, bw, bh, format);
 		GX2FreeTilingAperture(handle);
 		break;
 	}
@@ -893,7 +908,7 @@ bool GX2DrawContext::CopyFramebufferToMemorySync(Framebuffer *src, int channelBi
 		Crash(); // TODO
 		for (int y = by; y < by + bh; y++) {
 			float *dest = (float *)((u8 *)pixels + y * pixelStride * sizeof(float));
-			const u32 *src = (u32 *)fb->depthBuffer.surface.image + by * fb->depthBuffer.surface.pitch + bx;
+			const u32 *src = (u32 *)surface->image + by * surface->pitch + bx;
 			for (int x = 0; x < bw; x++) {
 				dest[x] = (src[x] & 0xFFFFFF) / (256.f * 256.f * 256.f);
 			}
@@ -903,7 +918,7 @@ bool GX2DrawContext::CopyFramebufferToMemorySync(Framebuffer *src, int channelBi
 		Crash(); // TODO
 		for (int y = by; y < by + bh; y++) {
 			u8 *destStencil = (u8 *)pixels + y * pixelStride;
-			const u32 *src = (u32 *)fb->depthBuffer.surface.image + by * fb->depthBuffer.surface.pitch + bx;
+			const u32 *src = (u32 *)surface->image + by * surface->pitch + bx;
 			for (int x = 0; x < bw; x++) {
 				destStencil[x] = src[x] >> 24;
 			}
@@ -952,25 +967,31 @@ void GX2DrawContext::BindFramebufferAsTexture(Framebuffer *fbo_, int binding, FB
 	_assert_(channelBit == FB_COLOR_BIT);
 
 	//	GX2DrawDone();
-	GX2SetPixelTexture(&fbo->colorTexture, binding);
+	if (channelBit == FB_COLOR_BIT) {
+		GX2SetPixelTexture(&fbo->colorTexture, binding);
+	}
 }
 
 uintptr_t GX2DrawContext::GetFramebufferAPITexture(Framebuffer *fbo_, int channelBit, int attachment) {
 	GX2Framebuffer *fbo = (GX2Framebuffer *)fbo_;
+	_assert_(channelBit == FB_COLOR_BIT);
+
 	//	GX2DrawDone();
 	if (channelBit == FB_COLOR_BIT) {
 		return (uintptr_t)&fbo->colorTexture;
-	} else {
-		DEBUG_LINE(); //TODO: depth buffer surface format might not work as a texture format.
-		return (uintptr_t)&fbo->depthTexture;
 	}
 	return 0;
 }
 
 void GX2DrawContext::GetFramebufferDimensions(Framebuffer *fbo_, int *w, int *h) {
 	GX2Framebuffer *fbo = (GX2Framebuffer *)fbo_;
-	*w = fbo->colorBuffer.surface.width;
-	*h = fbo->colorBuffer.surface.height;
+	if (fbo) {
+		*w = fbo->colorBuffer.surface.width;
+		*h = fbo->colorBuffer.surface.height;
+	} else {
+		*w = current_color_buffer_->surface.width;
+		*h = current_color_buffer_->surface.height;
+	}
 }
 
 DrawContext *T3DCreateGX2Context(GX2ContextState *context_state, GX2ColorBuffer *color_buffer, GX2DepthBuffer *depth_buffer) { return new GX2DrawContext(context_state, color_buffer, depth_buffer); }

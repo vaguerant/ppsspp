@@ -14,6 +14,7 @@
 #include "fs_utils.h"
 #include "sd_fat_devoptab.h"
 #include "exception_handler.h"
+#define HAVE_LIBFAT
 
 void wiiu_log_init(void);
 void wiiu_log_deinit(void);
@@ -40,6 +41,7 @@ __attribute__((weak)) void __fini(void) {
 		(*dtor++)();
 	}
 }
+#ifdef HAVE_LIBFAT
 /* libiosuhax related */
 
 // just to be able to call async
@@ -80,8 +82,10 @@ void MCPHookClose(void) {
 }
 
 static int iosuhaxMount = 0;
+#endif
 
 static void fsdev_init(void) {
+#ifdef HAVE_LIBFAT
 	iosuhaxMount = 0;
 	if (!OSIsHLE()) {
 		int res = IOSUHAX_Open(NULL);
@@ -95,9 +99,11 @@ static void fsdev_init(void) {
 			return;
 		}
 	}
+#endif
 	mount_sd_fat("sd");
 }
 static void fsdev_exit(void) {
+#ifdef HAVE_LIBFAT
 	if (iosuhaxMount) {
 		fatUnmount("sd:");
 		fatUnmount("usb:");
@@ -106,8 +112,10 @@ static void fsdev_exit(void) {
 			MCPHookClose();
 		else
 			IOSUHAX_Close();
-	} else
-		unmount_sd_fat("sd");
+		return;
+	}
+#endif
+	unmount_sd_fat("sd");
 }
 
 __attribute__((noreturn)) void __shutdown_program(void) {
@@ -118,15 +126,16 @@ __attribute__((noreturn)) void __shutdown_program(void) {
 	exit(0);
 }
 
-/* RPX entry point */
 __attribute__((noreturn)) void _start(int argc, char **argv) {
 	setup_os_exceptions();
 	socket_lib_init();
 	wiiu_log_init();
 	fsdev_init();
 	memoryInitialize();
+#ifdef HAVE_LIBFAT
 	DEBUG_VAR(iosuhaxMount);
 	DEBUG_VAR(mcp_hook_fd);
+#endif
 	__init();
 	main(argc, argv);
 	//   __fini();

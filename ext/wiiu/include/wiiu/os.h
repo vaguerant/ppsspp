@@ -1,7 +1,7 @@
 #pragma once
 
 #include <wiiu/os/alarm.h>
-#include <wiiu/os/atomic64.h>
+#include <wiiu/os/atomic.h>
 #include <wiiu/os/cache.h>
 #include <wiiu/os/condition.h>
 #include <wiiu/os/core.h>

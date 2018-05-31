@@ -239,7 +239,7 @@ int32_t OSCheckActiveThreads();
 int32_t OSCheckThreadStackUsage(OSThread *thread);
 void OSClearThreadStackUsage(OSThread *thread);
 void OSContinueThread(OSThread *thread);
-BOOL OSCreateThread(OSThread *thread, OSThreadEntryPointFn entry, int32_t argc, char *argv,
+BOOL OSCreateThread(OSThread *thread, OSThreadEntryPointFn entry, int32_t argc, char **argv,
                     void *stack, uint32_t stackSize, int32_t priority, OSThreadAttributes attributes);
 void OSDetachThread(OSThread *thread);
 void OSExitThread(int32_t result);

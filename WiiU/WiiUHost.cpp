@@ -96,6 +96,10 @@ static void VPADCallback(s32 chan) {
 		if (vpad.trigger & VPAD_BUTTON_ZL) {
 			System_SendMessage("finish", "");
 		}
+		if (vpad.trigger & VPAD_BUTTON_STICK_L) {
+			extern bool g_TakeScreenshot;
+			g_TakeScreenshot = true;
+		}
 #endif
 	}
 }
@@ -139,7 +143,7 @@ static s16 __attribute__((aligned(64))) axBuffers[2][AX_FRAMES][AX_FRAME_SIZE];
 static void AXCallback() {
 	static s16 mixBuffer[AX_FRAME_SIZE * 2];
 	static int pos;
-#if 0
+#if 1
 	AXVoiceOffsets offsets;
 	AXGetVoiceOffsets(mvoice->v[0], &offsets);
 	if ((offsets.currentOffset / AX_FRAME_SIZE) == pos) {

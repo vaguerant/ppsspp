@@ -81,7 +81,11 @@ class PointerWrap
 #ifdef _MSC_VER
 	template<typename T, bool isPOD = std::is_pod<T>::value, bool isPointer = std::is_pointer<T>::value>
 #else
+#ifdef COMMON_BIG_ENDIAN // treat swapped types as pod.
+	template<typename T, bool isPOD = __is_enum(T) || __is_trivially_copyable(T), bool isPointer = std::is_pointer<T>::value>
+#else
 	template<typename T, bool isPOD = __is_pod(T), bool isPointer = std::is_pointer<T>::value>
+#endif
 #endif
 	struct DoHelper
 	{
@@ -462,13 +466,6 @@ public:
 	void Do(std::wstring &x);
 
 	void Do(tm &t);
-
-	template<typename T>
-	void Do(swap_t<T> &x) {
-		T v = x;
-		Do(v);
-		x = v;
-	}
 
 	template<class T>
 	void DoClass(T &x) {

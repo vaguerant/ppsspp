@@ -765,6 +765,7 @@ elseif(IOS)
 
 	set(TargetBin PPSSPP)
 elseif(WIIU)
+	add_definitions(-D_GNU_SOURCE)
 	set(nativeExtra ${nativeExtra}
 		WiiU/WiiUHost.h
 		WiiU/WiiUHost.cpp
@@ -1839,6 +1840,9 @@ if(FFmpeg_FOUND)
     FFmpeg::swscale
     ${ZLIB_LIBRARY}
   )
+  if(WIIU)
+     target_link_libraries(${CoreLibName} pthread)
+  endif()
 endif()
 
 setup_target_project(${CoreLibName} Core)

@@ -13,8 +13,6 @@ void GX2Invalidate(GX2InvalidateMode mode, void *buffer, uint32_t size);
 }
 #endif
 
-
-//#define GX2_DISABLE_WRAPS
 #ifndef GX2_DISABLE_WRAPS
 #include "validation_layer.h"
 #define GX2Invalidate(...) GX2_WRAP(GX2Invalidate, __VA_ARGS__)

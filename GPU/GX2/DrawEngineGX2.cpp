@@ -15,7 +15,6 @@
 // Official git repository and contact information can be found at
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
-#define GX2_DISABLE_WRAPS
 #include <algorithm>
 
 #include "base/logging.h"
@@ -300,6 +299,7 @@ void DrawEngineGX2::DoFlush() {
 	bool useHWTransform = CanUseHardwareTransform(prim);
 
 	if (useHWTransform) {
+		PROFILE_THIS_SCOPE("T-hard");
 		void *vb_ = nullptr;
 		void *ib_ = nullptr;
 
@@ -518,7 +518,7 @@ void DrawEngineGX2::DoFlush() {
 			}
 		}
 	} else {
-		PROFILE_THIS_SCOPE("soft");
+		PROFILE_THIS_SCOPE("T-soft");
 		DecodeVerts(decoded);
 		bool hasColor = (lastVType_ & GE_VTYPE_COL_MASK) != GE_VTYPE_COL_NONE;
 		if (gstate.isModeThrough()) {
@@ -645,7 +645,10 @@ void DrawEngineGX2::DoFlush() {
 	gstate_c.vertBounds.maxU = 0;
 	gstate_c.vertBounds.maxV = 0;
 
-	GX2Flush();
+	{
+		PROFILE_THIS_SCOPE("GX2Flush");
+		GX2Flush();
+	}
 #if 0
 	// We only support GPU debugging on Windows, and that's the only use case for this.
 	host->GPUNotifyDraw();

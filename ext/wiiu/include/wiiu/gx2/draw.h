@@ -1,6 +1,7 @@
 #pragma once
 #include <wiiu/types.h>
 #include "enum.h"
+#include "common.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,7 +48,6 @@ void GX2SetPrimitiveRestartIndex(uint32_t index);
 }
 #endif
 
-//#define GX2_DISABLE_WRAPS
 #ifndef GX2_DISABLE_WRAPS
 #include "validation_layer.h"
 

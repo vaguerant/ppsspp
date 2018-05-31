@@ -37,7 +37,7 @@ include_directories($ENV{DEVKITPRO}/portlibs/ppc/include)
 link_directories($ENV{DEVKITPRO}/portlibs/ppc/lib)
 
 
-set(ARCH_FLAGS "-mwup -mcpu=750 -meabi -mhard-float -D__powerpc__ -DWORDS_BIGENDIAN")
+set(ARCH_FLAGS "-mwup -mcpu=750 -meabi -mhard-float -D__powerpc__ -DWORDS_BIGENDIAN -U__INT32_TYPE__ -U__UINT32_TYPE__ -D__INT32_TYPE__=int")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ARCH_FLAGS}")
 set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${ARCH_FLAGS} -mregnames")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ARCH_FLAGS}")
@@ -65,6 +65,7 @@ add_library(wiiu STATIC
    ${WIIU_ROOT}/std/fstream-inst.cc
    ${WIIU_ROOT}/std/basic_file_stdio.cc
    )
+add_library(pthread STATIC ${WIIU_ROOT}/pthread.c)
 add_library(fat STATIC
    ${WIIU_ROOT}/libfat/bit_ops.h
    ${WIIU_ROOT}/libfat/cache.c
