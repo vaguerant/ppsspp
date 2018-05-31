@@ -15,10 +15,11 @@ extern GX2PixelShader stencilUploadPSshaderGX2;
 extern GX2VertexShader STVshaderGX2;
 extern GX2PixelShader STPshaderGX2;
 
-extern GX2PixelShader PUberShaderGX2;
+extern GX2PixelShader PShaderAllGX2;
 
-extern GX2VertexShader ST_VShaderGX2;
-extern GX2VertexShader TAL_VShaderGX2;
+extern GX2VertexShader VShaderSWGX2;
+extern GX2VertexShader VShaderHWNoSkinGX2;
+extern GX2VertexShader VShaderHWSkinGX2;
 
 #ifdef __cplusplus
 }

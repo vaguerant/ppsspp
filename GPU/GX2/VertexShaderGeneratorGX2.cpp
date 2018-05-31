@@ -31,11 +31,7 @@
 using namespace GX2Gen;
 void GenerateVertexShaderGX2(const VShaderID &id, GX2VertexShader *vs) {
 #if 1
-	if (id.Bit(VS_BIT_USE_HW_TRANSFORM)) {
-		*vs = TAL_VShaderGX2;
-	} else {
-		*vs = ST_VShaderGX2;
-	}
+	*vs = id.Bit(VS_BIT_USE_HW_TRANSFORM) ? id.Bit(VS_BIT_ENABLE_BONES) ? VShaderHWSkinGX2 : VShaderHWNoSkinGX2 : VShaderSWGX2;
 #else
 	GX2VertexShaderEmitter emit_(vs);
 

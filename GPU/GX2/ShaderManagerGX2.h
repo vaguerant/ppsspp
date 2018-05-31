@@ -89,6 +89,7 @@ struct UB_VSID {
 	u32_le VS_BIT_WEIGHT_FMTSCALE;
 	u32_le VS_BIT_FLATSHADE;
 	u32_le VS_BIT_BEZIER;
+	u32_le GPU_ROUND_DEPTH_TO_16BIT;
 } __attribute__((aligned(64)));
 
 struct UB_FSID {
@@ -120,6 +121,10 @@ struct UB_FSID {
 	u32_le FS_BIT_BLENDFUNC_B;
 	u32_le FS_BIT_FLATSHADE;
 	u32_le FS_BIT_BGRA_TEXTURE;
+	u32_le GPU_SCALE_DEPTH_FROM_24BIT_TO_16BIT;
+	u32_le GPU_SUPPORTS_DEPTH_CLAMP;
+	u32_le GPU_ROUND_FRAGMENT_DEPTH_TO_16BIT;
+	u32_le GPU_SUPPORTS_ACCURATE_DEPTH;
 } __attribute__((aligned(64)));
 
 class GX2PShader : public GX2PixelShader {

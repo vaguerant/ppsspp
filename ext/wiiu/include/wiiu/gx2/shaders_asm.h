@@ -44,6 +44,7 @@
 #define _0_15                 CF_KCACHE_BANK_LOCK_1, 0
 #define _16_31                CF_KCACHE_BANK_LOCK_1, 1
 #define _0_31                 CF_KCACHE_BANK_LOCK_2, 0
+#define AR                    | (1 << 9)
 
 #define KC0(x) (x + ALU_SRC_KCACHE0_BASE)
 #define KC1(x) (x + ALU_SRC_KCACHE1_BASE)
@@ -232,6 +233,7 @@
 #define OP2_INST_SETGT_DX10      0x0D
 #define OP2_INST_SETGE_DX10      0x0E
 #define OP2_INST_FLOOR           0x14
+#define OP2_INST_MOVA_INT        0x18
 #define OP2_INST_MOV             0x19
 #define OP2_INST_NOP             0x1A
 #define OP2_INST_PRED_SETGT      0x21
@@ -269,6 +271,7 @@
 #define OP2_INST_FLT_TO_UINT     0x79
 
 #define OP3_INST_MULADD          0x10
+#define OP3_INST_MULADD_D2       0x13
 #define OP3_INST_CNDGT           0x19
 #define OP3_INST_CNDE_INT        0x1C
 /* EXP */
@@ -398,7 +401,7 @@
    ALU_WORD1_OP3(src2Sel, 0x0, src2Chan, 0x0, inst, 0x0, dstGpr, 0x0, dstChan, 0x0))
 
 #define ALU_NOP(dstGpr, dstChan) \
-   ALU_OP2(OP2_INST_NOP, dstGpr, dstChan, ALU_SRC_PV, 0x0, ALU_SRC_PV, 0x0, ALU_OMOD_OFF)
+   ALU_OP2(OP2_INST_NOP, dstGpr, dstChan, ALU_SRC_PV, dstChan, ALU_SRC_PV, dstChan, ALU_OMOD_OFF)
 
 #define ALU_ADD(dstGpr, dstChan, src0Sel, src0Chan, src1Sel, src1Chan) \
    ALU_OP2(OP2_INST_ADD, dstGpr, dstChan, src0Sel, src0Chan, src1Sel, src1Chan, ALU_OMOD_OFF)
@@ -438,6 +441,9 @@
 
 #define ALU_SQRT_IEEE_D2(dstGpr, dstChan, src0Sel, src0Chan) \
    ALU_OP2(OP2_INST_SQRT_IEEE, dstGpr, dstChan, src0Sel, src0Chan, ALU_SRC_0, 0x0, ALU_OMOD_D2)
+
+#define ALU_MOVA_INT(dstGpr, dstChan, src0Sel, src0Chan) \
+   ALU_OP2(OP2_INST_MOVA_INT, dstGpr, dstChan, src0Sel, src0Chan, ALU_SRC_0, 0x0, ALU_OMOD_OFF)
 
 #define ALU_MOV(dstGpr, dstChan, src0Sel, src0Chan) \
    ALU_OP2(OP2_INST_MOV, dstGpr, dstChan, src0Sel, src0Chan, ALU_SRC_0, 0x0, ALU_OMOD_OFF)
@@ -574,6 +580,9 @@
 
 #define ALU_MULADD(dstGpr, dstChan, src0Sel, src0Chan, src1Sel, src1Chan, src2Sel, src2Chan) \
    ALU_OP3(OP3_INST_MULADD, dstGpr, dstChan, src0Sel, src0Chan, src1Sel, src1Chan, src2Sel, src2Chan)
+
+#define ALU_MULADD_D2(dstGpr, dstChan, src0Sel, src0Chan, src1Sel, src1Chan, src2Sel, src2Chan) \
+   ALU_OP3(OP3_INST_MULADD_D2, dstGpr, dstChan, src0Sel, src0Chan, src1Sel, src1Chan, src2Sel, src2Chan)
 
 #define ALU_CNDGT(dstGpr, dstChan, src0Sel, src0Chan, src1Sel, src1Chan, src2Sel, src2Chan) \
    ALU_OP3(OP3_INST_CNDGT, dstGpr, dstChan, src0Sel, src0Chan, src1Sel, src1Chan, src2Sel, src2Chan)

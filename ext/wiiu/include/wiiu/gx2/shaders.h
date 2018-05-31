@@ -324,7 +324,7 @@ typedef struct GX2PixelShader
             bool stencil_ref_export_enable : 1;
          } db_shader_control;
 
-         bool spi_input_z;
+         BOOL spi_input_z;
       };
       u32 vals[41];
    } regs;

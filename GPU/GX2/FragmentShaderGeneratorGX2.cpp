@@ -31,7 +31,7 @@
 using namespace GX2Gen;
 void GenerateFragmentShaderGX2(const FShaderID &id, GX2PixelShader *ps) {
 #if 1
-	*ps = PUberShaderGX2;
+	*ps = PShaderAllGX2;
 #else
 	GX2PixelShaderEmitter emit_(ps);
 

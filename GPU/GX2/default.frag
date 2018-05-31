@@ -5,11 +5,8 @@
 //#define FLAT_SHADING
 //#define BUG_PVR_SHADER_PRECISION_BAD
 //#define BUG_PVR_SHADER_PRECISION_TERRIBLE
-//#define GPU_SCALE_DEPTH_FROM_24BIT_TO_16BIT
-//#define GPU_SUPPORTS_DEPTH_CLAMP
-//#define GPU_ROUND_FRAGMENT_DEPTH_TO_16BIT
-//#define GPU_SUPPORTS_ACCURATE_DEPTH
-layout(std140, set = 0, binding = 3) uniform baseVars
+
+layout(std140, binding = 1) uniform baseVars
 {
    mat4 proj_mtx;
    mat4 proj_through_mtx;
@@ -33,9 +30,9 @@ layout(std140, set = 0, binding = 3) uniform baseVars
    vec3 blendFixB;
    vec4 texclamp;
    vec2 texclampoff;
-}base;
+} base;
 
-layout(std140, set = 0, binding = 7) uniform UB_FSID
+layout(std140, binding = 5) uniform UB_FSID
 {
    bool FS_BIT_CLEARMODE;
    bool FS_BIT_DO_TEXTURE;
@@ -65,6 +62,10 @@ layout(std140, set = 0, binding = 7) uniform UB_FSID
    int  FS_BIT_BLENDFUNC_B;
    bool FS_BIT_FLATSHADE;
    bool FS_BIT_BGRA_TEXTURE;
+   bool GPU_SCALE_DEPTH_FROM_24BIT_TO_16BIT;
+   bool GPU_SUPPORTS_DEPTH_CLAMP;
+   bool GPU_ROUND_FRAGMENT_DEPTH_TO_16BIT;
+   bool GPU_SUPPORTS_ACCURATE_DEPTH;
 };
 
 #define GE_BLENDMODE_MUL_AND_ADD 0
@@ -157,14 +158,15 @@ layout(location = 1) shading in vec4 v_color0;
 layout(location = 2) shading in vec3 v_color1;
 layout(location = 3) in float v_fogdepth;
 
-layout(location = 0, index = 0) out vec4 fragColor0;
-layout(location = 0, index = 1) out vec4 fragColor1;
-
+layout(location = 0) out vec4 fragColor0;
+layout(location = 1) out vec4 fragColor1;
+out float gl_FragDepth;
 
 int roundAndScaleTo255i(in float x)
 {
    return int(floor(x * 255.0 + 0.5));
 }
+
 ivec3 roundAndScaleTo255i(in vec3 x)
 {
    return ivec3(floor(x * 255.0 + 0.5));
@@ -681,27 +683,17 @@ void main()
       discard;
    }
 
-#if defined(GPU_SCALE_DEPTH_FROM_24BIT_TO_16BIT)
-#define DepthSliceFactor 256.0
-#elif defined(GPU_SUPPORTS_DEPTH_CLAMP)
-#define DepthSliceFactor 1.0
-#else
-#define DepthSliceFactor 4.0
-#endif
-
-#ifdef GPU_ROUND_FRAGMENT_DEPTH_TO_16BIT
-   float scale = DepthSliceFactor * 65535.0;
-   highp float z = gl_FragCoord.z;
-#ifdef GPU_SUPPORTS_ACCURATE_DEPTH
-   // We center the depth with an offset, but only its fraction matters.
-   // When (DepthSliceFactor() - 1) is odd, it will be 0.5, otherwise 0.
-   if (((int)(DepthSliceFactor - 1.0f) & 1) == 1)
-      z = (floor((z * scale) - 0.5) + 0.5) * (1.0 / scale);
-   else
-      z = floor(z * scale) * (1.0 / scale);
-#else
-   z = (1.0 / 65535.0) * floor(z * 65535.0);
-   gl_FragDepth = z;
-#endif
-#endif
+   if (GPU_ROUND_FRAGMENT_DEPTH_TO_16BIT)
+   {
+      float scale = 65535.0;
+      if(GPU_SUPPORTS_ACCURATE_DEPTH)
+      {
+         if (GPU_SCALE_DEPTH_FROM_24BIT_TO_16BIT)
+            scale *= 256.0;
+         else if (!GPU_SUPPORTS_DEPTH_CLAMP)
+            scale *= 4.0;
+      }
+      float offset = mod(scale - 1, 2.0) * 0.5;
+      gl_FragDepth = (floor((gl_FragCoord.z * scale) - offset) + offset) / scale;
+   }
 }
