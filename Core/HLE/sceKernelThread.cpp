@@ -1379,7 +1379,7 @@ u32 sceKernelGetThreadmanIdList(u32 type, u32 readBufPtr, u32 readBufSize, u32 i
 	}
 
 	u32 total = 0;
-	auto uids = PSPPointer<SceUID>::Create(readBufPtr);
+	auto uids = PSPPointer<SceUID_le>::Create(readBufPtr);
 	u32 error;
 	if (type > 0 && type <= SCE_KERNEL_TMID_Tlspl) {
 		DEBUG_LOG(SCEKERNEL, "sceKernelGetThreadmanIdList(%i, %08x, %i, %08x)", type, readBufPtr, readBufSize, idCountPtr);

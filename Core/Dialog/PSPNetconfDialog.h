@@ -22,7 +22,7 @@
 
 struct SceUtilityNetconfData {
 	char groupName[8];
-	int timeout;
+	s32_le timeout;
 };
 
 struct SceUtilityNetconfParam {
