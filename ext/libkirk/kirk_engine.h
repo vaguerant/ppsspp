@@ -55,6 +55,14 @@ typedef unsigned int u32;
 
 typedef struct
 {
+	int unk_0; //0
+	int unk_4; //4
+	int unk_8; //8
+	int seed;  //C
+}KIRK_AES128CBC_BLOCK;
+
+typedef struct
+{
 	int mode;    //0
 	int unk_4;   //4
 	int unk_8;   //8
