@@ -1,5 +1,6 @@
 
 #include <unistd.h>
+#include <cmath>
 
 #include <wiiu/os/cache.h>
 #include <wiiu/os/foreground.h>
@@ -17,6 +18,18 @@
 
 #include "WiiU/WiiUHost.h"
 #include "WiiU/GX2GraphicsContext.h"
+
+static void VPADRangeToPSPRange(VPADVec2D *vec) {
+	if (vec->x == 0.0 || vec->y == 0.0) {
+		return;
+	}
+	float x = fabs(vec->x);
+	float y = fabs(vec->y);
+	float phi = atanf(y / x);
+	float scale = (x > y) ? 1.0 / cosf(phi) : 1.0 / sinf(phi);
+	vec->x *= scale;
+	vec->y *= scale;
+}
 
 static void VPADCallback(s32 chan) {
 	static keycode_t keymap[] = {
@@ -83,14 +96,16 @@ static void VPADCallback(s32 chan) {
 
 		static VPADVec2D prevLeftStick, prevRightStick;
 		if (prevLeftStick.x != vpad.leftStick.x || prevLeftStick.y != vpad.leftStick.y) {
+			prevLeftStick = vpad.leftStick;
+			VPADRangeToPSPRange(&vpad.leftStick);
 			NativeAxis({ DEVICE_ID_PAD_0 + chan, JOYSTICK_OUYA_AXIS_LS_X, vpad.leftStick.x });
 			NativeAxis({ DEVICE_ID_PAD_0 + chan, JOYSTICK_OUYA_AXIS_LS_Y, vpad.leftStick.y });
-			prevLeftStick = vpad.leftStick;
 		}
 		if (prevRightStick.x != vpad.rightStick.x || prevRightStick.y != vpad.rightStick.y) {
+			prevRightStick = vpad.rightStick;
+			VPADRangeToPSPRange(&vpad.rightStick);
 			NativeAxis({ DEVICE_ID_PAD_0 + chan, JOYSTICK_OUYA_AXIS_RS_X, vpad.rightStick.x });
 			NativeAxis({ DEVICE_ID_PAD_0 + chan, JOYSTICK_OUYA_AXIS_RS_Y, vpad.rightStick.y });
-			prevRightStick = vpad.rightStick;
 		}
 #if 0
 		if (vpad.trigger & VPAD_BUTTON_ZL) {
