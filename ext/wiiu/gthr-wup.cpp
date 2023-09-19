@@ -119,7 +119,7 @@ int __gthread_create(__gthread_t *_thread, void *(*func)(void *), void *args) {
 	argv[1] = args;
 	argv[2] = NULL;
 
-	if (!OSCreateThread(thread, OSThreadEntryPointFnWrap, 2, (char *)argv, stack + __GTHREADS_STACK_SIZE, __GTHREADS_STACK_SIZE, OS_THREAD_DEF_PRIO, attr)) {
+	if (!OSCreateThread(thread, OSThreadEntryPointFnWrap, 2, (char **)argv, stack + __GTHREADS_STACK_SIZE, __GTHREADS_STACK_SIZE, OS_THREAD_DEF_PRIO, attr)) {
 		MEMFreeToExpHeap((MEMExpandedHeap*)MEMGetBaseHeapHandle(MEM_BASE_HEAP_MEM2), thread);
 		return EINVAL;
 	}
