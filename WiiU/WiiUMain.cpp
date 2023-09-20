@@ -18,7 +18,7 @@
 #include "Core/Core.h"
 #include "Common/Log.h"
 
-#include "Common/GraphicsContext.h"
+#include "WiiU/GX2GraphicsContext.h"
 #include "WiiU/WiiUHost.h"
 
 static int g_QuitRequested;
@@ -27,6 +27,28 @@ void System_SendMessage(const char *command, const char *parameter) {
 		g_QuitRequested = true;
 		UpdateUIState(UISTATE_EXIT);
 		Core_Stop();
+	}
+}
+
+void getTVResolution(uint32_t* width, uint32_t* height) {
+	GX2TVScanMode scanMode = GX2GetSystemTVScanMode(); // The enums were wrong back in 2018; using the correct ones via magic number
+	switch (scanMode) {
+		case 1: // GX2_TV_SCAN_MODE_576I
+		case 2: // GX2_TV_SCAN_MODE_480I
+		case 3: // GX2_TV_SCAN_MODE_480P
+			*width = 854;
+			*height = 480;
+			break;
+		case 6: // GX2_TV_SCAN_MODE_1080I
+		case 7: // GX2_TV_SCAN_MODE_1080P
+			*width = 1920;
+			*height = 1080;
+			break;
+		case 4: // GX2_TV_SCAN_MODE_720P
+		default:
+			*width = 1280;
+			*height = 720;
+			break;
 	}
 }
 
@@ -42,6 +64,9 @@ int main(int argc, char **argv) {
 	bool landscape;
 	NativeGetAppInfo(&app_name, &app_name_nice, &landscape, &version);
 
+	uint32_t tvWidth, tvHeight;
+	getTVResolution(&tvWidth, &tvHeight);
+
 	const char *argv_[] = {
 		"sd:/ppsspp/PPSSPP.rpx",
 //		"-d",
@@ -53,10 +78,10 @@ int main(int argc, char **argv) {
 #if 0
 	UpdateScreenScale(854,480);
 #else
-	float dpi_scale = 1.0f;
+	float dpi_scale = 720.0f / tvHeight;
 	g_dpi = 96.0f;
-	pixel_xres = 854;
-	pixel_yres = 480;
+	pixel_xres = tvWidth;
+	pixel_yres = tvHeight;
 	dp_xres = (float)pixel_xres * dpi_scale;
 	dp_yres = (float)pixel_yres * dpi_scale;
 	pixel_in_dps_x = (float)pixel_xres / dp_xres;
@@ -117,13 +142,16 @@ std::string System_GetProperty(SystemProperty prop) {
 }
 
 int System_GetPropertyInt(SystemProperty prop) {
+	uint32_t tvWidth, tvHeight;
+	getTVResolution(&tvWidth, &tvHeight);
+
 	switch (prop) {
 	case SYSPROP_DISPLAY_REFRESH_RATE:
-		return 60000; // internal refresh rate is always 59.940, even for PAL output.
+		return 59940; // internal refresh rate is always 59.940, even for PAL output.
 	case SYSPROP_DISPLAY_XRES:
-		return 854;
+		return tvWidth;
 	case SYSPROP_DISPLAY_YRES:
-		return 480;
+		return tvHeight;
 	case SYSPROP_DEVICE_TYPE:
 		return DEVICE_TYPE_TV;
 	case SYSPROP_AUDIO_SAMPLE_RATE:

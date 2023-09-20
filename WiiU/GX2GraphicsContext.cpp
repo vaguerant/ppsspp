@@ -32,7 +32,7 @@ bool GX2GraphicsContext::Init() {
 		{ 1920, 1080, GX2_TV_RENDER_MODE_WIDE_1080P }  /* GX2_TV_SCAN_MODE_1080P */
 	};
 	render_mode_ = render_mode_map[GX2GetSystemTVScanMode()];
-	render_mode_ = render_mode_map[GX2_TV_SCAN_MODE_480P];
+//	render_mode_ = render_mode_map[GX2_TV_SCAN_MODE_480P];
 
 	cmd_buffer_ = MEM2_alloc(0x400000, 0x40);
 	u32 init_attributes[] = { GX2_INIT_CMD_BUF_BASE, (u32)cmd_buffer_, GX2_INIT_CMD_BUF_POOL_SIZE, 0x400000, GX2_INIT_ARGC, 0, GX2_INIT_ARGV, 0, GX2_INIT_END };
