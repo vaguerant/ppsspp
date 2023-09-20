@@ -172,7 +172,7 @@ static int sub_0000(u8* data_out, u8* data, int alignedLen, u8* data2, int& data
 	else
 	{
 		memcpy(sp0, sp16, 12);
-		*(u32*)(sp0+12) = data3-1;
+		*(u32_le*)(sp0+12) = data3-1;
 	}
 
 	if (alignedLen > 0)
@@ -180,7 +180,7 @@ static int sub_0000(u8* data_out, u8* data, int alignedLen, u8* data2, int& data
 		for(int i = 20; i < alignedLen + 20; i += 16)
 		{
 			memcpy(data_out+i, sp16, 12);
-			*(u32*)(data_out+12+i) = data3;
+			*(u32_le*)(data_out+12+i) = data3;
 			data3++;
 		}
 	}
