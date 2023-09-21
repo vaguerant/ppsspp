@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+#include <vector>
 #include "thin3d/thin3d.h"
 
 // Separated this stuff into its own file so we don't get Windows.h included if all we want is the thin3d declarations.
@@ -33,10 +35,10 @@ DrawContext *T3DCreateGLContext();
 
 #ifdef _WIN32
 DrawContext *T3DCreateDX9Context(IDirect3D9 *d3d, IDirect3D9Ex *d3dEx, int adapterId, IDirect3DDevice9 *device, IDirect3DDevice9Ex *deviceEx);
-DrawContext *T3DCreateD3D11Context(ID3D11Device *device, ID3D11DeviceContext *context, ID3D11Device1 *device1, ID3D11DeviceContext1 *context1, D3D_FEATURE_LEVEL featureLevel, HWND hWnd);
+DrawContext *T3DCreateD3D11Context(ID3D11Device *device, ID3D11DeviceContext *context, ID3D11Device1 *device1, ID3D11DeviceContext1 *context1, D3D_FEATURE_LEVEL featureLevel, HWND hWnd, std::vector<std::string> adapterNames);
 #endif
 
-DrawContext *T3DCreateVulkanContext(VulkanContext *context, bool split);
+DrawContext *T3DCreateVulkanContext(VulkanContext *context, bool splitSubmit);
 
 #ifdef __wiiu__
 DrawContext *T3DCreateGX2Context(GX2ContextState *context_state, GX2ColorBuffer* color_buffer, GX2DepthBuffer *depth_buffer);

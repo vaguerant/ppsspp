@@ -37,7 +37,7 @@ public:
 	GX2PixelShader *GetDepalettizePixelShader(u32 clutMode, GEBufferFormat pixelFormat);
 	GX2VertexShader *GetDepalettizeVertexShader() { return &defVShaderGX2; }
 	GX2FetchShader *GetFetchShader() { return &fetchShader_; }
-	GX2Texture *GetClutTexture(GEPaletteFormat clutFormat, const u32 clutHash, u32 *rawClut, bool expandTo32bit);
+	GX2Texture *GetClutTexture(GEPaletteFormat clutFormat, const u32 clutHash, u32_le *rawClut, bool expandTo32bit);
 	void Clear();
 	void Decimate();
 	std::vector<std::string> DebugGetShaderIDs(DebugShaderType type);

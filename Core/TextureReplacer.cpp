@@ -15,7 +15,9 @@
 // Official git repository and contact information can be found at
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
-#ifndef USING_QT_UI
+#ifdef USING_QT_UI
+#include <QtGui/QImage>
+#else
 #include <libpng17/png.h>
 #endif
 
@@ -279,39 +281,50 @@ void TextureReplacer::PopulateReplacement(ReplacedTexture *result, u64 cachekey,
 			break;
 		}
 
+		bool good = false;
 		ReplacedTextureLevel level;
 		level.fmt = ReplacedTextureFormat::F_8888;
 		level.file = filename;
 
 #ifdef USING_QT_UI
-		ERROR_LOG(G3D, "Replacement texture loading not implemented for Qt");
+		QImage image(filename.c_str(), "PNG");
+		if (image.isNull()) {
+			ERROR_LOG(G3D, "Could not load texture replacement info: %s", filename.c_str());
+		} else {
+			level.w = (image.width() * w) / newW;
+			level.h = (image.height() * h) / newH;
+			good = true;
+		}
 #else
 		png_image png = {};
 		png.version = PNG_IMAGE_VERSION;
 		FILE *fp = File::OpenCFile(filename, "rb");
-		bool bad = false;
 		if (png_image_begin_read_from_stdio(&png, fp)) {
 			// We pad files that have been hashrange'd so they are the same texture size.
 			level.w = (png.width * w) / newW;
 			level.h = (png.height * h) / newH;
-			if (i != 0) {
-				// Check that the mipmap size is correct. Can't load mips of the wrong size.
-				if (level.w != (result->levels_[0].w >> i) || level.h != (result->levels_[0].h >> i)) {
-					WARN_LOG(G3D, "Replacement mipmap invalid: size=%dx%d, expected=%dx%d (level %d, '%s')", level.w, level.h, result->levels_[0].w >> i, result->levels_[0].h >> i, i, filename.c_str());
-					bad = true;
-				}
-			}
-			if (!bad)
-				result->levels_.push_back(level);
+			good = true;
 		} else {
 			ERROR_LOG(G3D, "Could not load texture replacement info: %s - %s", filename.c_str(), png.message);
 		}
 		fclose(fp);
 
 		png_image_free(&png);
-		if (bad)
-			break;  // Don't try to load any more mips.
 #endif
+
+		if (good && i != 0) {
+			// Check that the mipmap size is correct.  Can't load mips of the wrong size.
+			if (level.w != (result->levels_[0].w >> i) || level.h != (result->levels_[0].h >> i)) {
+				 WARN_LOG(G3D, "Replacement mipmap invalid: size=%dx%d, expected=%dx%d (level %d, '%s')", level.w, level.h, result->levels_[0].w >> i, result->levels_[0].h >> i, i, filename.c_str());
+				 good = false;
+			}
+		}
+
+		if (good)
+			result->levels_.push_back(level);
+		// Otherwise, we're done loading mips (bad PNG or bad size, either way.)
+		else
+			break;
 	}
 
 	result->alphaStatus_ = ReplacedTextureAlpha::UNKNOWN;
@@ -405,25 +418,25 @@ void TextureReplacer::NotifyTextureDecoded(const ReplacedTextureDecodeInfo &repl
 		saveBuf.resize((pitch * h) / sizeof(u16));
 		switch (replacedInfo.fmt) {
 		case ReplacedTextureFormat::F_5650:
-			ConvertRGBA565ToRGBA8888(saveBuf.data(), (const u16 *)data, (pitch * h) / sizeof(u16));
+			ConvertRGBA565ToRGBA8888(saveBuf.data(), (const u16_le *)data, (pitch * h) / sizeof(u16));
 			break;
 		case ReplacedTextureFormat::F_5551:
-			ConvertRGBA5551ToRGBA8888(saveBuf.data(), (const u16 *)data, (pitch * h) / sizeof(u16));
+			ConvertRGBA5551ToRGBA8888(saveBuf.data(), (const u16_le *)data, (pitch * h) / sizeof(u16));
 			break;
 		case ReplacedTextureFormat::F_4444:
-			ConvertRGBA4444ToRGBA8888(saveBuf.data(), (const u16 *)data, (pitch * h) / sizeof(u16));
+			ConvertRGBA4444ToRGBA8888(saveBuf.data(), (const u16_le *)data, (pitch * h) / sizeof(u16));
 			break;
 		case ReplacedTextureFormat::F_0565_ABGR:
-			ConvertABGR565ToRGBA8888(saveBuf.data(), (const u16 *)data, (pitch * h) / sizeof(u16));
+			ConvertABGR565ToRGBA8888(saveBuf.data(), (const u16_le *)data, (pitch * h) / sizeof(u16));
 			break;
 		case ReplacedTextureFormat::F_1555_ABGR:
-			ConvertABGR1555ToRGBA8888(saveBuf.data(), (const u16 *)data, (pitch * h) / sizeof(u16));
+			ConvertABGR1555ToRGBA8888(saveBuf.data(), (const u16_le *)data, (pitch * h) / sizeof(u16));
 			break;
 		case ReplacedTextureFormat::F_4444_ABGR:
-			ConvertABGR4444ToRGBA8888(saveBuf.data(), (const u16 *)data, (pitch * h) / sizeof(u16));
+			ConvertABGR4444ToRGBA8888(saveBuf.data(), (const u16_le *)data, (pitch * h) / sizeof(u16));
 			break;
 		case ReplacedTextureFormat::F_8888_BGRA:
-			ConvertBGRA8888ToRGBA8888(saveBuf.data(), (const u32 *)data, (pitch * h) / sizeof(u32));
+			ConvertBGRA8888ToRGBA8888(saveBuf.data(), (const u32_le *)data, (pitch * h) / sizeof(u32));
 			break;
 		case ReplacedTextureFormat::F_8888:
 			// Impossible.  Just so we can get warnings on other missed formats.
@@ -540,7 +553,32 @@ void ReplacedTexture::Load(int level, void *out, int rowPitch) {
 	const ReplacedTextureLevel &info = levels_[level];
 
 #ifdef USING_QT_UI
-	ERROR_LOG(G3D, "Replacement texture loading not implemented for Qt");
+	QImage image(info.file.c_str(), "PNG");
+	if (image.isNull()) {
+		ERROR_LOG(G3D, "Could not load texture replacement info: %s", info.file.c_str());
+		return;
+	}
+
+	image = image.convertToFormat(QImage::Format_ARGB32);
+	bool alphaFull = true;
+	for (int y = 0; y < image.height(); ++y) {
+		const QRgb *src = (const QRgb *)image.constScanLine(y);
+		uint8_t *outLine = (uint8_t *)out + y * rowPitch;
+		for (int x = 0; x < image.width(); ++x) {
+			outLine[x * 4 + 0] = qRed(src[x]);
+			outLine[x * 4 + 1] = qGreen(src[x]);
+			outLine[x * 4 + 2] = qBlue(src[x]);
+			outLine[x * 4 + 3] = qAlpha(src[x]);
+			// We're already scanning each pixel...
+			if (qAlpha(src[x]) != 255) {
+				alphaFull = false;
+			}
+		}
+	}
+
+	if (level == 0 || !alphaFull) {
+		alphaStatus_ = alphaFull ? ReplacedTextureAlpha::FULL : ReplacedTextureAlpha::UNKNOWN;
+	}
 #else
 	png_image png = {};
 	png.version = PNG_IMAGE_VERSION;
@@ -568,7 +606,7 @@ void ReplacedTexture::Load(int level, void *out, int rowPitch) {
 
 	if (!checkedAlpha) {
 		// This will only check the hashed bits.
-		CheckAlphaResult res = CheckAlphaRGBA8888Basic((u32 *)out, rowPitch / sizeof(u32), png.width, png.height);
+		CheckAlphaResult res = CheckAlphaRGBA8888Basic((u32_le *)out, rowPitch / sizeof(u32), png.width, png.height);
 		if (res == CHECKALPHA_ANY || level == 0) {
 			alphaStatus_ = ReplacedTextureAlpha(res);
 		}

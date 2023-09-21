@@ -114,7 +114,7 @@ bool ParamSFOData::ReadSFO(const u8 *paramsfo, size_t size) {
 		case 0x0404:
 			{
 				// Unsigned int
-				const u32 *data = (const u32 *)(data_start + indexTables[i].data_table_offset);
+				const u32_le *data = (const u32_le *)(data_start + indexTables[i].data_table_offset);
 				SetValue(key,*data,indexTables[i].param_max_len);
 				VERBOSE_LOG(LOADER, "%s %08x", key, *data);
 			}
@@ -219,7 +219,7 @@ bool ParamSFOData::WriteSFO(u8 **paramsfo, size_t *size) {
 			index_ptr->param_fmt = 0x0404;
 			index_ptr->param_len = 4;
 
-			*(int*)data_ptr = it->second.i_value;
+			*(s32_le*)data_ptr = it->second.i_value;
 		}
 		else if (it->second.type == VT_UTF8_SPE)
 		{

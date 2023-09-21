@@ -186,7 +186,7 @@ static u32 QuickTexHashBasic(const void *checkp, u32 size) {
 #else
 	u32 check = 0;
 	const u32 size_u32 = size / 4;
-	const u32 *p = (const u32 *)checkp;
+	const u32_le *p = (const u32_le *)checkp;
 	for (u32 i = 0; i < size_u32; i += 4) {
 		check += p[i + 0];
 		check ^= p[i + 1];
@@ -332,7 +332,7 @@ static inline u32 makecol(int r, int g, int b, int a) {
 }
 
 // This could probably be done faster by decoding two or four blocks at a time with SSE/NEON.
-void DecodeDXT1Block(u32 *dst, const DXT1Block *src, int pitch, int height, bool ignore1bitAlpha) {
+void DecodeDXT1Block(u32_le *dst, const DXT1Block *src, int pitch, int height, bool ignore1bitAlpha) {
 	// S3TC Decoder
 	// Needs more speed and debugging.
 	u16 c1 = (src->color1);
@@ -370,7 +370,7 @@ void DecodeDXT1Block(u32 *dst, const DXT1Block *src, int pitch, int height, bool
 	}
 }
 
-void DecodeDXT3Block(u32 *dst, const DXT3Block *src, int pitch, int height)
+void DecodeDXT3Block(u32_le *dst, const DXT3Block *src, int pitch, int height)
 {
 	DecodeDXT1Block(dst, &src->color, pitch, height, true);
 
@@ -396,7 +396,7 @@ static inline u8 lerp6(const DXT5Block *src, int n) {
 }
 
 // The alpha channel is not 100% correct 
-void DecodeDXT5Block(u32 *dst, const DXT5Block *src, int pitch, int height) {
+void DecodeDXT5Block(u32_le *dst, const DXT5Block *src, int pitch, int height) {
 	DecodeDXT1Block(dst, &src->color, pitch, height, true);
 	u8 alpha[8];
 
@@ -563,7 +563,7 @@ CheckAlphaResult CheckAlphaRGBA5551SSE2(const u32 *pixelData, int stride, int w,
 }
 #endif
 
-CheckAlphaResult CheckAlphaRGBA8888Basic(const u32 *pixelData, int stride, int w, int h) {
+CheckAlphaResult CheckAlphaRGBA8888Basic(const u32_le *pixelData, int stride, int w, int h) {
 	// Use SIMD if aligned to 16 bytes / 4 pixels (almost always the case.)
 	if ((w & 3) == 0 && (stride & 3) == 0) {
 #ifdef _M_SSE
@@ -593,7 +593,7 @@ CheckAlphaResult CheckAlphaRGBA8888Basic(const u32 *pixelData, int stride, int w
 	return CHECKALPHA_FULL;
 }
 
-CheckAlphaResult CheckAlphaABGR4444Basic(const u32 *pixelData, int stride, int w, int h) {
+CheckAlphaResult CheckAlphaABGR4444Basic(const u32_le *pixelData, int stride, int w, int h) {
 	// Use SIMD if aligned to 16 bytes / 8 pixels (usually the case.)
 	if ((w & 7) == 0 && (stride & 7) == 0) {
 #ifdef _M_SSE
@@ -626,7 +626,7 @@ CheckAlphaResult CheckAlphaABGR4444Basic(const u32 *pixelData, int stride, int w
 	return CHECKALPHA_FULL;
 }
 
-CheckAlphaResult CheckAlphaABGR1555Basic(const u32 *pixelData, int stride, int w, int h) {
+CheckAlphaResult CheckAlphaABGR1555Basic(const u32_le *pixelData, int stride, int w, int h) {
 	// Use SIMD if aligned to 16 bytes / 8 pixels (usually the case.)
 	if ((w & 7) == 0 && (stride & 7) == 0) {
 #ifdef _M_SSE
@@ -658,7 +658,7 @@ CheckAlphaResult CheckAlphaABGR1555Basic(const u32 *pixelData, int stride, int w
 	return CHECKALPHA_FULL;
 }
 
-CheckAlphaResult CheckAlphaRGBA4444Basic(const u32 *pixelData, int stride, int w, int h) {
+CheckAlphaResult CheckAlphaRGBA4444Basic(const u32_le *pixelData, int stride, int w, int h) {
 	// Use SSE if aligned to 16 bytes / 8 pixels (usually the case.)
 	if ((w & 7) == 0 && (stride & 7) == 0) {
 #ifdef _M_SSE
@@ -691,7 +691,7 @@ CheckAlphaResult CheckAlphaRGBA4444Basic(const u32 *pixelData, int stride, int w
 	return CHECKALPHA_FULL;
 }
 
-CheckAlphaResult CheckAlphaRGBA5551Basic(const u32 *pixelData, int stride, int w, int h) {
+CheckAlphaResult CheckAlphaRGBA5551Basic(const u32_le *pixelData, int stride, int w, int h) {
 	// Use SSE if aligned to 16 bytes / 8 pixels (usually the case.)
 	if ((w & 7) == 0 && (stride & 7) == 0) {
 #ifdef _M_SSE

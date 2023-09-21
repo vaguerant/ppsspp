@@ -227,7 +227,7 @@ static const std::vector<ShaderSource> vsCol = {
 	"}\n"
 	},
 	{ ShaderLanguage::GLSL_VULKAN,
-	"#version 400\n"
+	"#version 450\n"
 	"#extension GL_ARB_separate_shader_objects : enable\n"
 	"#extension GL_ARB_shading_language_420pack : enable\n"
 	"layout (std140, set = 0, binding = 0) uniform bufferVals {\n"
@@ -293,7 +293,7 @@ static const std::vector<ShaderSource> vsTexCol = {
 	"}\n"
 	},
 	{ ShaderLanguage::GLSL_VULKAN,
-	"#version 400\n"
+	"#version 450\n"
 	"#extension GL_ARB_separate_shader_objects : enable\n"
 	"#extension GL_ARB_shading_language_420pack : enable\n"
 	"layout (std140, set = 0, binding = 0) uniform bufferVals {\n"
@@ -360,10 +360,10 @@ DrawContext::~DrawContext() {
 // Could also make C fake-simd for 64-bit, two 8888 pixels fit in a register :)
 void ConvertFromRGBA8888(uint8_t *dst, const uint8_t *src, uint32_t dstStride, uint32_t srcStride, uint32_t width, uint32_t height, DataFormat format) {
 	// Must skip stride in the cases below.  Some games pack data into the cracks, like MotoGP.
-	const uint32_t *src32 = (const uint32_t *)src;
+	const u32_le *src32 = (const u32_le *)src;
 
 	if (format == Draw::DataFormat::R8G8B8A8_UNORM) {
-		uint32_t *dst32 = (uint32_t *)dst;
+		u32_le *dst32 = (u32_le *)dst;
 		if (src == dst) {
 			return;
 		} else {
@@ -383,7 +383,7 @@ void ConvertFromRGBA8888(uint8_t *dst, const uint8_t *src, uint32_t dstStride, u
 		}
 	} else {
 		// But here it shouldn't matter if they do intersect
-		uint16_t *dst16 = (uint16_t *)dst;
+		u16_le *dst16 = (u16_le *)dst;
 		switch (format) {
 		case Draw::DataFormat::R5G6B5_UNORM_PACK16: // BGR 565
 			for (uint32_t y = 0; y < height; ++y) {
@@ -409,7 +409,7 @@ void ConvertFromRGBA8888(uint8_t *dst, const uint8_t *src, uint32_t dstStride, u
 		case Draw::DataFormat::R8G8B8A8_UNORM:
 		case Draw::DataFormat::UNDEFINED:
 		default:
-			WARN_LOG_REPORT_ONCE(convFromRGBA, G3D, "Unable to convert from format: %d", format);
+			WARN_LOG_REPORT_ONCE(convFromRGBA, G3D, "Unable to convert from format: %d", (int)format);
 			break;
 		}
 	}
@@ -419,21 +419,42 @@ void ConvertFromRGBA8888(uint8_t *dst, const uint8_t *src, uint32_t dstStride, u
 // Could also make C fake-simd for 64-bit, two 8888 pixels fit in a register :)
 void ConvertFromBGRA8888(uint8_t *dst, const uint8_t *src, uint32_t dstStride, uint32_t srcStride, uint32_t width, uint32_t height, DataFormat format) {
 	// Must skip stride in the cases below.  Some games pack data into the cracks, like MotoGP.
-	const uint32_t *src32 = (const uint32_t *)src;
+	const u32_le *src32 = (const u32_le *)src;
 
-	if (format == Draw::DataFormat::R8G8B8A8_UNORM) {
-		uint32_t *dst32 = (uint32_t *)dst;
+	if (format == Draw::DataFormat::B8G8R8A8_UNORM) {
+		u32_le *dst32 = (u32_le *)dst;
+		if (src == dst) {
+			return;
+		} else {
+			for (uint32_t y = 0; y < height; ++y) {
+				memcpy(dst32, src32, width * 4);
+				src32 += srcStride;
+				dst32 += dstStride;
+			}
+		}
+	} else if (format == Draw::DataFormat::R8G8B8A8_UNORM) {
+		u32_le *dst32 = (u32_le *)dst;
 		for (uint32_t y = 0; y < height; ++y) {
 			ConvertBGRA8888ToRGBA8888(dst32, src32, width);
 			src32 += srcStride;
 			dst32 += dstStride;
 		}
-	}
-	else {
-		// Don't even bother with these, this path only happens in screenshots and we don't save those to 16-bit.
-		assert(false);
+	} else if (format == Draw::DataFormat::R8G8B8_UNORM) {
+		for (uint32_t y = 0; y < height; ++y) {
+			for (uint32_t x = 0; x < width; ++x) {
+				uint32_t c = src32[x];
+				dst[x * 3 + 0] = (c >> 16) & 0xFF;
+				dst[x * 3 + 1] = (c >> 8) & 0xFF;
+				dst[x * 3 + 2] = (c >> 0) & 0xFF;
+			}
+			src32 += srcStride;
+			dst += dstStride * 3;
+		}
+	} else {
+		WARN_LOG_REPORT_ONCE(convFromBGRA, G3D, "Unable to convert from format to BGRA: %d", (int)format);
 	}
 }
+
 void ConvertToD32F(uint8_t *dst, const uint8_t *src, uint32_t dstStride, uint32_t srcStride, uint32_t width, uint32_t height, DataFormat format) {
 	if (format == Draw::DataFormat::D32F) {
 		const float *src32 = (const float *)src;

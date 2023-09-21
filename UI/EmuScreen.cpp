@@ -350,14 +350,14 @@ void EmuScreen::dialogFinished(const Screen *dialog, DialogResult result) {
 	RecreateViews();
 }
 
-static void AfterSaveStateAction(bool success, const std::string &message, void *) {
+static void AfterSaveStateAction(SaveState::Status status, const std::string &message, void *) {
 	if (!message.empty()) {
-		osm.Show(message, 2.0);
+		osm.Show(message, status == SaveState::Status::SUCCESS ? 2.0 : 5.0);
 	}
 }
 
-static void AfterStateBoot(bool success, const std::string &message, void *ignored) {
-	AfterSaveStateAction(success, message, ignored);
+static void AfterStateBoot(SaveState::Status status, const std::string &message, void *ignored) {
+	AfterSaveStateAction(status, message, ignored);
 	Core_EnableStepping(false);
 	host->UpdateDisassembly();
 }
@@ -403,15 +403,15 @@ void EmuScreen::sendMessage(const char *message, const char *value) {
 		// In case we need to position touch controls differently.
 		RecreateViews();
 	} else if (!strcmp(message, "control mapping") && screenManager()->topScreen() == this) {
-		UpdateUIState(UISTATE_MENU);
+		UpdateUIState(UISTATE_PAUSEMENU);
 		releaseButtons();
 		screenManager()->push(new ControlMappingScreen());
 	} else if (!strcmp(message, "display layout editor") && screenManager()->topScreen() == this) {
-		UpdateUIState(UISTATE_MENU);
+		UpdateUIState(UISTATE_PAUSEMENU);
 		releaseButtons();
 		screenManager()->push(new DisplayLayoutScreen());
 	} else if (!strcmp(message, "settings") && screenManager()->topScreen() == this) {
-		UpdateUIState(UISTATE_MENU);
+		UpdateUIState(UISTATE_PAUSEMENU);
 		releaseButtons();
 		screenManager()->push(new GameSettingsScreen(gamePath_));
 	} else if (!strcmp(message, "gpu dump next frame")) {
@@ -860,13 +860,16 @@ public:
 
 		// PIC1 is the loading image, so let's only draw if it's available.
 		if (ginfo && ginfo->pic1.texture) {
-			dc.GetDrawContext()->BindTexture(0, ginfo->pic1.texture->GetTexture());
+			Draw::Texture *texture = ginfo->pic1.texture->GetTexture();
+			if (texture) {
+				dc.GetDrawContext()->BindTexture(0, texture);
 
-			double loadTime = ginfo->pic1.timeLoaded;
-			uint32_t color = alphaMul(color_, ease((time_now_d() - loadTime) * 3));
-			dc.Draw()->DrawTexRect(dc.GetBounds(), 0, 0, 1, 1, color);
-			dc.Flush();
-			dc.RebindTexture();
+				double loadTime = ginfo->pic1.timeLoaded;
+				uint32_t color = alphaMul(color_, ease((time_now_d() - loadTime) * 3));
+				dc.Draw()->DrawTexRect(dc.GetBounds(), 0, 0, 1, 1, color);
+				dc.Flush();
+				dc.RebindTexture();
+			}
 		}
 	}
 
@@ -1117,6 +1120,11 @@ void EmuScreen::preRender() {
 	using namespace Draw;
 	DrawContext *draw = screenManager()->getDrawContext();
 	draw->BeginFrame();
+	// Let's be consistent for the entire frame.  We skip the UI texture if we don't need it.
+	hasVisibleUI_ = hasVisibleUI();
+	if (hasVisibleUI_) {
+		screenManager()->getUIContext()->BeginFrame();
+	}
 	// Here we do NOT bind the backbuffer or clear the screen, unless non-buffered.
 	// The emuscreen is different than the others - we really want to allow the game to render to framebuffers
 	// before we ever bind the backbuffer for rendering. On mobile GPUs, switching back and forth between render
@@ -1158,6 +1166,8 @@ void EmuScreen::render() {
 	using namespace Draw;
 
 	DrawContext *thin3d = screenManager()->getDrawContext();
+	if (!thin3d)
+		return;  // shouldn't really happen but I've seen a suspicious stack trace..
 
 	if (invalid_) {
 		// Loading, or after shutdown?
@@ -1187,14 +1197,7 @@ void EmuScreen::render() {
 
 	PSP_BeginHostFrame();
 
-	// We just run the CPU until we get to vblank. This will quickly sync up pretty nicely.
-	// The actual number of cycles doesn't matter so much here as we will break due to CORE_NEXTFRAME, most of the time hopefully...
-	int blockTicks = usToCycles(1000000 / 10);
-
-	// Run until CORE_NEXTFRAME
-	while (coreState == CORE_RUNNING) {
-		PSP_RunLoopFor(blockTicks);
-	}
+	PSP_RunLoopWhileState();
 
 	// Hopefully coreState is now CORE_NEXTFRAME
 	if (coreState == CORE_NEXTFRAME) {
@@ -1215,9 +1218,7 @@ void EmuScreen::render() {
 	if (invalid_)
 		return;
 
-	const bool hasVisibleUI = !osm.IsEmpty() || saveStatePreview_->GetVisibility() != UI::V_GONE || g_Config.bShowTouchControls || loadingSpinner_->GetVisibility() == UI::V_VISIBLE;
-	const bool showDebugUI = g_Config.bShowDebugStats || g_Config.bShowDeveloperMenu || g_Config.bShowAudioDebug || g_Config.bShowFrameProfiler;
-	if (hasVisibleUI || showDebugUI || g_Config.iShowFPSCounter != 0) {
+	if (hasVisibleUI_) {
 		renderUI();
 	}
 
@@ -1237,6 +1238,20 @@ void EmuScreen::render() {
 #endif
 	}
 	*/
+}
+
+bool EmuScreen::hasVisibleUI() {
+	// Regular but uncommon UI.
+	if (saveStatePreview_->GetVisibility() != UI::V_GONE || loadingSpinner_->GetVisibility() == UI::V_VISIBLE)
+		return true;
+	if (!osm.IsEmpty() || g_Config.bShowTouchControls || g_Config.iShowFPSCounter != 0)
+		return true;
+
+	// Debug UI.
+	if (g_Config.bShowDebugStats || g_Config.bShowDeveloperMenu || g_Config.bShowAudioDebug || g_Config.bShowFrameProfiler)
+		return true;
+
+	return false;
 }
 
 void EmuScreen::renderUI() {

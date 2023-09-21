@@ -564,8 +564,8 @@ static int sceNetAdhocPdpRecv(int id, void *addr, void * port, void *buf, void *
 	}
 
 	SceNetEtherAddr *saddr = (SceNetEtherAddr *)addr;
-	uint16_t * sport = (uint16_t *)port; //Looking at Quake3 sourcecode (net_adhoc.c) this is an "int" (32bit) but changing here to 32bit will cause FF-Type0 to see duplicated Host (thinking it was from a different host)
-	int * len = (int *)dataLength;
+	u16_le * sport = (u16_le *)port; //Looking at Quake3 sourcecode (net_adhoc.c) this is an "int" (32bit) but changing here to 32bit will cause FF-Type0 to see duplicated Host (thinking it was from a different host)
+	s32_le * len = (s32_le *)dataLength;
 	if (netAdhocInited) {
 		// Valid Socket ID
 		if (id > 0 && id <= 255 && pdp[id - 1] != NULL) {
@@ -3476,23 +3476,24 @@ void __NetTriggerCallbacks()
 		{
 			int flags = params.first;
 			int error = params.second;
-			u32_le args[3] = { 0, 0, 0 };
+			u32 args[3] = { 0, 0, 0 };
 			args[0] = flags;
 			args[1] = error;
 
 			for (std::map<int, AdhocctlHandler>::iterator it = adhocctlHandlers.begin(); it != adhocctlHandlers.end(); ++it) {
 				args[2] = it->second.argument;
-				__KernelDirectMipsCall(it->second.entryPoint, NULL, (u32*)args, 3, true);
+				__KernelDirectMipsCall(it->second.entryPoint, NULL, args, 3, true);
 			}
 		}
 		adhocctlEvents.clear();
 
 		for (auto &param : matchingEvents)
 		{
-			u32_le *args = (u32_le *) param;
+			u32 args[6];
+			endian_convert(args, (u32_le *)param, 6);
 			AfterMatchingMipsCall *after = (AfterMatchingMipsCall *) __KernelCreateAction(actionAfterMatchingMipsCall);
 			after->SetContextID(args[0], args[1]);
-			__KernelDirectMipsCall(args[5], after, (u32*)args, 5, true);
+			__KernelDirectMipsCall(args[5], after, args, 5, true);
 		}
 		matchingEvents.clear();
 	}

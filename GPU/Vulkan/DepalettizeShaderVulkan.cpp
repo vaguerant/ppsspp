@@ -22,7 +22,7 @@
 #include "GPU/Vulkan/VulkanUtil.h"
 #include "Common/Vulkan/VulkanImage.h"
 
-static const char depal_vs[] = R"(#version 400
+static const char depal_vs[] = R"(#version 450
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 layout (location = 0) in vec3 a_position;
@@ -116,7 +116,7 @@ DepalShaderVulkan *DepalShaderCacheVulkan::GetDepalettizeShader(uint32_t clutMod
 	return depal;
 }
 
-VulkanTexture *DepalShaderCacheVulkan::GetClutTexture(GEPaletteFormat clutFormat, u32 clutHash, u32 *rawClut) {
+VulkanTexture *DepalShaderCacheVulkan::GetClutTexture(GEPaletteFormat clutFormat, u32 clutHash, u32_le *rawClut) {
 	u32 clutId = GetClutID(clutFormat, clutHash);
 	auto oldtex = texCache_.find(clutId);
 	if (oldtex != texCache_.end()) {

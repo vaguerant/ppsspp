@@ -347,11 +347,10 @@ public:
 		return caps_;
 	}
 	uint32_t GetSupportedShaderLanguages() const override {
-#if defined(USING_GLES2)
-		return (uint32_t)ShaderLanguage::GLSL_ES_200 | (uint32_t)ShaderLanguage::GLSL_ES_300;
-#else
-		return (uint32_t)ShaderLanguage::GLSL_ES_200 | (uint32_t)ShaderLanguage::GLSL_410;
-#endif
+		if (gl_extensions.IsGLES)
+			return (uint32_t)ShaderLanguage::GLSL_ES_200 | (uint32_t)ShaderLanguage::GLSL_ES_300;
+		else
+			return (uint32_t)ShaderLanguage::GLSL_ES_200 | (uint32_t)ShaderLanguage::GLSL_410;
 	}
 	uint32_t GetDataFormatSupport(DataFormat fmt) const override;
 
@@ -720,6 +719,10 @@ static void LogReadPixelsError(GLenum error) {
 #endif
 
 bool OpenGLContext::CopyFramebufferToMemorySync(Framebuffer *src, int channelBits, int x, int y, int w, int h, Draw::DataFormat dataFormat, void *pixels, int pixelStride) {
+	if (gl_extensions.IsGLES && (channelBits & FB_COLOR_BIT) == 0) {
+		// Can't readback depth or stencil on GLES.
+		return false;
+	}
 	OpenGLFramebuffer *fb = (OpenGLFramebuffer *)src;
 	GLuint aspect = 0;
 	if (channelBits & FB_COLOR_BIT)
@@ -858,8 +861,14 @@ Pipeline *OpenGLContext::CreateGraphicsPipeline(const PipelineDesc &desc) {
 	}
 	OpenGLPipeline *pipeline = new OpenGLPipeline(&renderManager_);
 	for (auto iter : desc.shaders) {
-		iter->AddRef();
-		pipeline->shaders.push_back(static_cast<OpenGLShaderModule *>(iter));
+		if (iter) {
+			iter->AddRef();
+			pipeline->shaders.push_back(static_cast<OpenGLShaderModule *>(iter));
+		} else {
+			ELOG("ERROR: Tried to create graphics pipeline with a null shader module");
+			delete pipeline;
+			return nullptr;
+		}
 	}
 	if (pipeline->LinkShaders()) {
 		// Build the rest of the virtual pipeline object.
@@ -878,7 +887,7 @@ Pipeline *OpenGLContext::CreateGraphicsPipeline(const PipelineDesc &desc) {
 	} else {
 		ELOG("Failed to create pipeline - shaders failed to link");
 		delete pipeline;
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -1153,11 +1162,8 @@ uint32_t OpenGLContext::GetDataFormatSupport(DataFormat fmt) const {
 	case DataFormat::B4G4R4A4_UNORM_PACK16:
 		return FMT_RENDERTARGET | FMT_TEXTURE | FMT_AUTOGEN_MIPS;  // native support
 	case DataFormat::A4R4G4B4_UNORM_PACK16:
-#ifndef USING_GLES2
 		// Can support this if _REV formats are supported.
-		return FMT_TEXTURE;
-#endif
-		return 0;
+		return gl_extensions.IsGLES ? 0 : FMT_TEXTURE;
 
 	case DataFormat::R8G8B8A8_UNORM:
 		return FMT_RENDERTARGET | FMT_TEXTURE | FMT_INPUTLAYOUT | FMT_AUTOGEN_MIPS;

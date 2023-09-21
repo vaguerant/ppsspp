@@ -27,7 +27,9 @@
 #include "GPU/Vulkan/TextureCacheVulkan.h"
 #include "GPU/Vulkan/VulkanUtil.h"
 
-static const char *stencil_fs = R"(#version 400
+// This shader references gl_FragDepth to prevent early fragment tests.
+// They shouldn't happen since it uses discard, but Adreno detects that incorrectly - see #10634.
+static const char *stencil_fs = R"(#version 450
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 layout (binding = 0) uniform sampler2D tex;
@@ -38,6 +40,8 @@ layout (location = 0) in vec2 v_texcoord0;
 layout (location = 0) out vec4 fragColor0;
 
 void main() {
+	gl_FragDepth = 0.0;
+
 	if (u_stencilValue == 0) {
 		fragColor0 = vec4(0.0);
 	} else {
@@ -50,7 +54,7 @@ void main() {
 }
 )";
 
-static const char stencil_vs[] = R"(#version 400
+static const char stencil_vs[] = R"(#version 450
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_ARB_shading_language_420pack : enable
 layout (location = 0) out vec2 v_texcoord0;
