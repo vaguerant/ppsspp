@@ -311,10 +311,10 @@ protected:
 	u32 clutHash_ = 0;
 
 	// Raw is where we keep the original bytes.  Converted is where we swap colors if necessary.
-	u32 *clutBufRaw_;
-	u32 *clutBufConverted_;
+	u32_le *clutBufRaw_;
+	u32_le *clutBufConverted_;
 	// This is the active one.
-	u32 *clutBuf_;
+	u32_le *clutBuf_;
 	u32 clutLastFormat_;
 	u32 clutTotalBytes_;
 	u32 clutMaxBytes_;
@@ -333,7 +333,7 @@ protected:
 
 	bool isBgraBackend_;
 
-	u32 expandClut_[256];
+	u32_le expandClut_[256];
 };
 
 inline bool TexCacheEntry::Matches(u16 dim2, u8 format2, u8 maxLevel2) const {

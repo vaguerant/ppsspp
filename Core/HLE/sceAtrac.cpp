@@ -2297,7 +2297,7 @@ void _AtracGenerateContext(Atrac *atrac, SceAtracId *context) {
 	context->info.streamDataByte = atrac->first_.size - atrac->dataOff_;
 
 	u8* buf = (u8*)context;
-	*(u32*)(buf + 0xfc) = atrac->atracID_;
+	*(u32_le*)(buf + 0xfc) = atrac->atracID_;
 }
 
 static u32 _sceAtracGetContextAddress(int atracID) {

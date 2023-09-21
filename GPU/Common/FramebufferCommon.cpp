@@ -1104,7 +1104,7 @@ void FramebufferManagerCommon::DecimateFBOs() {
 		int age = frameLastFramebufUsed_ - it->second.last_frame_used;
 		if (age > FBO_OLD_AGE) {
 			it->second.fbo->Release();
-			tempFBOs_.erase(it++);
+			it = tempFBOs_.erase(it);
 		} else {
 			++it;
 		}
@@ -1492,9 +1492,9 @@ void FramebufferManagerCommon::ApplyClearToMemory(int x1, int y1, int x2, int y2
 	if (bpp == 2) {
 		u16 clear16 = 0;
 		switch (gstate.FrameBufFormat()) {
-		case GE_FORMAT_565: ConvertRGBA8888ToRGB565(&clear16, &clearColor, 1); break;
-		case GE_FORMAT_5551: ConvertRGBA8888ToRGBA5551(&clear16, &clearColor, 1); break;
-		case GE_FORMAT_4444: ConvertRGBA8888ToRGBA4444(&clear16, &clearColor, 1); break;
+		case GE_FORMAT_565: clear16 = RGBA8888ToRGB565(clearColor); break;
+		case GE_FORMAT_5551: clear16 = RGBA8888ToRGBA5551(clearColor); break;
+		case GE_FORMAT_4444: clear16 = RGBA8888ToRGBA4444(clearColor); break;
 		default: _dbg_assert_(G3D, 0); break;
 		}
 		clearBits = clear16 | (clear16 << 16);
@@ -1836,8 +1836,8 @@ void FramebufferManagerCommon::GetCardboardSettings(CardboardSettings *cardboard
 	cardboardSettings->screenHeight = cardboardScreenHeight;
 }
 
-Draw::Framebuffer *FramebufferManagerCommon::GetTempFBO(u16 w, u16 h, Draw::FBColorDepth depth) {
-	u64 key = ((u64)depth << 32) | ((u32)w << 16) | h;
+Draw::Framebuffer *FramebufferManagerCommon::GetTempFBO(TempFBO reason, u16 w, u16 h, Draw::FBColorDepth depth) {
+	u64 key = ((u64)reason << 48) | ((u64)depth << 32) | ((u32)w << 16) | h;
 	auto it = tempFBOs_.find(key);
 	if (it != tempFBOs_.end()) {
 		it->second.last_frame_used = gpuStats.numFlips;
@@ -1849,7 +1849,7 @@ Draw::Framebuffer *FramebufferManagerCommon::GetTempFBO(u16 w, u16 h, Draw::FBCo
 	if (!fbo)
 		return fbo;
 
-	const TempFBO info = { fbo, gpuStats.numFlips };
+	const TempFBOInfo info = { fbo, gpuStats.numFlips };
 	tempFBOs_[key] = info;
 	return fbo;
 }
@@ -1918,7 +1918,7 @@ bool FramebufferManagerCommon::GetFramebuffer(u32 fb_address, int fb_stride, GEB
 			w = vfb->width * maxRes;
 			h = vfb->height * maxRes;
 
-			Draw::Framebuffer *tempFBO = GetTempFBO(w, h);
+			Draw::Framebuffer *tempFBO = GetTempFBO(TempFBO::COPY, w, h);
 			VirtualFramebuffer tempVfb = *vfb;
 			tempVfb.fbo = tempFBO;
 			tempVfb.bufferWidth = vfb->width;
@@ -1941,7 +1941,7 @@ bool FramebufferManagerCommon::GetFramebuffer(u32 fb_address, int fb_stride, GEB
 
 	// TODO: Maybe should handle flipY inside CopyFramebufferToMemorySync somehow?
 	bool flipY = (GetGPUBackend() == GPUBackend::OPENGL && !useBufferedRendering_) ? true : false;
-	buffer.Allocate(w, h, GE_FORMAT_8888, flipY, true);
+	buffer.Allocate(w, h, GE_FORMAT_8888, flipY);
 	bool retval = draw_->CopyFramebufferToMemorySync(bound, Draw::FB_COLOR_BIT, 0, 0, w, h, Draw::DataFormat::R8G8B8A8_UNORM, buffer.GetData(), w);
 	gpuStats.numReadbacks++;
 	// After a readback we'll have flushed and started over, need to dirty a bunch of things to be safe.
@@ -2019,8 +2019,12 @@ bool FramebufferManagerCommon::GetStencilbuffer(u32 fb_address, int fb_stride, G
 bool FramebufferManagerCommon::GetOutputFramebuffer(GPUDebugBuffer &buffer) {
 	int w, h;
 	draw_->GetFramebufferDimensions(nullptr, &w, &h);
-	buffer.Allocate(w, h, GE_FORMAT_8888, false, true);
-	bool retval = draw_->CopyFramebufferToMemorySync(nullptr, Draw::FB_COLOR_BIT, 0, 0, w, h, Draw::DataFormat::R8G8B8A8_UNORM, buffer.GetData(), w);
+	Draw::DataFormat fmt = draw_->PreferredFramebufferReadbackFormat(nullptr);
+	// Ignore preferred formats other than BGRA.
+	if (fmt != Draw::DataFormat::B8G8R8A8_UNORM)
+		fmt = Draw::DataFormat::R8G8B8A8_UNORM;
+	buffer.Allocate(w, h, fmt == Draw::DataFormat::R8G8B8A8_UNORM ? GPU_DBG_FORMAT_8888 : GPU_DBG_FORMAT_8888_BGRA, false);
+	bool retval = draw_->CopyFramebufferToMemorySync(nullptr, Draw::FB_COLOR_BIT, 0, 0, w, h, fmt, buffer.GetData(), w);
 	// That may have unbound the framebuffer, rebind to avoid crashes when debugging.
 	RebindFramebuffer();
 	return retval;

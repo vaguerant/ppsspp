@@ -47,7 +47,7 @@ DepalShaderCacheGX2::~DepalShaderCacheGX2() {
 	MEM2_free(fetchShader_.program);
 }
 
-GX2Texture *DepalShaderCacheGX2::GetClutTexture(GEPaletteFormat clutFormat, const u32 clutHash, u32 *rawClut, bool expandTo32bit) {
+GX2Texture *DepalShaderCacheGX2::GetClutTexture(GEPaletteFormat clutFormat, const u32 clutHash, u32_le *rawClut, bool expandTo32bit) {
 	const u32 clutId = GetClutID(clutFormat, clutHash);
 
 	auto oldtex = texCache_.find(clutId);
@@ -59,18 +59,18 @@ GX2Texture *DepalShaderCacheGX2::GetClutTexture(GEPaletteFormat clutFormat, cons
 	int texturePixels = clutFormat == GE_CMODE_32BIT_ABGR8888 ? 256 : 512;
 	int bpp = clutFormat == GE_CMODE_32BIT_ABGR8888 ? 4 : 2;
 	GX2SurfaceFormat dstFmt;
-	u32 *expanded = nullptr;
+	u32_le *expanded = nullptr;
 	if (expandTo32bit && clutFormat != GE_CMODE_32BIT_ABGR8888) {
-		expanded = new u32[texturePixels];
+		expanded = new u32_le[texturePixels];
 		switch (clutFormat) {
 		case GE_CMODE_16BIT_ABGR4444:
-			ConvertRGBA4444ToRGBA8888(expanded, (const u16 *)rawClut, texturePixels);
+			ConvertRGBA4444ToRGBA8888(expanded, (const u16_le *)rawClut, texturePixels);
 			break;
 		case GE_CMODE_16BIT_ABGR5551:
-			ConvertRGBA5551ToRGBA8888(expanded, (const u16 *)rawClut, texturePixels);
+			ConvertRGBA5551ToRGBA8888(expanded, (const u16_le *)rawClut, texturePixels);
 			break;
 		case GE_CMODE_16BIT_BGR5650:
-			ConvertRGBA565ToRGBA8888(expanded, (const u16 *)rawClut, texturePixels);
+			ConvertRGBA565ToRGBA8888(expanded, (const u16_le *)rawClut, texturePixels);
 			break;
 		}
 		rawClut = expanded;
@@ -100,15 +100,15 @@ GX2Texture *DepalShaderCacheGX2::GetClutTexture(GEPaletteFormat clutFormat, cons
 	_assert_(tex->surface.image);
 
 	if (bpp == 2) {
-		const u16 *src = (const u16 *)rawClut;
-		u16 *dst = (u16 *)tex->surface.image;
-		while (src < (u16 *)rawClut + texturePixels) {
+		const u16_le *src = (const u16_le *)rawClut;
+		u16_le *dst = (u16_le *)tex->surface.image;
+		while (src < (u16_le *)rawClut + texturePixels) {
 			*dst++ = (*src++);
 		}
 	} else {
-		const u32 *src = (const u32 *)rawClut;
-		u32 *dst = (u32 *)tex->surface.image;
-		while (src < (u32 *)rawClut + texturePixels) {
+		const u32_le *src = (const u32_le *)rawClut;
+		u32_le *dst = (u32_le *)tex->surface.image;
+		while (src < (u32_le *)rawClut + texturePixels) {
 			*dst++ = (*src++);
 		}
 	}

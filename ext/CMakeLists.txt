@@ -1,7 +1,7 @@
 set(ARMIPS_REGEXP OFF CACHE BOOL "" FORCE)
+add_subdirectory(armips)
 
 if(NOT WIIU)
-   add_subdirectory(armips)
    if(NOT USING_GLES2)
      add_subdirectory(glew)
    endif()

@@ -23,6 +23,7 @@
 #include <vector>
 #include "Common/Common.h"
 #include "Common/MemoryUtil.h"
+#include "Common/Swap.h"
 #include "GPU/ge_constants.h"
 
 class TextureCacheCommon;
@@ -43,7 +44,6 @@ enum class ReplacedTextureFormat {
 enum class ReplacedTextureAlpha {
 	UNKNOWN = 0x04,
 	FULL = 0x00,
-	SIMPLE = 0x08,
 };
 
 // For forward comatibility, we specify the hash.
@@ -195,7 +195,7 @@ protected:
 	std::string HashName(u64 cachekey, u32 hash, int level);
 	void PopulateReplacement(ReplacedTexture *result, u64 cachekey, u32 hash, int w, int h);
 
-	SimpleBuf<u32> saveBuf;
+	SimpleBuf<u32_le> saveBuf;
 	bool enabled_ = false;
 	bool allowVideo_ = false;
 	bool ignoreAddress_ = false;

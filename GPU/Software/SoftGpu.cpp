@@ -650,10 +650,8 @@ void SoftGPU::ExecuteOp(u32 op, u32 diff) {
 				memcpy(dst, src, width * bpp);
 			}
 
-#ifndef MOBILE_DEVICE
 			CBreakPoints::ExecMemCheck(srcBasePtr + (srcY * srcStride + srcX) * bpp, false, height * srcStride * bpp, currentMIPS->pc);
 			CBreakPoints::ExecMemCheck(dstBasePtr + (srcY * dstStride + srcX) * bpp, true, height * dstStride * bpp, currentMIPS->pc);
-#endif
 
 			// TODO: Correct timing appears to be 1.9, but erring a bit low since some of our other timing is inaccurate.
 			cyclesExecuted += ((height * width * bpp) * 16) / 10;
@@ -954,14 +952,14 @@ bool SoftGPU::GetCurrentFramebuffer(GPUDebugBuffer &buffer, GPUDebugFramebufferT
 	buffer.Allocate(x2 - x1, y2 - y1, fmt);
 
 	if(fmt == GE_FORMAT_8888) {
-		u32 *dst = (u32 *)buffer.GetData();
+		u32_le *dst = (u32_le *)buffer.GetData();
 		for (int y = y1; y < y2; ++y) {
 			for (int x = x1; x < x2; ++x) {
 				*dst++ = fb.Get32(x, y, stride);
 			}
 		}
 	} else {
-		u16 *dst = (u16 *)buffer.GetData();
+		u16_le *dst = (u16_le *)buffer.GetData();
 		for (int y = y1; y < y2; ++y) {
 			for (int x = x1; x < x2; ++x) {
 				*dst++ = fb.Get16(x, y, stride);
