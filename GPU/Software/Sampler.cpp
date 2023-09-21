@@ -380,7 +380,7 @@ inline static Nearest4 SampleNearest(int u[N], int v[N], const u8 *srcptr, int t
 	case GE_TFMT_DXT1:
 		for (int i = 0; i < N; ++i) {
 			const DXT1Block *block = (const DXT1Block *)srcptr + (v[i] / 4) * (texbufw / 4) + (u[i] / 4);
-			u32 data[4 * 4];
+			u32_le data[4 * 4];
 			DecodeDXT1Block(data, block, 4, 4, false);
 			res.v[i] = data[4 * (v[i] % 4) + (u[i] % 4)];
 		}
@@ -389,7 +389,7 @@ inline static Nearest4 SampleNearest(int u[N], int v[N], const u8 *srcptr, int t
 	case GE_TFMT_DXT3:
 		for (int i = 0; i < N; ++i) {
 			const DXT3Block *block = (const DXT3Block *)srcptr + (v[i] / 4) * (texbufw / 4) + (u[i] / 4);
-			u32 data[4 * 4];
+			u32_le data[4 * 4];
 			DecodeDXT3Block(data, block, 4, 4);
 			res.v[i] = data[4 * (v[i] % 4) + (u[i] % 4)];
 		}
@@ -398,7 +398,7 @@ inline static Nearest4 SampleNearest(int u[N], int v[N], const u8 *srcptr, int t
 	case GE_TFMT_DXT5:
 		for (int i = 0; i < N; ++i) {
 			const DXT5Block *block = (const DXT5Block *)srcptr + (v[i] / 4) * (texbufw / 4) + (u[i] / 4);
-			u32 data[4 * 4];
+			u32_le data[4 * 4];
 			DecodeDXT5Block(data, block, 4, 4);
 			res.v[i] = data[4 * (v[i] % 4) + (u[i] % 4)];
 		}

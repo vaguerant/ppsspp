@@ -88,11 +88,11 @@ extern ReliableHash64Func DoReliableHash64;
 typedef u32 ReliableHashType;
 #endif
 
-CheckAlphaResult CheckAlphaRGBA8888Basic(const u32 *pixelData, int stride, int w, int h);
-CheckAlphaResult CheckAlphaABGR4444Basic(const u32 *pixelData, int stride, int w, int h);
-CheckAlphaResult CheckAlphaRGBA4444Basic(const u32 *pixelData, int stride, int w, int h);
-CheckAlphaResult CheckAlphaABGR1555Basic(const u32 *pixelData, int stride, int w, int h);
-CheckAlphaResult CheckAlphaRGBA5551Basic(const u32 *pixelData, int stride, int w, int h);
+CheckAlphaResult CheckAlphaRGBA8888Basic(const u32_le *pixelData, int stride, int w, int h);
+CheckAlphaResult CheckAlphaABGR4444Basic(const u32_le *pixelData, int stride, int w, int h);
+CheckAlphaResult CheckAlphaRGBA4444Basic(const u32_le *pixelData, int stride, int w, int h);
+CheckAlphaResult CheckAlphaABGR1555Basic(const u32_le *pixelData, int stride, int w, int h);
+CheckAlphaResult CheckAlphaRGBA5551Basic(const u32_le *pixelData, int stride, int w, int h);
 
 // All these DXT structs are in the reverse order, as compared to PC.
 // On PC, alpha comes before color, and interpolants are before the tile data.
@@ -115,9 +115,9 @@ struct DXT5Block {
 	u8 alpha1; u8 alpha2;
 };
 
-void DecodeDXT1Block(u32 *dst, const DXT1Block *src, int pitch, int height, bool ignore1bitAlpha);
-void DecodeDXT3Block(u32 *dst, const DXT3Block *src, int pitch, int height);
-void DecodeDXT5Block(u32 *dst, const DXT5Block *src, int pitch, int height);
+void DecodeDXT1Block(u32_le *dst, const DXT1Block *src, int pitch, int height, bool ignore1bitAlpha);
+void DecodeDXT3Block(u32_le *dst, const DXT3Block *src, int pitch, int height);
+void DecodeDXT5Block(u32_le *dst, const DXT5Block *src, int pitch, int height);
 
 static const u8 textureBitsPerPixel[16] = {
 	16,  //GE_TFMT_5650,
@@ -188,7 +188,7 @@ inline void DeIndexTexture4(ClutT *dest, const u8 *indexed, int length, const Cl
 	}
 }
 
-inline void DeIndexTexture4Optimal(u16 *dest, const u8 *indexed, int length, u16 color) {
+inline void DeIndexTexture4Optimal(u16_le *dest, const u8 *indexed, int length, u16 color) {
 	const u16_le *indexed16 = (const u16_le *)indexed;
 	const u64 color64 = ((u64)color << 48) | ((u64)color << 32) | ((u64)color << 16) | (u64)color;
 	u64_le *dest64 = (u64_le *)dest;
@@ -198,7 +198,7 @@ inline void DeIndexTexture4Optimal(u16 *dest, const u8 *indexed, int length, u16
 	}
 }
 
-inline void DeIndexTexture4OptimalRev(u16 *dest, const u8 *indexed, int length, u16 color) {
+inline void DeIndexTexture4OptimalRev(u16_le *dest, const u8 *indexed, int length, u16 color) {
 	const u16_le *indexed16 = (const u16_le *)indexed;
 	const u64 color64 = ((u64)color << 48) | ((u64)color << 32) | ((u64)color << 16) | (u64)color;
 	u64_le *dest64 = (u64_le *)dest;
@@ -214,7 +214,7 @@ inline void DeIndexTexture4(ClutT *dest, const u32 texaddr, int length, const Cl
 	DeIndexTexture4(dest, indexed, length, clut);
 }
 
-inline void DeIndexTexture4Optimal(u16 *dest, const u32 texaddr, int length, u16 color) {
+inline void DeIndexTexture4Optimal(u16_le *dest, const u32 texaddr, int length, u16 color) {
 	const u8 *indexed = (const u8 *) Memory::GetPointer(texaddr);
 	DeIndexTexture4Optimal(dest, indexed, length, color);
 }

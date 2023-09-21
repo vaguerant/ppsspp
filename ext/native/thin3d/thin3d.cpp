@@ -360,10 +360,10 @@ DrawContext::~DrawContext() {
 // Could also make C fake-simd for 64-bit, two 8888 pixels fit in a register :)
 void ConvertFromRGBA8888(uint8_t *dst, const uint8_t *src, uint32_t dstStride, uint32_t srcStride, uint32_t width, uint32_t height, DataFormat format) {
 	// Must skip stride in the cases below.  Some games pack data into the cracks, like MotoGP.
-	const uint32_t *src32 = (const uint32_t *)src;
+	const u32_le *src32 = (const u32_le *)src;
 
 	if (format == Draw::DataFormat::R8G8B8A8_UNORM) {
-		uint32_t *dst32 = (uint32_t *)dst;
+		u32_le *dst32 = (u32_le *)dst;
 		if (src == dst) {
 			return;
 		} else {
@@ -383,7 +383,7 @@ void ConvertFromRGBA8888(uint8_t *dst, const uint8_t *src, uint32_t dstStride, u
 		}
 	} else {
 		// But here it shouldn't matter if they do intersect
-		uint16_t *dst16 = (uint16_t *)dst;
+		u16_le *dst16 = (u16_le *)dst;
 		switch (format) {
 		case Draw::DataFormat::R5G6B5_UNORM_PACK16: // BGR 565
 			for (uint32_t y = 0; y < height; ++y) {
@@ -419,10 +419,10 @@ void ConvertFromRGBA8888(uint8_t *dst, const uint8_t *src, uint32_t dstStride, u
 // Could also make C fake-simd for 64-bit, two 8888 pixels fit in a register :)
 void ConvertFromBGRA8888(uint8_t *dst, const uint8_t *src, uint32_t dstStride, uint32_t srcStride, uint32_t width, uint32_t height, DataFormat format) {
 	// Must skip stride in the cases below.  Some games pack data into the cracks, like MotoGP.
-	const uint32_t *src32 = (const uint32_t *)src;
+	const u32_le *src32 = (const u32_le *)src;
 
 	if (format == Draw::DataFormat::R8G8B8A8_UNORM) {
-		uint32_t *dst32 = (uint32_t *)dst;
+		u32_le *dst32 = (u32_le *)dst;
 		for (uint32_t y = 0; y < height; ++y) {
 			ConvertBGRA8888ToRGBA8888(dst32, src32, width);
 			src32 += srcStride;

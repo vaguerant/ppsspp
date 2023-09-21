@@ -116,7 +116,7 @@ DepalShaderVulkan *DepalShaderCacheVulkan::GetDepalettizeShader(uint32_t clutMod
 	return depal;
 }
 
-VulkanTexture *DepalShaderCacheVulkan::GetClutTexture(GEPaletteFormat clutFormat, u32 clutHash, u32 *rawClut) {
+VulkanTexture *DepalShaderCacheVulkan::GetClutTexture(GEPaletteFormat clutFormat, u32 clutHash, u32_le *rawClut) {
 	u32 clutId = GetClutID(clutFormat, clutHash);
 	auto oldtex = texCache_.find(clutId);
 	if (oldtex != texCache_.end()) {

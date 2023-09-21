@@ -16,6 +16,7 @@
 // https://github.com/hrydgard/ppsspp and http://www.ppsspp.org/.
 
 #include <cstring>
+#include <type_traits>
 #include "IndexGenerator.h"
 
 #include "Common/Common.h"
@@ -214,7 +215,7 @@ void IndexGenerator::TranslateList(int numInds, const ITypeLE *inds, int indexOf
 	indexOffset = index_ - indexOffset;
 	// We only bother doing this minor optimization in triangle list, since it's by far the most
 	// common operation that can benefit.
-	if (sizeof(ITypeLE) == sizeof(inds_[0]) && indexOffset == 0) {
+	if (std::is_same<ITypeLE, u16>::value && indexOffset == 0) {
 		memcpy(inds_, inds, numInds * sizeof(ITypeLE));
 		inds_ += numInds;
 		count_ += numInds;

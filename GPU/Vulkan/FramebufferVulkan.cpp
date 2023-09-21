@@ -228,28 +228,25 @@ void FramebufferManagerVulkan::MakePixelTexture(const u8 *srcPixels, GEBufferFor
 		}
 		data = convBuf_;
 		for (int y = 0; y < height; y++) {
+			const u16_le *src16 = (const u16_le *)srcPixels + srcStride * y;
+			const u32_le *src32 = (const u32_le *)srcPixels + srcStride * y;
+			u32_le *dst = (u32_le *)convBuf_ + width * y;
 			switch (srcPixelFormat) {
 			case GE_FORMAT_565:
 			{
-				const u16 *src = (const u16 *)srcPixels + srcStride * y;
-				u8 *dst = convBuf_ + 4 * width * y;
-				ConvertRGBA565ToRGBA8888((u32 *)dst, src, width);
+				ConvertRGBA565ToRGBA8888(dst, src16, width);
 			}
 			break;
 
 			case GE_FORMAT_5551:
 			{
-				const u16 *src = (const u16 *)srcPixels + srcStride * y;
-				u8 *dst = convBuf_ + 4 * width * y;
-				ConvertRGBA5551ToRGBA8888((u32 *)dst, src, width);
+				ConvertRGBA5551ToRGBA8888(dst, src16, width);
 			}
 			break;
 
 			case GE_FORMAT_4444:
 			{
-				const u16 *src = (const u16 *)srcPixels + srcStride * y;
-				u8 *dst = convBuf_ + 4 * width * y;
-				ConvertRGBA4444ToRGBA8888((u32 *)dst, src, width);
+				ConvertRGBA4444ToRGBA8888(dst, src16, width);
 			}
 			break;
 
@@ -539,10 +536,10 @@ void FramebufferManagerVulkan::BlitFramebuffer(VirtualFramebuffer *dst, int dstX
 // Could also make C fake-simd for 64-bit, two 8888 pixels fit in a register :)
 void ConvertFromRGBA8888_Vulkan(u8 *dst, const u8 *src, u32 dstStride, u32 srcStride, u32 width, u32 height, GEBufferFormat format) {
 	// Must skip stride in the cases below.  Some games pack data into the cracks, like MotoGP.
-	const u32 *src32 = (const u32 *)src;
+	const u32_le *src32 = (const u32_le *)src;
 
 	if (format == GE_FORMAT_8888) {
-		u32 *dst32 = (u32 *)dst;
+		u32_le *dst32 = (u32_le *)dst;
 		if (src == dst) {
 			return;
 		} else {
@@ -555,7 +552,7 @@ void ConvertFromRGBA8888_Vulkan(u8 *dst, const u8 *src, u32 dstStride, u32 srcSt
 		}
 	} else {
 		// But here it shouldn't matter if they do intersect
-		u16 *dst16 = (u16 *)dst;
+		u16_le *dst16 = (u16_le *)dst;
 		switch (format) {
 		case GE_FORMAT_565: // BGR 565
 			for (u32 y = 0; y < height; ++y) {

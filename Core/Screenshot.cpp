@@ -127,9 +127,9 @@ static bool WriteScreenshotToPNG(png_imagep image, const char *filename, int con
 
 static bool ConvertPixelTo8888RGBA(GPUDebugBufferFormat fmt, u8 &r, u8 &g, u8 &b, u8 &a, const void *buffer, int offset, bool rev) {
 	const u8 *buf8 = (const u8 *)buffer;
-	const u16 *buf16 = (const u16 *)buffer;
-	const u32 *buf32 = (const u32 *)buffer;
-	const float *fbuf = (const float *)buffer;
+	const u16_le *buf16 = (const u16_le *)buffer;
+	const u32_le *buf32 = (const u32_le *)buffer;
+	const float_le *fbuf = (const float_le *)buffer;
 
 	// NOTE: a and r might be the same channel.  This is used for RGB.
 

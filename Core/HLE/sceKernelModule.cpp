@@ -1344,11 +1344,11 @@ static Module *__KernelLoadELFFromPtr(const u8 *ptr, size_t elfSize, u32 loadAdd
 			name = "invalid?";
 		}
 
-		INFO_LOG(LOADER, "Exporting ent %d named %s, %d funcs, %d vars, resident %08x", m, name, ent->fcount, ent->vcount, ent->resident);
+		INFO_LOG(LOADER, "Exporting ent %d named %s, %d funcs, %d vars, resident %08x", m, name, (u32)ent->fcount, (u32)ent->vcount, (u32)ent->resident);
 
 		if (!Memory::IsValidAddress(ent->resident)) {
 			if (ent->fcount + variableCount > 0) {
-				WARN_LOG_REPORT(LOADER, "Invalid export resident address %08x", ent->resident);
+				WARN_LOG_REPORT(LOADER, "Invalid export resident address %08x", (u32)ent->resident);
 			}
 			continue;
 		}
@@ -1357,7 +1357,7 @@ static Module *__KernelLoadELFFromPtr(const u8 *ptr, size_t elfSize, u32 loadAdd
 		u32_le *exportPtr = residentPtr + ent->fcount + variableCount;
 
 		if (ent->size != 4 && ent->unknown1 != 0 && ent->unknown2 != 0) {
-			WARN_LOG_REPORT(LOADER, "Unexpected export module entry size %d, vcountNew=%08x, unknown1=%08x, unknown2=%08x", ent->size, ent->vcountNew, ent->unknown1, ent->unknown2);
+			WARN_LOG_REPORT(LOADER, "Unexpected export module entry size %d, vcountNew=%08x, unknown1=%08x, unknown2=%08x", ent->size, (u32)ent->vcountNew, ent->unknown1, ent->unknown2);
 		}
 
 		FuncSymbolExport func;

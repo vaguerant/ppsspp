@@ -532,7 +532,7 @@ GX2SurfaceFormat TextureCacheGX2::GetDestFormat(GETextureFormat format, GEPalett
 	}
 }
 
-TexCacheEntry::TexStatus TextureCacheGX2::CheckAlpha(const u32 *pixelData, u32 dstFmt, int stride, int w, int h) {
+TexCacheEntry::TexStatus TextureCacheGX2::CheckAlpha(const u32_le *pixelData, u32 dstFmt, int stride, int w, int h) {
 	CheckAlphaResult res;
 	switch (dstFmt) {
 	case GX2_SURFACE_FORMAT_UNORM_R4_G4_B4_A4: res = CheckAlphaRGBA4444Basic(pixelData, stride, w, h); break;
@@ -658,7 +658,7 @@ void TextureCacheGX2::LoadTextureLevel(TexCacheEntry &entry, ReplacedTexture &re
 
 		// We check before scaling since scaling shouldn't invent alpha from a full alpha texture.
 		if ((entry.status & TexCacheEntry::STATUS_CHANGE_FREQUENT) == 0) {
-			TexCacheEntry::TexStatus alphaStatus = CheckAlpha(pixelData, dstFmt, decPitch / bpp, w, h);
+			TexCacheEntry::TexStatus alphaStatus = CheckAlpha((u32_le *)pixelData, dstFmt, decPitch / bpp, w, h);
 			entry.SetAlphaStatus(alphaStatus, level);
 		} else {
 			entry.SetAlphaStatus(TexCacheEntry::STATUS_ALPHA_UNKNOWN);

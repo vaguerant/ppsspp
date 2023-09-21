@@ -73,7 +73,7 @@ protected:
 private:
 	void LoadTextureLevel(TexCacheEntry &entry, ReplacedTexture &replaced, int level, int maxLevel, int scaleFactor, GX2SurfaceFormat dstFmt);
 	GX2SurfaceFormat GetDestFormat(GETextureFormat format, GEPaletteFormat clutFormat) const;
-	TexCacheEntry::TexStatus CheckAlpha(const u32 *pixelData, u32 dstFmt, int stride, int w, int h);
+	TexCacheEntry::TexStatus CheckAlpha(const u32_le *pixelData, u32 dstFmt, int stride, int w, int h);
 	void UpdateCurrentClut(GEPaletteFormat clutFormat, u32 clutBase, bool clutIndexIsSimple) override;
 
 	void ApplyTextureFramebuffer(TexCacheEntry *entry, VirtualFramebuffer *framebuffer) override;

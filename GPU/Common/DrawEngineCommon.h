@@ -160,7 +160,7 @@ protected:
 	GEPrimitiveType prevPrim_ = GE_PRIM_INVALID;
 
 	// Fixed index buffer for easy quad generation from spline/bezier
-	u16 *quadIndices_ = nullptr;
+	u16_le *quadIndices_ = nullptr;
 
 	// Shader blending state
 	bool fboTexNeedBind_ = false;

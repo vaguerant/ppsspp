@@ -91,7 +91,7 @@ static u32 execListBuf;
 static u32 execListPos;
 static u32 execListID;
 static const int LIST_BUF_SIZE = 256 * 1024;
-static std::vector<u32> execListQueue;
+static std::vector<u32_le> execListQueue;
 
 // This class maps pushbuffer (dump data) sections to PSP memory.
 // Dumps can be larger than available PSP memory, because they include generated data too.

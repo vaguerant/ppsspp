@@ -91,7 +91,7 @@ static void CopyQuad(u8 *&dest, const SimpleVertex *v1, const SimpleVertex *v2, 
 	dest += vertexSize;
 }
 
-static void CopyQuadIndex(u16 *&indices, GEPatchPrimType type, const int idx0, const int idx1, const int idx2, const int idx3) {
+static void CopyQuadIndex(u16_le *&indices, GEPatchPrimType type, const int idx0, const int idx1, const int idx2, const int idx3) {
 	if (type == GE_PATCHPRIM_LINES) {
 		*(indices++) = idx0;
 		*(indices++) = idx2;
@@ -224,7 +224,7 @@ static void spline_knot(int n, int type, float *knot) {
 }
 
 // Prepare mesh of one patch for "Instanced Tessellation".
-static void TessellateSplinePatchHardware(u8 *&dest, u16 *indices, int &count, const SplinePatchLocal &spatch) {
+static void TessellateSplinePatchHardware(u8 *&dest, u16_le *indices, int &count, const SplinePatchLocal &spatch) {
 	SimpleVertex *&vertices = (SimpleVertex*&)dest;
 
 	float inv_u = 1.0f / (float)spatch.tess_u;
@@ -258,7 +258,7 @@ static void TessellateSplinePatchHardware(u8 *&dest, u16 *indices, int &count, c
 	}
 }
 
-static void _SplinePatchLowQuality(u8 *&dest, u16 *indices, int &count, const SplinePatchLocal &spatch, u32 origVertType) {
+static void _SplinePatchLowQuality(u8 *&dest, u16_le *indices, int &count, const SplinePatchLocal &spatch, u32 origVertType) {
 	// Fast and easy way - just draw the control points, generate some very basic normal vector substitutes.
 	// Very inaccurate but okay for Loco Roco. Maybe should keep it as an option because it's fast.
 
@@ -345,7 +345,7 @@ static inline void AccumulateWeighted(Vec4f &out, const Vec4f &in, const Vec4f &
 }
 
 template <bool origNrm, bool origCol, bool origTc, bool useSSE4>
-static void SplinePatchFullQuality(u8 *&dest, u16 *indices, int &count, const SplinePatchLocal &spatch, u32 origVertType, int quality, int maxVertices) {
+static void SplinePatchFullQuality(u8 *&dest, u16_le *indices, int &count, const SplinePatchLocal &spatch, u32 origVertType, int quality, int maxVertices) {
 	// Full (mostly) correct tessellation of spline patches.
 	// Not very fast.
 
@@ -558,7 +558,7 @@ static void SplinePatchFullQuality(u8 *&dest, u16 *indices, int &count, const Sp
 }
 
 template <bool origNrm, bool origCol, bool origTc>
-static inline void SplinePatchFullQualityDispatch4(u8 *&dest, u16 *indices, int &count, const SplinePatchLocal &spatch, u32 origVertType, int quality, int maxVertices) {
+static inline void SplinePatchFullQualityDispatch4(u8 *&dest, u16_le *indices, int &count, const SplinePatchLocal &spatch, u32 origVertType, int quality, int maxVertices) {
 	if (cpu_info.bSSE4_1)
 		SplinePatchFullQuality<origNrm, origCol, origTc, true>(dest, indices, count, spatch, origVertType, quality, maxVertices);
 	else
@@ -566,7 +566,7 @@ static inline void SplinePatchFullQualityDispatch4(u8 *&dest, u16 *indices, int 
 }
 
 template <bool origNrm, bool origCol>
-static inline void SplinePatchFullQualityDispatch3(u8 *&dest, u16 *indices, int &count, const SplinePatchLocal &spatch, u32 origVertType, int quality, int maxVertices) {
+static inline void SplinePatchFullQualityDispatch3(u8 *&dest, u16_le *indices, int &count, const SplinePatchLocal &spatch, u32 origVertType, int quality, int maxVertices) {
 	bool origTc = (origVertType & GE_VTYPE_TC_MASK) != 0;
 
 	if (origTc)
@@ -576,7 +576,7 @@ static inline void SplinePatchFullQualityDispatch3(u8 *&dest, u16 *indices, int 
 }
 
 template <bool origNrm>
-static inline void SplinePatchFullQualityDispatch2(u8 *&dest, u16 *indices, int &count, const SplinePatchLocal &spatch, u32 origVertType, int quality, int maxVertices) {
+static inline void SplinePatchFullQualityDispatch2(u8 *&dest, u16_le *indices, int &count, const SplinePatchLocal &spatch, u32 origVertType, int quality, int maxVertices) {
 	bool origCol = (origVertType & GE_VTYPE_COL_MASK) != 0;
 
 	if (origCol)
@@ -585,7 +585,7 @@ static inline void SplinePatchFullQualityDispatch2(u8 *&dest, u16 *indices, int 
 		SplinePatchFullQualityDispatch3<origNrm, false>(dest, indices, count, spatch, origVertType, quality, maxVertices);
 }
 
-static void SplinePatchFullQualityDispatch(u8 *&dest, u16 *indices, int &count, const SplinePatchLocal &spatch, u32 origVertType, int quality, int maxVertices) {
+static void SplinePatchFullQualityDispatch(u8 *&dest, u16_le *indices, int &count, const SplinePatchLocal &spatch, u32 origVertType, int quality, int maxVertices) {
 	bool origNrm = (origVertType & GE_VTYPE_NRM_MASK) != 0;
 
 	if (origNrm)
@@ -594,7 +594,7 @@ static void SplinePatchFullQualityDispatch(u8 *&dest, u16 *indices, int &count, 
 		SplinePatchFullQualityDispatch2<false>(dest, indices, count, spatch, origVertType, quality, maxVertices);
 }
 
-void TessellateSplinePatch(u8 *&dest, u16 *indices, int &count, const SplinePatchLocal &spatch, u32 origVertType, int maxVertexCount) {
+void TessellateSplinePatch(u8 *&dest, u16_le *indices, int &count, const SplinePatchLocal &spatch, u32 origVertType, int maxVertexCount) {
 	switch (g_Config.iSplineBezierQuality) {
 	case LOW_QUALITY:
 		_SplinePatchLowQuality(dest, indices, count, spatch, origVertType);
@@ -608,7 +608,7 @@ void TessellateSplinePatch(u8 *&dest, u16 *indices, int &count, const SplinePatc
 	}
 }
 
-static void _BezierPatchLowQuality(u8 *&dest, u16 *&indices, int &count, int tess_u, int tess_v, const BezierPatch &patch, u32 origVertType) {
+static void _BezierPatchLowQuality(u8 *&dest, u16_le *&indices, int &count, int tess_u, int tess_v, const BezierPatch &patch, u32 origVertType) {
 	const float third = 1.0f / 3.0f;
 	// Fast and easy way - just draw the control points, generate some very basic normal vector subsitutes.
 	// Very inaccurate though but okay for Loco Roco. Maybe should keep it as an option.
@@ -694,7 +694,7 @@ struct PrecomputedCurves {
 	T *horiz4;
 };
 
-static void _BezierPatchHighQuality(u8 *&dest, u16 *&indices, int &count, int tess_u, int tess_v, const BezierPatch &patch, u32 origVertType) {
+static void _BezierPatchHighQuality(u8 *&dest, u16_le *&indices, int &count, int tess_u, int tess_v, const BezierPatch &patch, u32 origVertType) {
 	const float third = 1.0f / 3.0f;
 
 	// First compute all the vertices and put them in an array
@@ -797,7 +797,7 @@ static void _BezierPatchHighQuality(u8 *&dest, u16 *&indices, int &count, int te
 }
 
 // Prepare mesh of one patch for "Instanced Tessellation".
-static void TessellateBezierPatchHardware(u8 *&dest, u16 *indices, int &count, int tess_u, int tess_v, GEPatchPrimType primType) {
+static void TessellateBezierPatchHardware(u8 *&dest, u16_le *indices, int &count, int tess_u, int tess_v, GEPatchPrimType primType) {
 	SimpleVertex *&vertices = (SimpleVertex*&)dest;
 
 	float inv_u = 1.0f / (float)tess_u;
@@ -827,7 +827,7 @@ static void TessellateBezierPatchHardware(u8 *&dest, u16 *indices, int &count, i
 	}
 }
 
-void TessellateBezierPatch(u8 *&dest, u16 *&indices, int &count, int tess_u, int tess_v, const BezierPatch &patch, u32 origVertType) {
+void TessellateBezierPatch(u8 *&dest, u16_le *&indices, int &count, int tess_u, int tess_v, const BezierPatch &patch, u32 origVertType) {
 	switch (g_Config.iSplineBezierQuality) {
 	case LOW_QUALITY:
 		_BezierPatchLowQuality(dest, indices, count, tess_u, tess_v, patch, origVertType);
@@ -1062,7 +1062,7 @@ void DrawEngineCommon::SubmitBezier(const void *control_points, const void *indi
 		tess_v = 1;
 	}
 
-	u16 *inds = quadIndices_;
+	u16_le *inds = quadIndices_;
 	if (g_Config.bHardwareTessellation && g_Config.bHardwareTransform && !g_Config.bSoftwareRendering) {
 		tessDataTransfer->SendDataToShader(pos, tex, col, count_u * count_v, hasColor, hasTexCoords);
 		TessellateBezierPatchHardware(dest, inds, count, tess_u, tess_v, prim_type);

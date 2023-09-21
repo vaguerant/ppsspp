@@ -56,12 +56,7 @@ typedef struct
 	u32_le      key_data2;       // 12C
 	u32_le      oe_tag;          // 130
 	u8          key_data3[0x1C]; // 134
-#ifdef _MSC_VER
 } PSP_Header;
-#else
-} PSP_Header;
-#endif
-
 #ifdef _MSC_VER
 #pragma pack(pop)
 #endif

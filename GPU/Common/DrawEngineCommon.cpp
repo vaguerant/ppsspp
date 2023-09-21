@@ -34,7 +34,7 @@ enum {
 };
 
 DrawEngineCommon::DrawEngineCommon() : decoderMap_(16) {
-	quadIndices_ = new u16[6 * QUAD_INDICES_MAX];
+	quadIndices_ = new u16_le[6 * QUAD_INDICES_MAX];
 	decJitCache_ = new VertexDecoderJitCache();
 	transformed = (TransformedVertex *)AllocateMemoryPages(TRANSFORMED_VERTEX_BUFFER_SIZE, MEM_PROT_READ | MEM_PROT_WRITE);
 	transformedExpanded = (TransformedVertex *)AllocateMemoryPages(3 * TRANSFORMED_VERTEX_BUFFER_SIZE, MEM_PROT_READ | MEM_PROT_WRITE);
