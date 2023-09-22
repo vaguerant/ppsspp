@@ -28,6 +28,10 @@ private:
 	void *drc_scan_buffer_;
 	void *tv_scan_buffer_;
 	GX2ColorBuffer color_buffer_ = {};
+	GX2Texture tv_texture_ = {};
+	GX2Sampler tv_sampler_ = {};
+	GX2ColorBuffer drc_color_buffer_ = {};
 	GX2DepthBuffer depth_buffer_ = {};
 	GX2ContextState *ctx_state_;
+	GX2ContextState *drc_ctx_state_;
 };

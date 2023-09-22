@@ -1,6 +1,7 @@
 
 #define GX2_COMP_SEL
 #include "WiiU/GX2GraphicsContext.h"
+#include "WiiU/GX2ScreenShader.h"
 #include "thin3d/thin3d.h"
 #include "thin3d/thin3d_create.h"
 #include "Core/System.h"
@@ -66,6 +67,32 @@ bool GX2GraphicsContext::Init() {
 	color_buffer_.surface.image = MEM1_alloc(color_buffer_.surface.imageSize, color_buffer_.surface.alignment);
 	GX2Invalidate(GX2_INVALIDATE_MODE_CPU, color_buffer_.surface.image, color_buffer_.surface.imageSize);
 
+	// Copy color buffer to a texture
+	tv_texture_.surface = color_buffer_.surface;
+	tv_texture_.surface.use = GX2_SURFACE_USE_TEXTURE;
+	tv_texture_.viewFirstMip = 0;
+	tv_texture_.viewNumMips = 1;
+	tv_texture_.viewFirstSlice = 0;
+	tv_texture_.viewNumSlices = 1;
+	tv_texture_.compMap = 0x00010203;
+	GX2InitTextureRegs(&tv_texture_);
+	GX2InitSampler(&tv_sampler_, GX2_TEX_CLAMP_MODE_CLAMP, GX2_TEX_XY_FILTER_MODE_LINEAR);
+
+	drc_color_buffer_.surface.dim = GX2_SURFACE_DIM_TEXTURE_2D;
+	drc_color_buffer_.surface.width = 854;
+	drc_color_buffer_.surface.height = 480;
+	drc_color_buffer_.surface.depth = 1;
+	drc_color_buffer_.surface.mipLevels = 1;
+	drc_color_buffer_.surface.format = GX2_SURFACE_FORMAT_UNORM_R8_G8_B8_A8;
+	drc_color_buffer_.surface.use = GX2_SURFACE_USE_TEXTURE_COLOR_BUFFER_TV;
+	drc_color_buffer_.viewNumSlices = 1;
+
+	GX2CalcSurfaceSizeAndAlignment(&drc_color_buffer_.surface);
+	GX2InitColorBufferRegs(&drc_color_buffer_);
+
+	drc_color_buffer_.surface.image = MEM1_alloc(drc_color_buffer_.surface.imageSize, drc_color_buffer_.surface.alignment);
+	GX2Invalidate(GX2_INVALIDATE_MODE_CPU, drc_color_buffer_.surface.image, drc_color_buffer_.surface.imageSize);
+
 	depth_buffer_.surface.dim = GX2_SURFACE_DIM_TEXTURE_2D;
 	depth_buffer_.surface.width = render_mode_.width;
 	depth_buffer_.surface.height = render_mode_.height;
@@ -83,6 +110,8 @@ bool GX2GraphicsContext::Init() {
 
 	ctx_state_ = (GX2ContextState *)MEM2_alloc(sizeof(GX2ContextState), GX2_CONTEXT_STATE_ALIGNMENT);
 	GX2SetupContextStateEx(ctx_state_, GX2_TRUE);
+	drc_ctx_state_ = (GX2ContextState *)MEM2_alloc(sizeof(GX2ContextState), GX2_CONTEXT_STATE_ALIGNMENT);
+	GX2SetupContextStateEx(drc_ctx_state_, GX2_TRUE);
 
 	GX2SetContextState(ctx_state_);
 	GX2SetShaderMode(GX2_SHADER_MODE_UNIFORM_BLOCK);
@@ -104,6 +133,8 @@ bool GX2GraphicsContext::Init() {
 	draw_ = Draw::T3DCreateGX2Context(ctx_state_, &color_buffer_, &depth_buffer_);
 	SetGPUBackend(GPUBackend::GX2);
 	GX2SetSwapInterval(0);
+	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_SHADER, screen_shader_VSH.program, screen_shader_VSH.size);
+	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_SHADER, screen_shader_PSH.program, screen_shader_PSH.size);
 	return draw_->CreatePresets();
 }
 
@@ -122,6 +153,8 @@ void GX2GraphicsContext::Shutdown() {
 
 	MEM2_free(ctx_state_);
 	ctx_state_ = nullptr;
+	MEM2_free(drc_ctx_state_);
+	drc_ctx_state_ = nullptr;
 	MEM2_free(cmd_buffer_);
 	cmd_buffer_ = nullptr;
 	MEM1_free(color_buffer_.surface.image);
@@ -134,8 +167,33 @@ void GX2GraphicsContext::Shutdown() {
 #include "profiler/profiler.h"
 void GX2GraphicsContext::SwapBuffers() {
 	PROFILE_THIS_SCOPE("swap");
+
+	GX2SetContextState(drc_ctx_state_);
+
+	GX2SetShaderMode(GX2_SHADER_MODE_UNIFORM_REGISTER);
+	GX2SetVertexShader(&screen_shader_VSH);
+	GX2SetPixelShader(&screen_shader_PSH);
+	// I'm assuming your shader has no attributes and you hardcoded everything
+	// I don't know if you need a dummy fetch shader, so let's test this as-is
+	// first then see if we do need a fetch shader later
+
+	GX2SetPixelSampler(&tv_sampler_, 0);
+	GX2SetPixelTexture(&tv_texture_, 0);
+
+	// Set DRC color buffer, viewport and scissor
+	GX2SetColorBuffer(&drc_color_buffer_, GX2_RENDER_TARGET_0);
+	GX2SetViewport(0, 0, 854, 480, 0, 1);
+	GX2SetScissor(0, 0, 854, 480);
+
+	GX2DrawEx(GX2_PRIMITIVE_MODE_TRIANGLES, 6, 0, 1);
+
+	// Restore TV color buffer, viewport and scissor
+	GX2SetColorBuffer(&color_buffer_, GX2_RENDER_TARGET_0);
+	GX2SetViewport(0, 0, color_buffer_.surface.width, color_buffer_.surface.height, 0, 1);
+	GX2SetScissor(0, 0, color_buffer_.surface.width, color_buffer_.surface.height);
+
 	GX2DrawDone();
-	GX2CopyColorBufferToScanBuffer(&color_buffer_, GX2_SCAN_TARGET_DRC);
+	GX2CopyColorBufferToScanBuffer(&drc_color_buffer_, GX2_SCAN_TARGET_DRC);
 	GX2CopyColorBufferToScanBuffer(&color_buffer_, GX2_SCAN_TARGET_TV);
 	GX2SwapScanBuffers();
 	GX2Flush();
