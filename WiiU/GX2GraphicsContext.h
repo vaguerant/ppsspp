@@ -34,4 +34,6 @@ private:
 	GX2DepthBuffer depth_buffer_ = {};
 	GX2ContextState *ctx_state_;
 	GX2ContextState *drc_ctx_state_;
+	GX2FetchShader fetch_shader_;
+	uint8_t* fetch_shader_buf_;
 };

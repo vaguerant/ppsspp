@@ -133,6 +133,30 @@ bool GX2GraphicsContext::Init() {
 	draw_ = Draw::T3DCreateGX2Context(ctx_state_, &color_buffer_, &depth_buffer_);
 	SetGPUBackend(GPUBackend::GX2);
 	GX2SetSwapInterval(0);
+
+	uint32_t fetch_shader_buf_size = GX2CalcFetchShaderSizeEx(
+		0,
+		GX2_FETCH_SHADER_TESSELLATION_NONE,	// No Tessellation
+		GX2_TESSELLATION_MODE_DISCRETE		// ^^^^^^^^^^^^^^^
+	);
+	fetch_shader_buf_ = (uint8_t*)MEM2_alloc(
+		fetch_shader_buf_size,
+		0x100								// GX2_SHADER_PROGRAM_ALIGNMENT
+	);
+
+	GX2FetchShader* fetch_shader = &fetch_shader_;
+
+	GX2InitFetchShaderEx(
+		fetch_shader,
+		fetch_shader_buf_,
+		0,
+		0,
+		GX2_FETCH_SHADER_TESSELLATION_NONE,	// No Tessellation
+		GX2_TESSELLATION_MODE_DISCRETE		// ^^^^^^^^^^^^^^^
+	);
+
+	// Make sure to flush CPU cache and invalidate GPU cache
+	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_SHADER, fetch_shader->program, fetch_shader->size);
 	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_SHADER, screen_shader_VSH.program, screen_shader_VSH.size);
 	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_SHADER, screen_shader_PSH.program, screen_shader_PSH.size);
 	return draw_->CreatePresets();
@@ -163,6 +187,8 @@ void GX2GraphicsContext::Shutdown() {
 	tv_scan_buffer_ = nullptr;
 	MEMBucket_free(drc_scan_buffer_);
 	drc_scan_buffer_ = nullptr;
+	MEM2_free(fetch_shader_buf_);
+	fetch_shader_buf_ = nullptr;
 }
 #include "profiler/profiler.h"
 void GX2GraphicsContext::SwapBuffers() {
@@ -173,9 +199,7 @@ void GX2GraphicsContext::SwapBuffers() {
 	GX2SetShaderMode(GX2_SHADER_MODE_UNIFORM_REGISTER);
 	GX2SetVertexShader(&screen_shader_VSH);
 	GX2SetPixelShader(&screen_shader_PSH);
-	// I'm assuming your shader has no attributes and you hardcoded everything
-	// I don't know if you need a dummy fetch shader, so let's test this as-is
-	// first then see if we do need a fetch shader later
+	GX2SetFetchShader(&fetch_shader_);
 
 	GX2SetPixelSampler(&tv_sampler_, 0);
 	GX2SetPixelTexture(&tv_texture_, 0);
@@ -193,8 +217,8 @@ void GX2GraphicsContext::SwapBuffers() {
 	GX2SetScissor(0, 0, color_buffer_.surface.width, color_buffer_.surface.height);
 
 	GX2DrawDone();
-	GX2CopyColorBufferToScanBuffer(&drc_color_buffer_, GX2_SCAN_TARGET_DRC);
 	GX2CopyColorBufferToScanBuffer(&color_buffer_, GX2_SCAN_TARGET_TV);
+	GX2CopyColorBufferToScanBuffer(&drc_color_buffer_, GX2_SCAN_TARGET_DRC);
 	GX2SwapScanBuffers();
 	GX2Flush();
 //	GX2WaitForVsync();
