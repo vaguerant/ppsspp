@@ -11,6 +11,7 @@
 #include <wiiu/gx2.h>
 #include <wiiu/vpad.h>
 #include <wiiu/os/memory.h>
+#include <wiiu/os/debug.h>
 
 static bool swap_is_pending(void *start_time) {
 	uint32_t swap_count, flip_count;
@@ -125,7 +126,7 @@ bool GX2GraphicsContext::Init() {
 	GX2SetCullOnlyControl(GX2_FRONT_FACE_CCW, GX2_DISABLE, GX2_DISABLE);
 
 	GX2ClearColor(&color_buffer_, 0.0f, 0.0f, 0.0f, 1.0f);
-	SwapBuffers();
+//	SwapBuffers();
 
 	GX2SetTVEnable(GX2_ENABLE);
 	GX2SetDRCEnable(GX2_ENABLE);
@@ -160,6 +161,18 @@ bool GX2GraphicsContext::Init() {
 	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_SHADER, screen_shader_VSH.program, screen_shader_VSH.size);
 	GX2Invalidate(GX2_INVALIDATE_MODE_CPU_SHADER, screen_shader_PSH.program, screen_shader_PSH.size);
 	return draw_->CreatePresets();
+
+	if (screen_shader_VSH.program == nullptr || uintptr_t(screen_shader_VSH.program) % 0x100 != 0)
+	{
+		OSReport("Run around in circles (vertex)\n");
+		while (true) {}
+	}
+
+	if (screen_shader_PSH.program == nullptr || uintptr_t(screen_shader_PSH.program) % 0x100 != 0)
+	{
+		OSReport("Run around in circles (pixel)\n");
+		while (true) {}
+	}
 }
 
 void GX2GraphicsContext::Shutdown() {
@@ -193,6 +206,9 @@ void GX2GraphicsContext::Shutdown() {
 #include "profiler/profiler.h"
 void GX2GraphicsContext::SwapBuffers() {
 	PROFILE_THIS_SCOPE("swap");
+
+	GX2Invalidate(GX2_INVALIDATE_MODE_COLOR_BUFFER, color_buffer_.surface.image, color_buffer_.surface.imageSize);
+	GX2Invalidate(GX2_INVALIDATE_MODE_TEXTURE, tv_texture_.surface.image, tv_texture_.surface.imageSize);
 
 	GX2SetContextState(drc_ctx_state_);
 
